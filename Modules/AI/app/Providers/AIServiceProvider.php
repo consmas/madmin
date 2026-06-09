@@ -20,6 +20,7 @@ class AIServiceProvider extends ServiceProvider
         $this->registerCommandSchedules();
         $this->registerTranslations();
         $this->registerConfig();
+        config(['openai.request_timeout' => config('ai.request_timeout', 30)]);
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
     }

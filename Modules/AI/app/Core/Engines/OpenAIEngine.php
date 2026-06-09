@@ -3,8 +3,8 @@
 namespace Modules\AI\app\Core\Engines;
 
 use Modules\AI\app\Core\Contracts\AIEngineInterface;
-use OpenAI\Laravel\Facades\OpenAI;
-
+use Modules\AI\app\Services\AiOpenAIService;
+use RuntimeException;
 
 class OpenAIEngine implements AIEngineInterface
 {
@@ -17,28 +17,28 @@ class OpenAIEngine implements AIEngineInterface
     {
         $content = [['type' => 'text', 'text' => $prompt]];
 
-        if (!empty($imageUrl)) {
+        if (! empty($imageUrl)) {
             $content[] = [
                 'type' => 'image_url',
                 'image_url' => ['url' => $imageUrl],
             ];
         }
 
-        $response = OpenAI::chat()->create([
-            'model' => 'gpt-4o',
-            'messages' => [
-                [
-                    'role' => 'user',
-                    'content' => $content,
-                ],
+        $response = app(AiOpenAIService::class)->chat([
+            [
+                'role' => 'user',
+                'content' => $content,
             ],
+        ], [
+            // Keep the existing autofill model configurable without changing its API.
+            'model' => config('ai.default_model', 'gpt-4o-mini'),
             'temperature' => 0.3,
         ]);
 
-        return $response->choices[0]->message->content;
+        if (! $response['success']) {
+            throw new RuntimeException('AI provider unavailable.');
+        }
+
+        return $response['content'];
     }
-
-
 }
-
-
