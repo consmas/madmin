@@ -1227,6 +1227,12 @@ class Helpers
         return $currency_symbol;
     }
 
+    public static function highlight($text)
+    {
+        if (!$text) return '';
+        return preg_replace('/\$(.+?)\$/', '<span class="hl">$1</span>', e($text));
+    }
+
 
     public static function format_currency($value)
     {
