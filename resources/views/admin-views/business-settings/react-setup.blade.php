@@ -23,7 +23,7 @@
         <div class="card">
 
             <div class="card-body">
-                <form action="{{env('APP_MODE')!='demo'?route('admin.business-settings.react-update'):'javascript:'}}" method="post"
+                <form action="{{getEnvMode()!='demo'?route('admin.business-settings.react-update'):'javascript:'}}" method="post"
                       enctype="multipart/form-data">
                     @csrf
                     <div class="row">
@@ -31,19 +31,19 @@
                             <div class="form-group">
                                 <label for="react_license_code" class="form-label text-capitalize">{{translate('React license code')}}</label>
                                 <input id="react_license_code" type="text" placeholder="{{translate('React license code')}}" class="form-control h--45px" name="react_license_code"
-                                    value="{{env('APP_MODE')!='demo'?( $react_setup['react_license_code'] ?? ''):''}}" required>
+                                    value="{{getEnvMode()!='demo'?( $react_setup['react_license_code'] ?? ''):''}}" required>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="react_domain" class="form-label text-capitalize">{{translate('React Domain')}}</label>
                                 <input id="react_domain" type="text" placeholder="{{translate('React Domain')}}" class="form-control h--45px" name="react_domain"
-                                    value="{{env('APP_MODE')!='demo'?( $react_setup['react_domain'] ?? ''):''}}" required>
+                                    value="{{getEnvMode()!='demo'?( $react_setup['react_domain'] ?? ''):''}}" required>
                             </div>
                         </div>
                     </div>
                     <div class="text-right">
-                        <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}"  class="btn btn--primary mb-2 call-demo">{{translate('messages.save')}}</button>
+                        <button type="{{getEnvMode()!='demo'?'submit':'button'}}"  class="btn btn--primary mb-2 call-demo">{{translate('messages.save')}}</button>
                     </div>
                 </form>
             </div>

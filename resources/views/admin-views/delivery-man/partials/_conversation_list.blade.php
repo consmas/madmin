@@ -45,11 +45,13 @@
 @endif
 @empty
 
-<div class="empty-conversation-content d-flex flex-column align-items-center gap-3">
-    <img width="128" height="128" src="{{asset('/public/assets/admin/img/icons/empty-conversation.png')}}" alt="public">
-    <h5 class="text-muted">
-        {{translate('no_conversation_found')}}
-    </h5>
+<div class="empty-conversation-content pt-5 mt-5">
+    <div class="d-flex flex-column align-items-center gap-2 pt-5 mt-5">
+        <img width="70" height="70" src="{{asset('/public/assets/admin/img/icons/empty-conversation.png')}}" alt="public">
+        <h5 class="text-muted">
+            {{translate('no_conversation_found')}}
+        </h5>
+    </div>
 </div>
 
 @endforelse

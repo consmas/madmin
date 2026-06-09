@@ -23,7 +23,7 @@ class CartController extends Controller
         }
         $user_id = $request->user ? $request->user->id : $request['guest_id'];
         $is_guest = $request->user ? 0 : 1;
-        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',$request->header('moduleId'))->get()
+        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',getModuleId($request->header('moduleId')))->get()
         ->map(function ($data) {
             $data->add_on_ids = json_decode($data->add_on_ids,true);
             $data->add_on_qtys = json_decode($data->add_on_qtys,true);
@@ -55,7 +55,7 @@ class CartController extends Controller
         $item = $request->model === 'Item' ? Item::find($request->item_id) : ItemCampaign::find($request->item_id);
 
 
-        $cart = Cart::where('item_id',$request->item_id)->where('item_type',$model)->where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',$request->header('moduleId'))->first();
+        $cart = Cart::where('item_id',$request->item_id)->where('item_type',$model)->where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',getModuleId($request->header('moduleId')))->first();
 
         if ($cart && json_decode($cart->variation, true) == $request->variation) {
 
@@ -76,7 +76,7 @@ class CartController extends Controller
 
         $cart = new Cart();
         $cart->user_id = $user_id;
-        $cart->module_id = $request->header('moduleId');
+        $cart->module_id = getModuleId($request->header('moduleId'));
         $cart->item_id = $request->item_id;
         $cart->is_guest = $is_guest;
         $cart->add_on_ids = isset($request->add_on_ids)?json_encode($request->add_on_ids):json_encode([]);
@@ -89,7 +89,7 @@ class CartController extends Controller
 
         $item->carts()->save($cart);
 
-        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',$request->header('moduleId'))->get()
+        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',getModuleId($request->header('moduleId')))->get()
         ->map(function ($data) {
             $data->add_on_ids = json_decode($data->add_on_ids,true);
             $data->add_on_qtys = json_decode($data->add_on_qtys,true);
@@ -127,7 +127,7 @@ class CartController extends Controller
         }
 
         $cart->user_id = $user_id;
-        $cart->module_id = $request->header('moduleId');
+        $cart->module_id = getModuleId($request->header('moduleId'));
         $cart->is_guest = $is_guest;
         $cart->add_on_ids = isset($request->add_on_ids)?json_encode($request->add_on_ids):$cart->add_on_ids;
         $cart->add_on_qtys = isset($request->add_on_qtys)?json_encode($request->add_on_qtys):$cart->add_on_qtys;
@@ -136,7 +136,7 @@ class CartController extends Controller
         $cart->variation = isset($request->variation)?json_encode($request->variation):$cart->variation;
         $cart->save();
 
-        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',$request->header('moduleId'))->get()
+        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',getModuleId($request->header('moduleId')))->get()
         ->map(function ($data) {
             $data->add_on_ids = json_decode($data->add_on_ids,true);
             $data->add_on_qtys = json_decode($data->add_on_qtys,true);
@@ -165,7 +165,7 @@ class CartController extends Controller
         $cart = Cart::find($request->cart_id);
         $cart?->delete();
 
-        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',$request->header('moduleId'))->get()
+        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',getModuleId($request->header('moduleId')))->get()
         ->map(function ($data) {
             $data->add_on_ids = json_decode($data->add_on_ids,true);
             $data->add_on_qtys = json_decode($data->add_on_qtys,true);
@@ -190,14 +190,14 @@ class CartController extends Controller
         $user_id = $request->user ? $request->user->id : $request['guest_id'];
         $is_guest = $request->user ? 0 : 1;
 
-        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',$request->header('moduleId'))->get();
+        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',getModuleId($request->header('moduleId')))->get();
 
         foreach($carts as $cart){
             $cart?->delete();
         }
 
 
-        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',$request->header('moduleId'))->get()
+        $carts = Cart::where('user_id', $user_id)->where('is_guest',$is_guest)->where('module_id',getModuleId($request->header('moduleId')))->get()
         ->map(function ($data) {
             $data->add_on_ids = json_decode($data->add_on_ids,true);
             $data->add_on_qtys = json_decode($data->add_on_qtys,true);

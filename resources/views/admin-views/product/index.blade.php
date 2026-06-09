@@ -12,33 +12,29 @@
     <div class="content container-fluid">
         @php($openai_config = \App\CentralLogics\Helpers::get_business_settings('openai_config'))
         <!-- Page Header -->
-        <div class="page-header d-flex flex-wrap __gap-15px justify-content-between align-items-center">
-            <h1 class="page-header-title">
-                <span class="page-header-icon">
-                    <img src="{{ asset('public/assets/admin/img/items.png') }}" class="w--22" alt="">
-                </span>
+        <div class="page-header d-flex flex-wrap __gap-15px justify-content-between align-items-center mb-2">
+            <h1 class="page-header-title mb-0">
                 <span>
-                    {{ translate('messages.add_new_item') }}
+                    {{ translate('messages.Add New Product') }}
                 </span>
             </h1>
-            <div class=" d-flex flex-sm-nowrap flex-wrap  align-items-end">
+            <div class=" d-flex flex-sm-nowrap flex-wrap gap-1 align-items-center">
                 <div class="text--primary-2 d-flex flex-wrap align-items-center mr-2">
                     <a href="{{ route('admin.item.product_gallery') }}"
-                        class="btn btn-outline-primary btn--primary d-flex align-items-center bg-not-hover-primary-ash rounded-8 gap-2">
-                        <img src="{{ asset('public/assets/admin/img/product-gallery.png') }}" class="w--22" alt="">
+                        class="btn btn-primary d-flex fs-13 align-items-center rounded gap-2">
                         <span>{{ translate('Add Info From Gallery') }}</span>
                     </a>
                 </div>
 
                 @if (Config::get('module.current_module_type') == 'food')
-                    <div class="text--primary-2 py-1 d-flex flex-wrap align-items-center mb-3 foodModalShow" type="button">
+                    <div class="text--primary-2 py-1 d-flex flex-wrap align-items-center foodModalShow" type="button">
                         <strong class="mr-2">{{ translate('See_how_it_works!') }}</strong>
                         <div>
                             <i class="tio-info-outined"></i>
                         </div>
                     </div>
                 @else
-                    <div class="text--primary-2 py-1 d-flex flex-wrap align-items-center mb-3 attributeModalShow"
+                    <div class="text--primary-2 py-1 d-flex flex-wrap align-items-center attributeModalShow"
                         type="button">
                         <strong class="mr-2">{{ translate('See_how_it_works!') }}</strong>
                         <div>
@@ -49,7 +45,7 @@
             </div>
         </div>
         <!-- End Page Header -->
-        <form id="item_form" enctype="multipart/form-data" class="custom-validation" data-ajax="true">
+        <form id="item_form" enctype="multipart/form-data" class="validate-form" data-ajax="true">
 
             <div class="row g-2">
 
@@ -58,45 +54,62 @@
 
                 @includeif('admin-views.product.partials._title_and_discription')
 
-                <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-body d-flex flex-wrap align-items-center">
-                            <div class="w-100 d-flex gap-3 flex-wrap flex-lg-nowrap">
-                                <div class="flex-grow-1 mx-auto overflow-x-auto scrollbar-primary">
-                                    <label class="text-dark d-block mb-4 mb-xl-5">
-                                        {{ translate('messages.item_image') }}
-                                        <small class="">( {{ translate('messages.ratio') }} 1:1 )</small>
-                                    </label>
-                                    <div class="d-flex __gap-12px __new-coba overflow-x-auto pb-2" id="coba"></div>
-                                </div>
+                @includeif('admin-views.product.partials._category_and_general')
 
-                                <div class="flex-grow-1 mx-auto pb-2 flex-shrink-0">
-                                    <label class="text-dark d-block mb-4 mb-xl-5">
-                                        {{ translate('messages.item_thumbnail') }}
-                                        @if (Config::get('module.current_module_type') == 'food')
-                                            <small class="">( {{ translate('messages.ratio') }} 1:1 )</small>
-                                        @else
-                                            <small class="text-danger">* ( {{ translate('messages.ratio') }} 1:1 )</small>
-                                        @endif
-                                    </label>
-                                    <label class="d-inline-block m-0 position-relative error-wrapper">
-                                        <img class="img--176 border" id="viewer"
-                                            src="{{ asset('public/assets/admin/img/upload-img.png') }}" alt="thumbnail" />
-                                        <div class="icon-file-group">
-                                            <div class="icon-file"><input type="file" name="image" id="customFileEg1"
-                                                    class="custom-file-input d-none"
-                                                    accept=".webp, .jpg, .png, .webp, .jpeg, .gif, .bmp, .tif, .tiff|image/*" required>
-                                                <i class="tio-edit"></i>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="mb-20">
+                                <h3 class="mb-0">{{ translate('Item_Thumbnail') }}
+                                    @if (Config::get('module.current_module_type') != 'food')
+                                    <span class="text-danger">*</span>
+                                    @endif
+                                </h3>
+                            </div>
+                            <div class="__bg-F8F9FC-card d-center p-3">
+                                <div class="w-100 py-5">
+                                    <div>
+                                        <div class="text-center py-2">
+                                            <div class="mx-auto text-center">
+                                                    @include('admin-views.partials._image-uploader', [
+                                                            'id' => 'image-input',
+                                                            'name' => 'image',
+                                                            'ratio' => '1:1',
+                                                            'isRequired' =>Config::get('module.current_module_type') == 'food' ?  false : true,
+                                                            'existingImage' => null,
+                                                            'imageExtension' => IMAGE_EXTENSION,
+                                                            'imageFormat' => IMAGE_FORMAT,
+                                                            'maxSize' => MAX_FILE_SIZE,
+                                                            'textPosition' => 'bottom',
+                                                        ]
+                                                    )
                                             </div>
                                         </div>
-                                    </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                @include('admin-views.product.partials._product-video')
+                @include('admin-views.partials._multiple-image-uploader', [
+                    'rootId' => 'product-multiple-image-uploader',
+                    'containerId' => 'product-additional-images',
+                    'title' => translate('messages.Product Additional Images'),
+                    'description' => translate('Upload additional images.') . translate(IMAGE_FORMAT) .' '. translate('Image size : Max') .' ' .MAX_FILE_SIZE. translate('MB (1:1)') ,
+                    'fieldName' => 'item_images[]',
+                    'maxCount' => 5,
+                    'rowHeight' => '120px',
+                    'groupClassName' => 'spartan_item_wrapper size--md',
+                    'maxSize' => MAX_FILE_SIZE,
+                    'placeholderImage' => asset('public/assets/admin/img/400x400/coba-placeholder.png'),
+                    'dropFileLabel' => 'Drop Here',
+                    'extensionErrorMessage' => translate('messages.please_only_input_png_or_jpg_type_file'),
+                    'sizeErrorMessage' => translate('messages.file_size_too_big'),
+                    'resetButtonSelector' => '#reset_btn',
+                ])
 
-                @includeif('admin-views.product.partials._category_and_general')
+
                 @includeif('admin-views.product.partials._price_and_stock')
 
                 @if (Config::get('module.current_module_type') == 'food')
@@ -106,6 +119,9 @@
                 @endif
 
                 @includeif('admin-views.product.partials._ai_sidebar')
+                @if (Config::get('module.current_module_type') == 'ecommerce')
+                    @includeIf('admin-views.business-settings.landing-page-settings.partial._meta_data')
+                @endif
 
                 <div class="col-md-12">
                     <div class="btn--container justify-content-end">
@@ -117,7 +133,10 @@
                 </div>
             </div>
         </form>
+
+
     </div>
+
 
     <div class="modal" id="food-modal">
         <div class="modal-dialog modal-xl">
@@ -159,47 +178,14 @@
 
 
 @push('script_2')
-    <script src="{{ asset('public/assets/admin') }}/js/tags-input.min.js"></script>
-    <script src="{{ asset('public/assets/admin/js/spartan-multi-image-picker.js') }}"></script>
-    <script src="{{ asset('public/assets/admin') }}/js/view-pages/product-index.js"></script>
-
-
-
-    <script src="{{ asset('public/assets/admin/js/AI/products/product-title-autofill.js') }}"></script>
-    <script src="{{ asset('public/assets/admin/js/AI/products/product-description-autofill.js') }}"></script>
-    <script src="{{ asset('public/assets/admin/js/AI/products/general-setup-autofill.js') }}"></script>
-    <script src="{{ asset('public/assets/admin/js/AI/products/product-others-autofill.js') }}"></script>
-    @if (Config::get('module.current_module_type') == 'food')
-    <script src="{{ asset('public/assets/admin/js/AI/products/variation-setup-auto-fill.js') }}"></script>
-    @else
-    <script src="{{ asset('public/assets/admin/js/AI/products/other-variation-setup-auto-fill.js') }}"></script>
-    @endif
-    <script src="{{ asset('public/assets/admin/js/AI/products/seo-section-autofill.js') }}"></script>
-
-    <script src="{{ asset('public/assets/admin/js/AI/products/ai-sidebar.js') }}"></script>
-
-    <script src="{{ asset('/public/assets/admin/js/AI/products/compressor/image-compressor.js') }}"></script>
-    <script src="{{ asset('/public/assets/admin/js/AI/products/compressor/compressor.min.js') }}"></script>
+    @include('admin-views.product.partials._shared-script-assets', [
+        'moduleType' => Config::get('module.current_module_type'),
+        'viewPageScript' => 'public/assets/admin/js/view-pages/product-index.js',
+    ])
 
 
     <script>
         "use strict";
-
-        function validateImageSize(inputSelector, imageType = "Image", maxSizeMB = 2) {
-            let fileInput = $(inputSelector)[0];
-            if (fileInput && fileInput.files.length > 0) {
-                let fileSize = fileInput.files[0].size;
-                if (fileSize > maxSizeMB * 1024 * 1024) {
-                    toastr.error(`${imageType} size should not exceed ${maxSizeMB}MB`, {
-                        CloseButton: true,
-                        ProgressBar: true
-                    });
-                    return false;
-                }
-            }
-            return true;
-        }
-
 
         $(document).on('change', '#discount_type', function() {
             let data = document.getElementById("discount_type");
@@ -211,152 +197,7 @@
         });
 
 
-        $(document).ready(function() {
-            $("#add_new_option_button").click(function(e) {
-                add_new_option_button();
-            });
-
-
-            // INITIALIZATION OF SELECT2
-            // =======================================================
-            $('.js-select2-custom').each(function() {
-                let select2 = $.HSCore.components.HSSelect2.init($(this));
-            });
-        });
-
-            function add_new_option_button() {
-                $('#empty-variation').hide();
-                count++;
-                let add_option_view = `
-                                <div class="__bg-F8F9FC-card view_new_option mb-2">
-                                    <div>
-                                        <div class="d-flex align-items-center justify-content-between mb-3">
-                                            <label class="form-check form--check">
-                                                <input id="options[` + count + `][required]" name="options[` + count + `][required]" class="form-check-input" type="checkbox">
-                                                <span class="form-check-label">{{ translate('Required') }}</span>
-                                            </label>
-                                            <div>
-                                                <button type="button" class="btn btn-danger btn-sm delete_input_button"
-                                                    title="{{ translate('Delete') }}">
-                                                    <i class="tio-add-to-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div class="row g-2">
-                                            <div class="col-xl-4 col-lg-6">
-                                                <label for="">{{ translate('name') }}</label>
-                                                <input required name=options[` + count +
-                    `][name] class="form-control new_option_name" type="text" data-count="` +
-                    count +
-                    `">
-                                            </div>
-
-                                            <div class="col-xl-4 col-lg-6">
-                                                <div>
-                                                    <label class="input-label text-capitalize d-flex align-items-center"><span class="line--limit-1">{{ translate('messages.selcetion_type') }} </span>
-                                                    </label>
-                                                    <div class="resturant-type-group px-0">
-                                                        <label class="form-check form--check mr-2 mr-md-4">
-                                                            <input class="form-check-input show_min_max" data-count="` +
-                    count + `" type="radio" value="multi"
-                                                            name="options[` + count + `][type]" id="type` + count +
-                    `" checked
-                                                            >
-                                                            <span class="form-check-label">
-                                                                {{ translate('Multiple Selection') }}
-                                </span>
-                            </label>
-
-                            <label class="form-check form--check mr-2 mr-md-4">
-                                <input class="form-check-input hide_min_max" data-count="` + count + `" type="radio" value="single"
-                                name="options[` + count + `][type]" id="type` + count +
-                    `"
-                                                            >
-                                                            <span class="form-check-label">
-                                                                {{ translate('Single Selection') }}
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-4 col-lg-6">
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <label for="">{{ translate('Min') }}</label>
-                                                        <input id="min_max1_` + count + `" required  name="options[` +
-                    count + `][min]" class="form-control" type="number" min="1">
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <label for="">{{ translate('Max') }}</label>
-                                                        <input id="min_max2_` + count + `"   required name="options[` +
-                    count + `][max]" class="form-control" type="number" min="1">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div id="option_price_` + count + `" >
-                                            <div class="bg-white border rounded p-3 pb-0 mt-3">
-                                                <div  id="option_price_view_` + count +
-                    `">
-                                                    <div class="row g-3 add_new_view_row_class mb-3">
-                                                        <div class="col-md-4 col-sm-6">
-                                                            <label for="">{{ translate('Option_name') }}</label>
-                                                            <input class="form-control" required type="text" name="options[` +
-                    count +
-                    `][values][0][label]" id="">
-                                                        </div>
-                                                        <div class="col-md-4 col-sm-6">
-                                                            <label for="">{{ translate('Additional_price') }}</label>
-                                                            <input class="form-control" required type="number" min="0" step="0.01" name="options[` +
-                    count + `][values][0][optionPrice]" id="">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row mt-3 p-3 mr-1 d-flex "  id="add_new_button_` + count +
-                    `">
-                                                    <button type="button" class="btn btn--primary btn-outline-primary add_new_row_button" data-count="` +
-                    count + `">{{ translate('Add_New_Option') }}</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>`;
-
-                $("#add_new_option").append(add_option_view);
-
-
-
-            }
-        function add_new_row_button(data) {
-            count = data;
-            countRow = 1 + $('#option_price_view_' + data).children('.add_new_view_row_class').length;
-            let add_new_row_view = `
-            <div class="row add_new_view_row_class mb-3 position-relative pt-3 pt-sm-0">
-                <div class="col-md-4 col-sm-5">
-                        <label for="">{{ translate('Option_name') }}</label>
-                        <input class="form-control" required type="text" name="options[` + count + `][values][` +
-                countRow + `][label]" id="">
-                    </div>
-                    <div class="col-md-4 col-sm-5">
-                        <label for="">{{ translate('Additional_price') }}</label>
-                        <input class="form-control"  required type="number" min="0" step="0.01" name="options[` +
-                count +
-                `][values][` + countRow + `][optionPrice]" id="">
-                    </div>
-                    <div class="col-sm-2 max-sm-absolute">
-                        <label class="d-none d-sm-block">&nbsp;</label>
-                        <div class="mt-1">
-                            <button type="button" class="btn btn-danger btn-sm deleteRow"
-                                title="{{ translate('Delete') }}">
-                                <i class="tio-add-to-trash"></i>
-                            </button>
-                        </div>
-                </div>
-            </div>`;
-            $('#option_price_view_' + data).append(add_new_row_view);
-
-        }
+        @include('admin-views.product.partials._shared-variation-builder-script')
 
 
         $('#store_id').on('change', function() {
@@ -498,7 +339,7 @@
 
         $('#store_id').select2({
             ajax: {
-                url: '{{ url('/') }}/admin/store/get-stores',
+                url: '{{ route('admin.store.get-stores') }}',
                 data: function(params) {
                     return {
                         q: params.term, // search term
@@ -600,15 +441,6 @@
             });
         });
 
-        function add_more_customer_choice_option(i, name) {
-            let n = name;
-
-            $('#customer_choice_options').append(
-                `<div class="__choos-item"><div><input type="hidden" name="choice_no[]" value="${i}"><input type="text" class="form-control d-none" name="choice[]" value="${n}" placeholder="{{ translate('messages.choice_title') }}" readonly> <label class="form-label">${n}</label> </div><div><input type="text" class="form-control combination_update" name="choice_options_${i}[]" placeholder="{{ translate('messages.enter_choice_values') }}" data-role="tagsinput"></div></div>`
-            );
-            $("input[data-role=tagsinput], select[multiple][data-role=tagsinput]").tagsinput();
-        }
-
         function combination_update() {
             $.ajaxSetup({
                 headers: {
@@ -642,27 +474,15 @@
         $('#item_form').on('submit', function(e) {
             $('#submitButton').attr('disabled', true);
             e.preventDefault();
+            if (typeof FormValidation != 'undefined' && !FormValidation.validateForm(this)) {
+                return false;
+            }
 
             let $form = $(this);
             if (!$form.valid()) {
                 return false;
             }
 
-            if (!validateImageSize('#customFileEg1', "Item image")) {
-                return;
-            }
-
-            let fileInput = $('#customFileEg1')[0];
-            if (fileInput.files.length > 0) {
-                let fileSize = fileInput.files[0].size;
-                if (fileSize > 1024 * 1024) {
-                    toastr.error('Image size should not exceed 2MB', {
-                        CloseButton: true,
-                        ProgressBar: true
-                    });
-                    return;
-                }
-            }
 
             let formData = new FormData(this);
             $.ajaxSetup({
@@ -703,49 +523,6 @@
             });
         });
 
-        function initImagePicker() {
-            $("#coba").spartanMultiImagePicker({
-                fieldName: 'item_images[]',
-                maxCount: 5,
-                rowHeight: '176px !important',
-                groupClassName: 'spartan_item_wrapper min-w-176px max-w-176px',
-                maxFileSize: 1024 * 1024 * 2,
-                placeholderImage: {
-                    image: "{{ asset('public/assets/admin/img/upload-img.png') }}",
-                    width: '176px'
-                },
-                dropFileLabel: "Drop Here",
-                onAddRow: function(index, file) {
-                    setTimeout(function() {
-                        let $newInput = $("#coba .spartan_item_wrapper").last();
-                        if ($newInput.length) {
-                            $newInput[0].scrollIntoView({
-                                behavior: "smooth",
-                                inline: "end",
-                                block: "nearest"
-                            });
-                        }
-                    }, 50);
-                },
-                onExtensionErr: function(index, file) {
-                    toastr.error("{{ translate('messages.please_only_input_png_or_jpg_type_file') }}", {
-                        CloseButton: true,
-                        ProgressBar: true
-                    });
-                },
-                onSizeErr: function(index, file) {
-                    toastr.error("{{ translate('messages.file_size_too_big') }}", {
-                        CloseButton: true,
-                        ProgressBar: true
-                    });
-                }
-            });
-        }
-
-        $(function() {
-            initImagePicker();
-        });
-
         $('#reset_btn').click(function() {
             $('#module_id').val(null).trigger('change');
             $('#store_id').val(null).trigger('change');
@@ -759,9 +536,6 @@
             $('#customer_choice_options').empty().trigger('change');
             $('#variant_combination').empty().trigger('change');
             $('#viewer').attr('src', "{{ asset('public/assets/admin/img/upload.png') }}");
-            $('#customFileEg1').val(null).trigger('change');
-            $("#coba").empty();
-            initImagePicker();
         })
     </script>
 @endpush

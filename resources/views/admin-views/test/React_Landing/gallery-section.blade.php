@@ -396,7 +396,7 @@
                 <section class="common-section-view bg-white border rounded-10">
                     <div class="mb-4 text-center">
                         <h2 class="mb-lg-1 mb-1 fs-24">
-                            See <span class="text-base-clr">ConsMas</span> in Action
+                            See <span class="text-base-clr">6amMart</span> in Action
                         </h2>
                         <p class="text-title fs-14 m-0">
                             Explore how customers use our services, vendors grow their business

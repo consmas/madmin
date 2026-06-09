@@ -3,13 +3,13 @@
 @section('content')
     <!-- Title -->
     <div class="text-center text-white mb-4">
-        <h2>ConsMas Software Installation</h2>
+        <h2>6amMart Software Installation</h2>
         <h6 class="fw-normal">Please proceed step by step with proper data according to instructions</h6>
     </div>
 
     <!-- Progress -->
     <div class="pb-2">
-        <div class="progress cursor-pointer" role="progressbar" aria-label="ConsMas Software Installation"
+        <div class="progress cursor-pointer" role="progressbar" aria-label="6amMart Software Installation"
              aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip"
              data-bs-placement="top" data-bs-custom-class="custom-progress-tooltip" data-bs-title="First Step!"
              data-bs-delay='{"hide":1000}'>
@@ -76,7 +76,7 @@
                             </div>
                         </div>
                         @foreach($permission as $key => $item)
-                            @if ($key != 'db_file_write_perm' && $key != 'routes_file_write_perm')
+                            @if ($key != 'db_file_write_perm' && $key != 'routes_file_write_perm' && $key != 'config_file_write_perm')
                                 <div class="col-md-6">
                                     <div class="d-flex gap-3 align-items-center">
                                         <img src="{{ asset('public/assets/installation') }}/assets/img/svg-icons/curl-enabled.svg" alt="">
@@ -132,6 +132,32 @@
                                     alt="">
                                 <div
                                     class="d-flex align-items-center gap-2 justify-content-between flex-grow-1">
+                                    config/system-addons.php File Permission
+
+                                    @if ($permission['config_file_write_perm'])
+                                        <img width="20"
+                                             src="{{asset('public/assets/installation')}}/assets/img/svg-icons/check.png"
+                                             alt="">
+                                    @else
+                                        <span class="cursor-pointer" data-bs-toggle="tooltip"
+                                              data-bs-placement="top" data-bs-custom-class="custom-tooltip"
+                                              data-bs-html="true" data-bs-delay='{"hide":1000}'
+                                              data-bs-title="...">
+                                                <img
+                                                    src="{{asset('public/assets/installation')}}/assets/img/svg-icons/info.svg"
+                                                    class="svg text-danger" alt="">
+                                            </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-3 align-items-center">
+                                <img
+                                    src="{{asset('public/assets/installation')}}/assets/img/svg-icons/route-service.svg"
+                                    alt="">
+                                <div
+                                    class="d-flex align-items-center gap-2 justify-content-between flex-grow-1">
                                     RouteServiceProvider.php File Permission
 
 
@@ -159,7 +185,7 @@
             <div class="text-center">
                 <p>All the permissions are provided successfully ? </p>
 
-                @if ($permission['curl_enabled'] == 1 && $permission['db_file_write_perm'] == 1 && $permission['routes_file_write_perm'] == 1 && $phpVersion >= 8.2)
+                @if ($permission['curl_enabled'] == 1 && $permission['db_file_write_perm'] == 1 &&  $permission['config_file_write_perm'] == 1 && $permission['routes_file_write_perm'] == 1 && $phpVersion >= 8.2)
                     <a href="{{ route('step2',['token'=>bcrypt('step_2')]) }}" class="btn btn-dark px-sm-5">Proceed
                         Next</a>
                 @endif

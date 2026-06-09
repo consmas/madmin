@@ -21,10 +21,16 @@ class CampaignController extends Controller
 
         $campaigns=Campaign::with('stores')->running()->latest()->module(Helpers::get_store_data()->module_id)
 
-        ->when($key, function($query)use($key){
+        ->when($key, function ($query) use ($key) {
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
-                    $q->orWhere('title', 'like', "%". $value."%");
+                    $q->orWhere('title', 'like', "%{$value}%")
+                    ->orWhere('description', 'like', "%{$value}%")
+                    ->orWhere('slug', 'like', "%{$value}%")
+                    ->orWhereHas('translations', function ($t) use ($value) {
+                        $t->where('value', 'like', "%{$value}%");
+                    });
+
                 }
             });
         })
@@ -48,7 +54,7 @@ class CampaignController extends Controller
     }
     public function addstore(Campaign $campaign, $store_id)
     {
-        $campaign->stores()->attach($store_id,['campaign_status' => 'pending']);
+        $campaign->stores()->attach($store_id,['campaign_status' => 'pending','updated_at' => now(),'created_at' => now()]);
         $campaign->save();
         $store = Store::find($store_id);
         try
@@ -56,11 +62,11 @@ class CampaignController extends Controller
             $admin= Admin::where('role_id', 1)->first();
             $mail_status = Helpers::get_mail_status('campaign_request_mail_status_admin');
             if(config('mail.status') && $mail_status == '1' &&  Helpers::getNotificationStatusData('admin','campaign_join_request','mail_status' )) {
-                Mail::to($admin->email)->send(new \App\Mail\CampaignRequestMail($store->name));
+                Mail::to($admin?->getRawOriginal('email'))->send(new \App\Mail\CampaignRequestMail($store->name));
             }
             $mail_status = Helpers::get_mail_status('campaign_request_mail_status_store');
             if(config('mail.status') && $mail_status == '1' &&  Helpers::getNotificationStatusData('store','store_campaign_join_request','mail_status',$store->id )) {
-                Mail::to($store->vendor->email)->send(new \App\Mail\VendorCampaignRequestMail($store->name,'pending'));
+                Mail::to($store->vendor?->getRawOriginal('email'))->send(new \App\Mail\VendorCampaignRequestMail($store->name,'pending'));
             }
         }
         catch(\Exception $e)

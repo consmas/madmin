@@ -86,7 +86,7 @@
                 <div class="card-body">
                     <h4 class="mb-3">{{translate('messages.import_items_file')}}</h4>
                     <div class="custom-file custom--file">
-                        <input type="file" name="products_file" class="form-control" id="products_file">
+                        <input type="file" name="products_file" class="form-control" id="products_file" accept=".xlsx,.xls">
                         <label class="custom-file-label" for="products_file">{{ translate('messages.Choose File') }}</label>
                     </div>
                     <div class="btn--container justify-content-end mt-20">
@@ -297,7 +297,7 @@
                                         </div>
                                         <div class="col-md-4 col-sm-6">
                                             <label for="">{{ translate('Additional_price') }}</label>
-                                            <input class="form-control" required type="number" min="0" step="0.01" name="options[` +
+                                            <input class="form-control" required type="number" min="0"  step="{{ \App\CentralLogics\Helpers::getDecimalPlaces() }}" max="999999999999.999" name="options[` +
                     count + `][values][0][optionPrice]" id="">
                                         </div>
                                     </div>
@@ -384,7 +384,7 @@
                 </div>
                 <div class="col-md-4 col-sm-5">
                     <label for="">{{ translate('Additional_price') }}</label>
-                    <input class="form-control"  required type="number" min="0" step="0.01" name="options[` +
+                    <input class="form-control"  required type="number" min="0"  step="{{ \App\CentralLogics\Helpers::getDecimalPlaces() }}" max="999999999999.999" name="options[` +
                 count +
                 `][values][` + countRow + `][optionPrice]" id="">
                 </div>
@@ -566,5 +566,28 @@
                 }
             })
         }
+        $(document).ready(function () {
+
+    $('#import_form').on('change', function (e) {
+            const fileInput = $('#products_file')[0];
+            const filePath = $('#products_file').val();
+
+            if (fileInput.files.length === 0) {
+                e.preventDefault();
+                toastr.error('Please select a file first.');
+                return false;
+            }
+
+            const allowedExtensions = /(\.xls|\.xlsx)$/i;
+
+            if (!allowedExtensions.exec(filePath)) {
+                e.preventDefault();
+                $('#products_file').val('');
+                toastr.error('Invalid file format. Please upload only XLS or XLSX files.');
+                return false;
+            }
+        });
+
+    });
     </script>
 @endpush

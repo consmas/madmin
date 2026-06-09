@@ -57,10 +57,10 @@ class DashboardController extends Controller
         $data['top_sell'] = $top_sell;
         $data['most_rated_items'] = $most_rated_items;
 
-        if( Helpers::get_store_data()?->storeConfig?->minimum_stock_for_warning > 0){
+        if( Helpers::get_store_data()?->storeConfig?->show_low_stock_count && Helpers::get_store_data()?->storeConfig?->minimum_stock_for_warning > 0){
             $items=  Item::where('stock' ,'<=' , Helpers::get_store_data()->storeConfig->minimum_stock_for_warning );
         } else{
-            $items=  Item::where('stock',0 );
+            $items=  Item::whereRaw('1 = 0');
         }
 
         $out_of_stock_count=  Helpers::get_store_data()->module->module_type != 'food' ?  $items->orderby('stock')->latest()->count() : null;
@@ -209,5 +209,13 @@ class DashboardController extends Controller
         $vendor->save();
 
         return response()->json(['Token successfully stored.']);
+    }
+
+    public function verifiedBadgePopupSeen(Request $request)
+    {
+        $store = Helpers::get_store_data();
+        Helpers::mark_verified_badge_popup_seen($store);
+
+        return response()->json(['success' => 1]);
     }
 }

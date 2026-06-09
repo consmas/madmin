@@ -1,12 +1,13 @@
 <?php
-use App\Models\BusinessSetting;
-$company_phone =BusinessSetting::where('key', 'phone')->first()->value;
-$company_email =BusinessSetting::where('key', 'email_address')->first()->value;
-$company_name =BusinessSetting::where('key', 'business_name')->first()->value;
-$logo =BusinessSetting::where('key', 'logo')->first()->value;
-$company_address =BusinessSetting::where('key', 'address')->first()->value;
-$company_mobile_logo = $logo;
-$company_links = json_decode(BusinessSetting::where('key','landing_page_links')->first()->value, true);
+use App\CentralLogics\Helpers;
+$company_phone = Helpers::get_business_settings('phone');
+$company_email =  Helpers::get_business_settings('email_address');
+$company_name = Helpers::get_business_settings('business_name');
+
+$company_address = Helpers::get_business_settings('address') ;
+
+$fixed_link =  \App\Models\DataSetting::where(['key'=>'fixed_link','type'=>'admin_landing_page'])->first();
+$company_links = isset($fixed_link->value)?json_decode($fixed_link->value, true):null;
 ?>
 <!DOCTYPE html>
 <html>

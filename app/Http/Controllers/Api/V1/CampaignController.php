@@ -12,13 +12,7 @@ use Illuminate\Support\Facades\Validator;
 class CampaignController extends Controller
 {
     public function get_basic_campaigns(Request $request){
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 200);
-        }
+        Helpers::setZoneIds($request);
         $zone_id= $request->header('zoneId');
         try {
             $campaigns = Campaign::
@@ -41,13 +35,7 @@ class CampaignController extends Controller
         }
     }
     public function basic_campaign_details(Request $request){
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 200);
-        }
+        Helpers::setZoneIds($request);
         $zone_id= $request->header('zoneId');
         $longitude= $request->header('longitude');
         $latitude= $request->header('latitude');
@@ -72,7 +60,10 @@ class CampaignController extends Controller
             ->whereHas('module.zones', function($query)use($zone_id){
                 $query->whereIn('zones.id', json_decode($zone_id, true));
             })
-            ->running()->active()->whereId($request->basic_campaign_id)->first();
+            ->running()
+            ->active()
+            ->where(fn($q) => $q->where('id', $request->basic_campaign_id)->orWhere('slug', $request->basic_campaign_id))
+            ->first();
 
             $campaign=Helpers::basic_campaign_data_formatting($campaign, false);
 
@@ -84,13 +75,7 @@ class CampaignController extends Controller
         }
     }
     public function get_item_campaigns(Request $request){
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 200);
-        }
+        Helpers::setZoneIds($request);
         $zone_id= $request->header('zoneId');
         $item_campaign_default_status = \App\Models\BusinessSetting::where('key', 'item_campaign_default_status')->first()?->value ??  1;
         $item_campaign_sort_by_general = \App\Models\PriorityList::where('name', 'item_campaign_sort_by_general')->where('type','general')->first()?->value ?? '';

@@ -132,7 +132,7 @@ class AdvertisementController extends Controller
         Helpers::add_or_update_translations(request: $request, key_data:'description' , name_field:'description' , model_name: 'Advertisement' ,data_id: $advertisement->id,data_value: $advertisement->description);
         try {
             if(Helpers::getNotificationStatusData('admin','advertisement_add','mail_status' ) && config('mail.status') && Helpers::get_mail_status('new_advertisement_mail_status_admin') == '1'){
-                Mail::to(Admin::where('role_id', 1)->first()?->email)->send(new \App\Mail\AdminAdversitementMail($advertisement?->store?->name,'new_advertisement' ,$advertisement->id));
+                Mail::to(Admin::where('role_id', 1)->first()?->getRawOriginal('email'))->send(new \App\Mail\AdminAdversitementMail($advertisement?->store?->name,'new_advertisement' ,$advertisement->id));
         }
         } catch (\Throwable $th) {
             //throw $th;
@@ -289,7 +289,7 @@ class AdvertisementController extends Controller
 
         try {
             if(Helpers::getNotificationStatusData('admin','advertisement_update','mail_status' ) && config('mail.status') && Helpers::get_mail_status('update_advertisement_mail_status_admin') == '1'){
-                    Mail::to(Admin::where('role_id', 1)->first()?->email)->send(new \App\Mail\AdminAdversitementMail($advertisement?->store?->name,'update_advertisement' ,$advertisement->id));
+                    Mail::to(Admin::where('role_id', 1)->first()?->getRawOriginal('email'))->send(new \App\Mail\AdminAdversitementMail($advertisement?->store?->name,'update_advertisement' ,$advertisement->id));
             }
         } catch (\Throwable $th) {
             //throw $th;
@@ -440,7 +440,7 @@ class AdvertisementController extends Controller
 
             try {
                 if(Helpers::getNotificationStatusData('admin','advertisement_add','mail_status') && config('mail.status') && Helpers::get_mail_status('new_advertisement_mail_status_admin') == '1'){
-                    Mail::to(Admin::where('role_id', 1)->first()?->email)->send(new \App\Mail\AdminAdversitementMail($advertisement?->store?->name,'new_advertisement' ,$advertisement->id));
+                    Mail::to(Admin::where('role_id', 1)->first()?->getRawOriginal('email'))->send(new \App\Mail\AdminAdversitementMail($advertisement?->store?->name,'new_advertisement' ,$advertisement->id));
             }
             } catch (\Throwable $th) {
                 //throw $th;

@@ -70,7 +70,7 @@
                         @php($config = \App\Models\BusinessSetting::where(['key' => 'openai_config'])->first())
                         @php($data = $config ? json_decode($config['value'], true) : null)
                         <form
-                            action="{{ env('APP_MODE') != 'demo' ? route('admin.business-settings.openAIConfigStatus') : 'javascript:' }}"
+                            action="{{ getEnvMode() != 'demo' ? route('admin.business-settings.openAIConfigStatus') : 'javascript:' }}"
                             method="get" id="mail-config-disable_form">
 
 
@@ -100,7 +100,7 @@
                             </div>
                         </form>
                         <form
-                            action="{{ env('APP_MODE') != 'demo' ? route('admin.business-settings.openAIConfigUpdate') : 'javascript:' }}"
+                            action="{{ getEnvMode() != 'demo' ? route('admin.business-settings.openAIConfigUpdate') : 'javascript:' }}"
                             method="post">
                             @csrf
                             <div
@@ -114,7 +114,7 @@
                                             <input type="text"
                                                 placeholder="{{ translate('messages.Ex:') }} sk-proj-K0LhsdcbHJ......."
                                                 class="form-control" name="OPENAI_API_KEY"
-                                                value="{{ env('APP_MODE') != 'demo' ? $data['OPENAI_API_KEY'] ?? '' : '' }}"
+                                                value="{{ getEnvMode() != 'demo' ? $data['OPENAI_API_KEY'] ?? '' : '' }}"
                                                 required>
                                         </div>
                                     </div>
@@ -125,7 +125,7 @@
                                             <input type="text"
                                                 placeholder="{{ translate('messages.Ex:') }} org-xxxxxxxxxxx"
                                                 class="form-control" name="OPENAI_ORGANIZATION"
-                                                value="{{ env('APP_MODE') != 'demo' ? $data['OPENAI_ORGANIZATION'] ?? '' : '' }}"
+                                                value="{{ getEnvMode() != 'demo' ? $data['OPENAI_ORGANIZATION'] ?? '' : '' }}"
                                                 required>
                                         </div>
                                     </div>
@@ -134,7 +134,7 @@
                                         <div class="btn--container justify-content-end">
                                             <button type="reset"
                                                 class="btn btn--reset">{{ translate('messages.reset') }}</button>
-                                            <button type="{{ env('APP_MODE') != 'demo' ? 'submit' : 'button' }}"
+                                            <button type="{{ getEnvMode() != 'demo' ? 'submit' : 'button' }}"
                                                 class="btn btn--primary call-demo">{{ translate('messages.save') }}</button>
                                         </div>
                                     </div>

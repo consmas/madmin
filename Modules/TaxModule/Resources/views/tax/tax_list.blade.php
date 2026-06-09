@@ -63,7 +63,7 @@
                                     <img class="avatar avatar-xss avatar-4by3 mr-2"
                                         src="{{ asset('Modules/TaxModule/public/assets/admin/img/placeholder-csv-format.svg') }}"
                                         alt="Image Description">
-                                    .{{ translate('messages.csv') }}
+                                    {{ translate('messages.csv') }}
                                 </a>
                             </div>
                         </div>
@@ -197,7 +197,7 @@
                             <div class="custom-group-btn border">
                                 <div class="flex-sm-grow-1">
                                     <input type="number" value="{{ old('tax_rate') }}" required name="tax_rate"
-                                        min="0.001" step="0.001" max="100"
+                                        min="0" step="0.001" max="100"
                                         class="form-control h--45px border-0 pl-unset" placeholder="{{ translate('Ex: 5') }}">
                                 </div>
                                 <div class="flex-shrink-0">
@@ -258,7 +258,7 @@
                             <div class="custom-group-btn border">
                                 <div class="flex-sm-grow-1">
                                     <input type="number" name="tax_rate" id="tax_rate" required name="tax_rate"
-                                        min="0.001" step="0.001" max="100"
+                                        min="0" step="0.001" max="100"
                                         class="form-control h--45px border-0 pl-unset" placeholder="{{ translate('Ex: 5') }}">
                                 </div>
                                  <div class="flex-shrink-0">
@@ -389,7 +389,7 @@
                             </button>
                         </div>
                         <div class="collapse mt-3" id="collapseGeneralSetup_032">
-                            <div class="card rounded border p-3 card-body">                                
+                            <div class="card rounded border p-3 card-body">
                                 <div class="mb-3">
                                     <h6 class="mb-2 fs-12 color-656566">{{translate('Enabling tax in your system helps you:')}}</h6>
                                     <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
@@ -417,7 +417,7 @@
                             </button>
                         </div>
                         <div class="collapse mt-3" id="collapseGeneralSetup_033">
-                            <div class="card rounded border p-3 card-body">   
+                            <div class="card rounded border p-3 card-body">
                                 <div class="mb-3">
                                     <h6 class="mb-2 fs-12 color-656566">{{translate('Activate the Tax Status')}}</h6>
                                     <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
@@ -463,7 +463,7 @@
                             </button>
                         </div>
                         <div class="collapse mt-3" id="collapseGeneralSetup_044">
-                            <div class="card rounded border p-3 card-body">   
+                            <div class="card rounded border p-3 card-body">
                                 <div class="mb-3">
                                     <h6 class="mb-2 fs-12 color-656566">{{translate('Edit or Manage Existing Taxes')}}</h6>
                                     <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
@@ -473,7 +473,7 @@
                                         <li class="fs-12 color-656566">{{translate('Use the Export button to download a copy for backup or accounting records.')}}</li>
                                         <li class="fs-12 color-656566">{{translate('Toggle the Status on or off to quickly enable or disable a tax.')}}</li>
                                     </ul>
-                                </div>                                
+                                </div>
                             </div>
                         </div>
                     </div>

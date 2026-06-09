@@ -210,7 +210,7 @@
                                         </div>
                                         <div class="py-5 mt-4">
                                             <div class="info-text text-center">
-                                                Store will pay 15% commission to ConsMas from each order. You will get access of all the features and options  in store panel , app and interaction with user.
+                                                Store will pay 15% commission to 6amMart from each order. You will get access of all the features and options  in store panel , app and interaction with user.
                                             </div>
                                         </div>
                                         <div class="text-center">

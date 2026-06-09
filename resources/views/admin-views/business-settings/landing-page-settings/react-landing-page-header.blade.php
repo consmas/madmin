@@ -63,7 +63,7 @@
 
     <div class="tab-content">
         <div class="tab-pane fade show active">
-            <!-- <form action="{{ route('admin.business-settings.react-landing-page-settings', 'header-section') }}" method="POST" enctype="multipart/form-data">
+            <!-- <form action="{{ route('admin.business-settings.react-landing-page-settings-update', 'header-section') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <h5 class="card-title mb-3 mt-3">
                     <div class="d-flex justify-content-between align-items-center w-100">
@@ -229,7 +229,7 @@ if (isset($header_tag_line->translations) && count($header_tag_line->translation
                     <button type="submit"   class="btn btn--primary mb-2">{{translate('Save Information')}}</button>
                 </div>
             </form> -->
-            <form action="{{ route('admin.business-settings.react-landing-page-settings', 'header-section') }}"
+            <form action="{{ route('admin.business-settings.react-landing-page-settings-update', 'header-section') }}"
                 method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="card mb-20">
@@ -583,7 +583,7 @@ if (isset($header_tag_line->translations) && count($header_tag_line->translation
                                 {!! \App\CentralLogics\Helpers::highlightWords(text:$header_title?->value ?? 'Your Everyday $Needs$, Delivered $Fast$') !!}
                             </h2>
                             <p class="text-title fs-14 mb-xl-4 mb-lg-4 mb-3">
-                                {{ $header_sub_title?->value ?? 'Enter your address to enjoy fast delivery of groceries, food, medicine, parcels & more from your favorite local stores with ConsMas.' }}
+                                {{ $header_sub_title?->value ?? 'Enter your address to enjoy fast delivery of groceries, food, medicine, parcels & more from your favorite local stores with 6amMart.' }}
                             </p>
                             <p class="fs-20 text-dark mb-20">
                                 {{$header_tag_line?->value ?? 'Discover everything you need near you'}}

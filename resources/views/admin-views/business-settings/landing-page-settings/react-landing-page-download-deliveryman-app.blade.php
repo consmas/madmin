@@ -84,7 +84,7 @@
         </div>
 
         <div class="card mb-20">
-            <form class="custom-validation" action="{{ route('admin.business-settings.react-landing-page-settings', 'download-dm-app-section') }}"
+            <form class="custom-validation" action="{{ route('admin.business-settings.react-landing-page-settings-update', 'download-dm-app-section') }}"
                   method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="card-body">
@@ -378,7 +378,7 @@
                 @php($download_dm_app_links = \App\Models\DataSetting::where(['key'=>'download_dm_app_links','type'=>'react_landing_page'])->first())
                 @php($download_dm_app_links_data = isset($download_dm_app_links->value) ? json_decode($download_dm_app_links->value, true) : [])
                 <form
-                    action="{{ route('admin.business-settings.react-landing-page-settings', 'download-dm-app-button-section') }}"
+                    action="{{ route('admin.business-settings.react-landing-page-settings-update', 'download-dm-app-button-section') }}"
                     method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="card">
@@ -589,13 +589,10 @@
                                                         </span>
                                                         </label>
                                                     </div>
-                                                    <input type="url"
-                                                           {{(isset($download_dm_app_links_data['playstore_url_status']) && $download_dm_app_links_data['playstore_url_status'])?'required':''}}
-                                                           id="playstore_url"
-                                                           placeholder="{{translate('Ex: https://play.google.com/store/apps')}}"
-                                                           class="form-control h--45px"
-                                                           name="dm_playstore_url"
-                                                           value="{{ $download_dm_app_links_data['playstore_url'] ?? ''}}">
+                                                
+                                                            @include('admin-views.business-settings.landing-page-settings.partials._app-download-link-status', [
+                                                                'isConfigured' => \App\CentralLogics\Helpers::get_business_settings('app_url_android_deliveryman'),
+                                                            ])
                                                 </div>
                                             </div>
                                         </div>
@@ -640,13 +637,10 @@
                                                         </span>
                                                         </label>
                                                     </div>
-                                                    <input type="url"
-                                                           id="apple_store_url"
-                                                           {{(isset($download_dm_app_links_data['apple_store_url_status']) && $download_dm_app_links_data['apple_store_url_status'])?'required':''}}
-                                                           placeholder="{{translate('Ex: https://www.apple.com/app-store/')}}"
-                                                           class="form-control h--45px"
-                                                           name="dm_apple_store_url"
-                                                           value="{{ $download_dm_app_links_data['apple_store_url'] ?? ''}}">
+
+                                                            @include('admin-views.business-settings.landing-page-settings.partials._app-download-link-status', [
+                                                                'isConfigured' => \App\CentralLogics\Helpers::get_business_settings('app_url_ios_deliveryman'),
+                                                            ])
                                                 </div>
                                             </div>
                                         </div>
@@ -686,9 +680,9 @@
                 <div class="custom-offcanvas-body custom-offcanvas-body-100  p-20">
                     <section class="common-section-view p-xl-5 p-0 bg-white border rounded-10 my-xl-2 mx-xl-2">
                         <div
-                            class="common-section-inner bg-fafafa p-xxl-4 p-3 d-flex flex-xl-nowrap justify-content-lg-between justify-content-center flex-wrap align-items-center gap-x-xl-20">
+                            class="common-section-inner bg-fafafa p-xxl-4 p-3 d-flex flex-xl-nowrap justify-content-lg-between justify-content-center flex-wrap align-items-center gap-xxl-20">
                             <div
-                                class="d-flex align-items-center justify-content-xl-start justify-content-center flex-xl-nowrap flex-wrap gap-x-xl-20 max-w-650 mb-xxl-0 mb-3">
+                                class="d-flex align-items-center justify-content-xl-start justify-content-center flex-xl-nowrap flex-wrap gap-xxl-20 max-w-650 mb-xxl-0 mb-3">
                                 <div class="selling-thumb min-w-176px max-w-250">
                                     <img width="180"
                                          src="{{ $download_dm_app_image?->value
@@ -706,27 +700,27 @@
                                         </p>
                                     @else
                                         <p class="text-title fs-12 mb-xxl-4 mb-xl-3 mb-3">
-                                            {{$download_dm_app_sub_title?->value ?? 'Join ConsMas as a delivery partner and turn every ride into income. Work on your own schedule and get paid faster, every day'}}
+                                            {{$download_dm_app_sub_title?->value ?? 'Join 6amMart as a delivery partner and turn every ride into income. Work on your own schedule and get paid faster, every day'}}
                                         </p>
                                         <ul class="list-checked d-flex flex-column gap-1 mb-xxl-4 mb-xl-3 mb-3">
                                             <li class="d-flex fs-14 align-items-center gap-2 text-title fw-medium">
                                                 <img width="16" src="{{asset('public/assets/admin/img/icons/6check.png')}}"
                                                      alt="check" class="svg">
-                                                Choose your ride – car, bike, or bicycle
+                                                {{ translate('Choose your ride – car, bike, or bicycle') }}
                                             </li>
                                             <li class="d-flex fs-14 align-items-center gap-2 text-title fw-medium">
                                                 <img width="16" src="{{asset('public/assets/admin/img/icons/6check.png')}}"
                                                      alt="check" class="svg">
-                                                Flexible hours that fit your lifestyle
+                                                {{ translate('Flexible hours that fit your lifestyle') }}
                                             </li>
                                             <li class="d-flex fs-14 align-items-center gap-2 text-title fw-medium">
                                                 <img width="16" src="{{asset('public/assets/admin/img/icons/6check.png')}}"
                                                      alt="check" class="svg">
-                                                Instant payouts & bonus opportunities
+                                                {{ translate('Instant payouts & bonus opportunities') }}
                                             </li>
                                         </ul>
                                         <a href="#0" class="btn btn-primary-white base-bg-cmn fs-12 text-white fw-medium">
-                                            Start Earning <i class="tio-arrow-forward pl-1 text-white"></i>
+                                            {{ translate('Start Earning') }} <i class="tio-arrow-forward pl-1 text-white"></i>
                                         </a>
                                     @endif
 
@@ -755,8 +749,8 @@
                                                      src="{{ asset('/public/assets/admin/img/icons/playstore.png') }}"
                                                      alt="Google Play" class="mr-1">
                                                 <div class="text-left">
-                                                    <small class="d-block text-white mb-0 fs-12">GET IT ON</small>
-                                                    <strong class="d-block text-white fs-14">Google Play</strong>
+                                                    <small class="d-block text-white mb-0 fs-12">{{ translate('GET IT ON') }}</small>
+                                                    <strong class="d-block text-white fs-14">{{ translate('Google Play') }}</strong>
                                                 </div>
                                             </a>
                                             <a href="#"
@@ -765,8 +759,8 @@
                                                      src="{{ asset('/public/assets/admin/img/icons/apple-icon.png') }}"
                                                      alt="App Store" class="mr-1">
                                                 <div class="text-left">
-                                                    <small class="d-block text-white mb-0 fs-12">Download ON</small>
-                                                    <strong class="d-block text-white fs-14">App Store</strong>
+                                                    <small class="d-block text-white mb-0 fs-12">{{ translate('Download ON') }}</small>
+                                                    <strong class="d-block text-white fs-14">{{ translate('App Store') }}</strong>
                                                 </div>
                                             </a>
                                         </div>

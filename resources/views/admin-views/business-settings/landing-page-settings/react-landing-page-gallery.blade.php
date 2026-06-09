@@ -91,7 +91,7 @@
         </div>
 
         <div class="card mb-20">
-            <form action="{{ route('admin.business-settings.react-landing-page-settings', 'gallery-section') }}"
+            <form action="{{ route('admin.business-settings.react-landing-page-settings-update', 'gallery-section') }}"
                   method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="card-body">
@@ -327,7 +327,7 @@
                         @php($status = \App\Models\DataSetting::withoutGlobalScope('translate')->where('type', 'react_landing_page')->where('key', "gallery_image_{$i}_status")->first())
                         <div class="col-md-6">
                             <form class="custom-validation"
-                                  action="{{ route('admin.business-settings.react-landing-page-settings', 'gallery-section-images') }}"
+                                  action="{{ route('admin.business-settings.react-landing-page-settings-update', 'gallery-section-images') }}"
                                   method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" value="{{$i}}" name="gallery_tab">
@@ -449,7 +449,7 @@
                     <section class="common-section-view bg-white border rounded-10">
                         <div class="mb-4 text-center">
                             <h2 class="mb-lg-1 mb-1 fs-24">
-                                {!! Helpers::highlightWords($gallery_content_title?->value ?? 'See $ConsMas$ in Action') !!}
+                                {!! Helpers::highlightWords($gallery_content_title?->value ?? 'See $6amMart$ in Action') !!}
                             </h2>
                             <p class="text-title fs-14 m-0">
                                 {{$gallery_content_sub_title?->value ?? 'Explore how customers use our services, vendors grow their business'}}

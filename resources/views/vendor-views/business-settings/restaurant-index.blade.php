@@ -2,9 +2,14 @@
 
 @section('title', translate('messages.settings'))
 
+@push('css_or_js')
+<link rel="stylesheet" href="{{asset('public/assets/admin/css/custom.css')}}">
+
+@endpush
 
 
 @section('content')
+ 
     <div class="content container-fluid config-inline-remove-class">
         <!-- Page Heading -->
         <div class="page-header">
@@ -259,10 +264,10 @@
                                     class="input-label-secondary" data-toggle="tooltip" data-placement="right"
                                     data-original-title="{{ translate('Specify_the_minimum_order_amount_required_for_customers_when_ordering_from_this_store.') }}"><img
                                         src="{{ asset('/public/assets/admin/img/info-circle.svg') }}"
-                                        alt="{{ translate('messages.self_delivery_hint') }}"></span></label>
-                            <input type="number" id="minimum_order" name="minimum_order" step="0.01" min="0"
-                                max="999999999" class="form-control" placeholder="100"
-                                value="{{ $store->minimum_order > 0 ? $store->minimum_order : '' }}">
+                                        alt="{{ translate('messages.self_delivery_hint') }}"></span> <span class="text-danger">*</span></label>
+                            <input type="number" id="minimum_order" name="minimum_order" step="0.01" min="1"
+                                max="999999999" class="form-control" placeholder="100" required
+                                value="{{ $store->minimum_order > 0 ? $store->minimum_order : 0 }}">
                         </div>
                         @if (config('module.' . $store->module->module_type)['order_place_to_schedule_interval'])
                             <div class=" col-md-4">
@@ -283,7 +288,7 @@
                                     class="input-label-secondary" data-toggle="tooltip" data-placement="right"
                                     data-original-title="{{ translate('Set_the_total_time_to_deliver_products.') }}"><img
                                         src="{{ asset('/public/assets/admin/img/info-circle.svg') }}"
-                                        alt="{{ translate('Set_the_total_time_to_deliver_products.') }}"></span></label>
+                                        alt="{{ translate('Set_the_total_time_to_deliver_products.') }}"></span> <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <input type="number" id="minimum_delivery_time" name="minimum_delivery_time"
                                     class="form-control" placeholder="Min: 10"
@@ -344,25 +349,6 @@
                                     <input type="number" id="maximum_shipping_charge" name="maximum_shipping_charge"
                                         step="0.01" min="0" max="999999999" class="form-control"
                                         placeholder="10000" value="{{ $store->maximum_shipping_charge ?? '' }}">
-                                </div>
-                            </div>
-                        @endif
-
-                        @if ($store->module->module_type != 'food')
-                            <div class="col-sm-4 col-12">
-                                <div class="">
-                                    <label class="input-label text-capitalize"
-                                        for="minimum_stock_for_warning">{{ translate('messages.Minimum_stock_for_warning') }}
-                                        <span data-toggle="tooltip" data-placement="right"
-                                            data-original-title="{{ translate('When_the_stock_of_a_product_reaches_its_minimum_value_that_you_have_set,_you_will_receive_a_warning_to_update_the_stock._Additionally,_these_products_will_appear_in_the_Admin’s_Low_Stock_list.') }}"
-                                            class="input-label-secondary"><img
-                                                src="{{ asset('/public/assets/admin/img/info-circle.svg') }}"
-                                                alt="{{ translate('messages.Minimum_stock_for_warning') }}"></span>
-                                    </label>
-                                    <input type="number" id="minimum_stock_for_warning" name="minimum_stock_for_warning"
-                                        min="0" max="999999999" class="form-control"
-                                        placeholder="{{ translate('messages.Ex: 5') }}"
-                                        value="{{ $store?->storeConfig?->minimum_stock_for_warning ?? '' }}">
                                 </div>
                             </div>
                         @endif
@@ -434,6 +420,64 @@
                 </form>
             </div>
         </div>
+        @if ($store->module->module_type != 'food')
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <span class="card-header-icon">
+                            <i class="tio-apps"></i>
+                        </span>
+                        <span>{{ translate('messages.Stock_Setup') }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('vendor.business-settings.update-stock-setup', [$store['id']]) }}" method="post">
+                        @csrf
+                        <div class="row align-items-end g-3">
+                            <div class="col-md-4">
+                                <div class="">
+                                    <label class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control"
+                                        for="show_low_stock_count">
+                                        <span class="pr-2">{{ translate('messages.Show_Low_Stock_Count') }}
+                                            <span class="form-label-secondary" data-toggle="tooltip" data-placement="right"
+                                                data-original-title="{{ translate('messages.If_enabled_low_stock_count_and_warning_products_will_be_visible_to_customer.') }}"><img
+                                                    src="{{ asset('/public/assets/admin/img/info-circle.svg') }}"
+                                                    alt="{{ translate('messages.Show_Low_Stock_Count') }}"></span>
+                                        </span>
+                                        <input type="checkbox" class="toggle-switch-input" name="show_low_stock_count"
+                                            id="show_low_stock_count" value="1"
+                                            {{ ($store?->storeConfig?->show_low_stock_count == 1) ? 'checked' : '' }}>
+                                        <span class="toggle-switch-label">
+                                            <span class="toggle-switch-indicator"></span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="input-label text-capitalize"
+                                    for="minimum_stock_for_warning_stock_card">{{ translate('messages.Minimum_stock_for_warning') }}
+                                    <span data-toggle="tooltip" data-placement="right"
+                                        data-original-title="{{ translate('When_the_stock_of_a_product_reaches_its_minimum_value_that_you_have_set,_you_will_receive_a_warning_to_update_the_stock._Additionally,_these_products_will_appear_in_the_Admin’s_Low_Stock_list.') }}"
+                                        class="input-label-secondary"><img
+                                            src="{{ asset('/public/assets/admin/img/info-circle.svg') }}"
+                                            alt="{{ translate('messages.Minimum_stock_for_warning') }}"></span>
+                                </label>
+                                <input type="number" id="minimum_stock_for_warning_stock_card" name="minimum_stock_for_warning"
+                                    min="0" max="999999999" class="form-control"
+                                    placeholder="{{ translate('messages.Ex: 5') }}"
+                                    value="{{ $store?->storeConfig?->minimum_stock_for_warning ?? '' }}">
+                            </div>
+                            <div class="col-12">
+                                <div class="btn--container mt-3 justify-content-end">
+                                    <button type="reset" class="btn btn--reset">{{ translate('messages.reset') }}</button>
+                                    <button type="submit" class="btn btn--primary">{{ translate('messages.update') }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
         <div class="card mb-3">
             <div class="card-header">
                 <h5 class="card-title">
@@ -450,176 +494,7 @@
                 <form action="{{ route('vendor.business-settings.update-meta-data', [$store['id']]) }}" method="post"
                     enctype="multipart/form-data" class="col-12">
                     @csrf
-                    <div class="row g-2">
-                        <div class="col-lg-6">
-                            <div class="card shadow--card-2">
-                                <div class="card-body">
-                                    @if ($language)
-                                        <ul class="nav nav-tabs mb-4">
-                                            <li class="nav-item">
-                                                <a class="nav-link lang_link active" href="#"
-                                                    id="default-link">{{ translate('Default') }}</a>
-                                            </li>
-                                            @foreach (json_decode($language) as $lang)
-                                                <li class="nav-item">
-                                                    <a class="nav-link lang_link" href="#"
-                                                        id="{{ $lang }}-link">{{ \App\CentralLogics\Helpers::get_language_name($lang) . '(' . strtoupper($lang) . ')' }}</a>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    @endif
-                                    @if ($language)
-                                        <div class="lang_form" id="default-form">
-                                            <div class=" ">
-                                                <label class="input-label"
-                                                    for="default_title">{{ translate('messages.meta_title') }}
-                                                    ({{ translate('messages.Default') }})
-                                                    <span class="form-label-secondary" data-toggle="tooltip"
-                                                        data-placement="right"
-                                                        data-original-title="{{ translate('This title appears in browser tabs, search results, and link previews.Use a short, clear, and keyword-focused title (recommended: 50–60 characters)') }}">
-                                                        <img src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
-                                                            alt="">
-                                                    </span>
-                                                </label>
-                                                <input type="text" name="meta_title[]" id="default_title"
-                                                    class="form-control" maxlength="60"
-                                                    placeholder="{{ translate('messages.meta_title') }}"
-                                                    value="{{ $store->getRawOriginal('meta_title') }}">
-                                            </div>
-                                            <input type="hidden" name="lang[]" value="default">
-                                            <div class="mt-2">
-                                                <label class="input-label"
-                                                    for="meta_description">{{ translate('messages.meta_description') }}
-                                                    ({{ translate('messages.default') }})
-                                                    <span class="form-label-secondary" data-toggle="tooltip"
-                                                        data-placement="right"
-                                                        data-original-title="{{ translate('A brief summary that appears under your page title in search results.Keep it compelling and relevant (recommended: 120–160 characters)') }}">
-                                                        <img src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
-                                                            alt="">
-                                                    </span>
-                                                </label>
-                                                <textarea type="text" maxlength="160" id="meta_description" name="meta_description[]"
-                                                    placeholder="{{ translate('messages.meta_description') }}" class="form-control min-h-90px ckeditor">{{ $store->getRawOriginal('meta_description') }}</textarea>
-                                            </div>
-                                        </div>
-                                        @foreach (json_decode($language) as $lang)
-                                            <?php
-                                            if (count($store['translations'])) {
-                                                $translate = [];
-                                                foreach ($store['translations'] as $t) {
-                                                    if ($t->locale == $lang && $t->key == 'meta_title') {
-                                                        $translate[$lang]['meta_title'] = $t->value;
-                                                    }
-                                                    if ($t->locale == $lang && $t->key == 'meta_description') {
-                                                        $translate[$lang]['meta_description'] = $t->value;
-                                                    }
-                                                }
-                                            }
-                                            ?>
-                                            <div class="d-none lang_form" id="{{ $lang }}-form">
-                                                <div class=" ">
-                                                    <label class="input-label"
-                                                        for="{{ $lang }}_title">{{ translate('messages.meta_title') }}
-                                                        ({{ strtoupper($lang) }})
-                                                        <span class="form-label-secondary" data-toggle="tooltip"
-                                                            data-placement="right"
-                                                            data-original-title="{{ translate('This title appears in browser tabs, search results, and link previews.Use a short, clear, and keyword-focused title (recommended: 50–60 characters)') }}">
-                                                            <img src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
-                                                                alt="">
-                                                        </span>
-                                                    </label>
-                                                    <input type="text" name="meta_title[]" maxlength="60"
-                                                        id="{{ $lang }}_title" class="form-control"
-                                                        value="{{ $translate[$lang]['meta_title'] ?? '' }}"
-                                                        placeholder="{{ translate('messages.meta_title') }}">
-                                                </div>
-                                                <input type="hidden" name="lang[]" value="{{ $lang }}">
-                                                <div class="mt-2">
-                                                    <label class="input-label"
-                                                        for="meta_description{{ $lang }}">{{ translate('messages.meta_description') }}
-                                                        ({{ strtoupper($lang) }})
-                                                        <span class="form-label-secondary" data-toggle="tooltip"
-                                                            data-placement="right"
-                                                            data-original-title="{{ translate('A brief summary that appears under your page title in search results.Keep it compelling and relevant (recommended: 120–160 characters)') }}">
-                                                            <img src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
-                                                                alt="">
-                                                        </span>
-                                                    </label>
-                                                    <textarea maxlength="160" id="meta_description{{ $lang }}" type="text" name="meta_description[]"
-                                                        placeholder="{{ translate('messages.meta_description') }}" class="form-control min-h-90px ckeditor">{{ $translate[$lang]['meta_description'] ?? '' }}</textarea>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    @else
-                                        <div id="default-form">
-                                            <div class=" ">
-                                                <label class="input-label"
-                                                    for="meta_title">{{ translate('messages.meta_title') }}
-                                                    ({{ translate('messages.default') }})</label>
-                                                <input type="text" id="meta_title" name="meta_title[]"
-                                                    class="form-control"
-                                                    placeholder="{{ translate('messages.meta_title') }}">
-                                            </div>
-                                            <input type="hidden" name="lang[]" value="default">
-                                            <div class="">
-                                                <label class="input-label"
-                                                    for="meta_description">{{ translate('messages.meta_description') }}
-                                                </label>
-                                                <textarea type="text" id="meta_description" name="meta_description[]"
-                                                    placeholder="{{ translate('messages.meta_description') }}" class="form-control min-h-90px ckeditor"></textarea>
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="card shadow--card-2">
-                                <div class="card-header">
-                                    <h5 class="card-title">
-                                        <span class="card-header-icon mr-1"><i class="tio-dashboard"></i></span>
-                                        <span>{{ translate('store_meta_image') }}</span>
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-center flex-wrap flex-sm-nowrap __gap-12px">
-                                        <label class="__custom-upload-img mr-lg-5">
-                                            <label class="form-label">
-                                                {{ translate('meta_image') }} <span
-                                                    class="text--primary">({{ translate('2:1') }})</span>
-                                                <span class="form-label-secondary" data-toggle="tooltip"
-                                                    data-placement="right"
-                                                    data-original-title="{{ translate('This image is used as a preview thumbnail when the page link is shared on social media or messaging platforms.') }}">
-                                                    <img src="{{ asset('public/assets/admin/img/info-circle.svg') }}"
-                                                        alt="">
-                                                </span>
-                                            </label>
-                                            <div class="text-center">
-                                                <img class="img--110 min-height-170px min-width-170px onerror-image"
-                                                    id="viewer"
-                                                    data-onerror-image="{{ asset('public/assets/admin/img/upload.png') }}"
-                                                    src="{{ $store->meta_image_full_url }}"
-                                                    alt="{{ translate('meta_image') }}" />
-                                            </div>
-                                            <input type="file" name="meta_image" id="customFileEg1"
-                                                class="custom-file-input"
-                                                accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                        </label>
-                                    </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="text-center">
-                                            <small>{{ translate('Upload a rectangular image (recommended size: 800×400 px, format: JPG or PNG)') }}</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="justify-content-end btn--container">
-                                <button type="submit" class="btn btn--primary">{{ translate('save_changes') }}</button>
-                            </div>
-                        </div>
-                    </div>
+                    @include('admin-views.business-settings.landing-page-settings.partial._meta_data', ['submit' => true])
                 </form>
             </div>
         </div>
@@ -683,6 +558,7 @@
 @endsection
 
 @push('script_2')
+
     <script>
         "use strict";
 
@@ -800,6 +676,10 @@
                 } else {
                     $('#gst').attr('readonly', true);
                 }
+            });
+
+            $("#show_low_stock_count").on('change', function() {
+                // Low stock count visibility is separate from warning threshold.
             });
         });
 

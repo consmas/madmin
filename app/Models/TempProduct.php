@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\CentralLogics\Helpers;
+use App\Traits\HasProductVideoPreview;
 use App\Scopes\ZoneScope;
 use App\Scopes\StoreScope;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Modules\TaxModule\Entities\Taxable;
 
 class TempProduct extends Model
 {
-    use HasFactory;
+    use HasFactory, HasProductVideoPreview;
     protected $casts = [
         'tax' => 'float',
         'price' => 'float',
@@ -36,7 +37,7 @@ class TempProduct extends Model
         'stock'=>'integer',
     ];
     protected $guarded = ['id'];
-    protected $appends = ['image_full_url','images_full_url'];
+    protected $appends = ['image_full_url','images_full_url', 'video_full_url', 'video_size', 'video_preview_type', 'video_embed_url', 'video_preview_url', 'video_thumbnail_url', 'video_preview_modal_type', 'video_preview_modal_url', 'has_video_preview', 'has_video_source'];
     public function getImageFullUrlAttribute(){
         $value = $this->image;
         if (count($this->storage) > 0) {
@@ -182,11 +183,28 @@ class TempProduct extends Model
                     'updated_at' => now(),
                 ]);
             }
+            if($model->isDirty('video')){
+                $value = Helpers::getDisk();
+
+                DB::table('storages')->updateOrInsert([
+                    'data_type' => get_class($model),
+                    'data_id' => $model->id,
+                    'key' => 'video',
+                ], [
+                    'value' => $value,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         });
 
     }
        public function taxVats()
     {
         return $this->morphMany(Taxable::class, 'taxable');
+    }
+
+    public function seoData(){
+        return $this->hasOne(ItemSeoData::class,'temp_item_id');
     }
 }

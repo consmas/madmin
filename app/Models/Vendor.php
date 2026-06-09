@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Store;
+use App\Traits\DemoMaskable;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 
 class Vendor extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, DemoMaskable;
 
     protected $guarded = ['id'];
 

@@ -84,6 +84,11 @@ enum Zone
         VIEW => ''
     ];
 
+    const GET_ZONE = [
+        URI => 'zone/get-zone',
+        VIEW => ''
+    ];
+
     const GET_ALL_ZONE_COORDINATES = [
         URI => 'get-all-zone-coordinates',
         VIEW => ''

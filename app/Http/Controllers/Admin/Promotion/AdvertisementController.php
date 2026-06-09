@@ -215,7 +215,7 @@ class AdvertisementController extends Controller
             }
 
             if(Helpers::getNotificationStatusData('store','store_advertisement_create_by_admin','mail_status',$advertisement?->store?->id) &&  config('mail.status') && Helpers::get_mail_status('advertisement_create_mail_status_store') == '1'){
-                Mail::to($advertisement?->store?->email)->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,'advertisement_create' ,$advertisement->id));
+                Mail::to($advertisement?->store?->getRawOriginal('email'))->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,'advertisement_create' ,$advertisement->id));
             }
         } catch (\Throwable $th) {
         }
@@ -359,22 +359,22 @@ class AdvertisementController extends Controller
 
 
                 if(Helpers::getNotificationStatusData('store','store_advertisement_approval','mail_status',$advertisement?->store?->id) &&  $email_type == 'advertisement_approved' &&  Helpers::get_mail_status('advertisement_approved_mail_status_store') == '1'){
-                    Mail::to($advertisement?->store?->email)->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,$email_type ,$advertisement->id));
+                    Mail::to($advertisement?->store?->getRawOriginal('email'))->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,$email_type ,$advertisement->id));
                 }
 
 
                 if(Helpers::getNotificationStatusData('store','store_advertisement_pause','mail_status',$advertisement?->store?->id)  &&  $email_type == 'advertisement_pause' &&  Helpers::get_mail_status('advertisement_pause_mail_status_store') == '1'){
-                    Mail::to($advertisement?->store?->email)->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,$email_type ,$advertisement->id));
+                    Mail::to($advertisement?->store?->getRawOriginal('email'))->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,$email_type ,$advertisement->id));
                 }
 
 
                 if(Helpers::getNotificationStatusData('store','store_advertisement_deny','mail_status',$advertisement?->store?->id)  &&  $email_type == 'advertisement_deny' &&  Helpers::get_mail_status('advertisement_deny_mail_status_store') == '1'){
-                    Mail::to($advertisement?->store?->email)->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,$email_type ,$advertisement->id));
+                    Mail::to($advertisement?->store?->getRawOriginal('email'))->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,$email_type ,$advertisement->id));
                 }
 
 
                 if(Helpers::getNotificationStatusData('store','store_advertisement_resume','mail_status',$advertisement?->store?->id)  &&  $email_type == 'advertisement_resume' &&  Helpers::get_mail_status('advertisement_resume_mail_status_store') == '1'){
-                    Mail::to($advertisement?->store?->email)->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,$email_type ,$advertisement->id));
+                    Mail::to($advertisement?->store?->getRawOriginal('email'))->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,$email_type ,$advertisement->id));
                 }
             }
         } catch (\Throwable $th) {
@@ -569,7 +569,7 @@ class AdvertisementController extends Controller
 
 
                 if( Helpers::getNotificationStatusData('store','store_advertisement_approval','mail_status' ,$advertisement?->store?->id)  && config('mail.status') && Helpers::get_mail_status('advertisement_approved_mail_status_store') == '1' && $request?->request_page_type){
-                    Mail::to($advertisement?->store?->email)->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,'advertisement_approved' ,$advertisement->id));
+                    Mail::to($advertisement?->store?->getRawOriginal('email'))->send(new \App\Mail\AdversitementStatusMail($advertisement?->store?->name,'advertisement_approved' ,$advertisement->id));
             }
         } catch (\Throwable $th) {
             //throw $th;
@@ -701,7 +701,7 @@ class AdvertisementController extends Controller
                 }
 
                 if(Helpers::getNotificationStatusData('store','store_advertisement_create_by_admin','mail_status',$newAdvertisement?->store?->id ) && config('mail.status') && Helpers::get_mail_status('advertisement_create_mail_status_store') == '1'){
-                    Mail::to($newAdvertisement?->store?->email)->send(new \App\Mail\AdversitementStatusMail($newAdvertisement?->store?->name,'advertisement_create' ,$newAdvertisement->id));
+                    Mail::to($newAdvertisement?->store?->getRawOriginal('email'))->send(new \App\Mail\AdversitementStatusMail($newAdvertisement?->store?->name,'advertisement_create' ,$newAdvertisement->id));
             }
             } catch (\Throwable $th) {
                 //throw $th;

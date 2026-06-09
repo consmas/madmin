@@ -182,7 +182,7 @@
                <section class="common-section-view bg-white border rounded-10 my-xl-3 mx-xl-3">
                     <div class="common-section-inner highlight-gradient rounded-20 py-sm-4 py-3 px-xxl-5 px-xl-3 px-sm-3 px-3">
                         <div class="d-flex align-items-center gap-3 flex-wrap justify-content-xl-between justify-content-center text-xl-start text-center flex-xl-nowrap">
-                            <div class="d-flex gap-x-xl-20 align-items-center flex-xl-nowrap flex-wrap">
+                            <div class="d-flex gap-xxl-20 align-items-center flex-xl-nowrap flex-wrap">
                                 <div class="w-100px min-w-100px h-100px d-center mb-xl-0 mb-2 mx-auto">
                                     <img src="{{ asset('/public/assets/admin/img/400x400/high-light-car.png') }}" alt="" class="object-contain">
                                 </div>
@@ -191,7 +191,7 @@
                                         Ride Anytime, Anywhere
                                     </h2>
                                     <p class="fs-12 m-0 text-white">
-                                        ConsMas makes it easy to rent vehicles quickly and affordably.
+                                        6amMart makes it easy to rent vehicles quickly and affordably.
                                     </p>
                                 </div>
                             </div>

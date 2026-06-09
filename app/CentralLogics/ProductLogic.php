@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\PriorityList;
 use App\Models\FlashSaleItem;
 use App\Models\BusinessSetting;
+use Illuminate\Support\Facades\DB;
 
 
 class ProductLogic
@@ -36,6 +37,7 @@ class ProductLogic
         $latest_items_sort_by_general =PriorityList::where('name', 'latest_items_sort_by_general')->where('type','general')->first()?->value ?? '';
         $latest_items_sort_by_unavailable =PriorityList::where('name', 'latest_items_sort_by_unavailable')->where('type','unavailable')->first()?->value ?? '';
         $latest_items_sort_by_temp_closed =PriorityList::where('name', 'latest_items_sort_by_temp_closed')->where('type','temp_closed')->first()?->value ?? '';
+        $zones = !empty($zone_id) ? json_decode($zone_id, true) : null;
 
 
         if($category_id != 0){
@@ -54,15 +56,21 @@ class ProductLogic
         ->when(isset($product_id), function($q)use($product_id){
             $q->where('id', '!=', $product_id);
         })
-        ->whereHas('module.zones', function($query)use($zone_id){
-            $query->whereIn('zones.id', json_decode($zone_id, true));
-        })
-        ->whereHas('store', function($query)use($zone_id){
-            $query->when(config('module.current_module_data'), function($query){
-                $query->where('module_id', config('module.current_module_data')['id'])->whereHas('zone.modules',function($query){
-                    $query->where('modules.id', config('module.current_module_data')['id']);
+
+        ->when(empty($store_id), function ($q) use ($zones) {
+                $q->whereHas('store', function ($query) use ($zones) {
+
+                    $query->when(config('module.current_module_data'), function ($query) {
+                        $query->where('module_id', config('module.current_module_data')['id'])
+                            ->whereHas('zone.modules', function ($query) {
+                                $query->where('modules.id', config('module.current_module_data')['id']);
+                            });
+                    });
+
+                    $query->when(!empty($zones), function ($query) use ($zones) {
+                        $query->whereIn('zone_id', $zones);
+                    });
                 });
-            })->whereIn('zone_id', json_decode($zone_id, true));
         })
         ->when($min && $max, function($query)use($min,$max){
             $query->whereBetween('price',[$min,$max]);
@@ -152,16 +160,29 @@ class ProductLogic
         ->when(isset($product_id), function($q)use($product_id){
             $q->where('id', '!=', $product_id);
         })
-        ->whereHas('module.zones', function($query)use($zone_id){
-            $query->whereIn('zones.id', json_decode($zone_id, true));
-        })
-        ->whereHas('store', function($query)use($zone_id){
-            $query->when(config('module.current_module_data'), function($query){
-                $query->where('module_id', config('module.current_module_data')['id'])->whereHas('zone.modules',function($query){
-                    $query->where('modules.id', config('module.current_module_data')['id']);
+            ->when(empty($store_id), function ($q) use ($zones) {
+
+                $q->when(!empty($zones), function ($q) use ($zones) {
+                    $q->whereHas('module.zones', function ($query) use ($zones) {
+                        $query->whereIn('zones.id', $zones);
+                    });
                 });
-            })->whereIn('zone_id', json_decode($zone_id, true));
-        })
+
+                $q->whereHas('store', function ($query) use ($zones) {
+
+                    $query->when(config('module.current_module_data'), function ($query) {
+                        $query->where('module_id', config('module.current_module_data')['id'])
+                            ->whereHas('zone.modules', function ($query) {
+                                $query->where('modules.id', config('module.current_module_data')['id']);
+                            });
+                    });
+
+                    $query->when(!empty($zones), function ($query) use ($zones) {
+                        $query->whereIn('zone_id', $zones);
+                    });
+                });
+            })
+
         ->when($min && $max, function($query)use($min,$max){
             $query->whereBetween('price',[$min,$max]);
         })
@@ -229,12 +250,27 @@ class ProductLogic
         ->whereIn('id',$item_categories)
         ->orderBy('priority','desc')->get();
 
+
+        $prices = Item::active()
+            ->when(is_numeric($store_id), fn($q) => $q->where('store_id', $store_id))
+            ->when(!is_numeric($store_id), fn($q) =>
+                $q->whereHas('store', fn($q2) => $q2->where('slug', $store_id))
+            )
+            ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
+            ->first();
+
+        $min_price = $prices->min_price;
+        $max_price = $prices->max_price;
+
+
         return [
             'total_size' => $paginator->total(),
             'limit' => $limit,
             'offset' => $offset,
             'products' => $paginator->items(),
-            'categories'=>$categories
+            'categories'=>$categories,
+            'min_price' => $min_price,
+            'max_price' => $max_price
         ];
     }
 
@@ -414,62 +450,123 @@ class ProductLogic
         ->get();
     }
 
-    public static function recommended_items($zone_id,$store_id=null,$limit = null, $offset = null, $type='all', $filter='all')
-    {
-        $data =[];
-        if($limit != null && $offset != null)
-        {
-            $paginator = Item::
-            when(isset($store_id), function($q)use($store_id){
+    // public static function recommended_items($zone_id,$store_id=null,$limit = null, $offset = null, $type='all', $filter='all')
+    // {
+    //     $data =[];
+    //     if($limit != null && $offset != null)
+    //     {
+    //         $paginator = Item::
+    //         when(isset($store_id), function($q)use($store_id){
+    //             $q->where('store_id', $store_id);
+    //         })
+    //         ->whereHas('store', function($query)use($zone_id){
+    //             $query->when(config('module.current_module_data'), function($query){
+    //                 $query->where('module_id', config('module.current_module_data')['id'])->whereHas('zone.modules',function($query){
+    //                     $query->where('modules.id', config('module.current_module_data')['id']);
+    //                 });
+    //             })->whereIn('zone_id', json_decode($zone_id, true));
+    //         })->active()->type($type)->Recommended()
+    //         ->when($filter == 'new_arrival',function ($qurey){
+    //             $qurey->latest();
+    //         })
+    //         ->when($filter == 'top_rated',function ($qurey){
+    //             $qurey->withCount('reviews')->orderBy('reviews_count','desc');
+    //         })
+    //         ->when($filter == 'best_selling',function ($qurey){
+    //             $qurey->popular();
+    //         })
+    //         ->paginate($limit, ['*'], 'page', $offset);
+    //             $data = $paginator->items();
+    //     }
+    //     else{
+    //         $paginator = Item::when(isset($store_id), function($q)use($store_id){
+    //             $q->where('store_id', $store_id);
+    //         })
+    //         ->active()
+    //         ->type($type)
+    //         ->whereHas('store', function($query)use($zone_id){
+    //             $query->when(config('module.current_module_data'), function($query){
+    //                 $query->where('module_id', config('module.current_module_data')['id'])->whereHas('zone.modules',function($query){
+    //                     $query->where('modules.id', config('module.current_module_data')['id']);
+    //                 });
+    //             })->whereIn('zone_id', json_decode($zone_id, true));
+    //         })
+    //         ->Recommended()
+    //         ->when($filter == 'new_arrival',function ($qurey){
+    //             $qurey->latest();
+    //         })
+    //         ->when($filter == 'top_rated',function ($qurey){
+    //             $qurey->withCount('reviews')->orderBy('reviews_count','desc');
+    //         })
+    //         ->when($filter == 'best_selling',function ($qurey){
+    //             $qurey->popular();
+    //         })
+    //         ->limit(50)->get();
+    //         $data =$paginator;
+    //     }
+
+    //     return [
+    //         'total_size' => $paginator->count(),
+    //         'limit' => $limit,
+    //         'offset' => $offset,
+    //         'items' => $data
+    //     ];
+    // }
+
+
+    public static function recommended_items(
+        $zone_id,
+        $store_id = null,
+        $limit = null,
+        $offset = null,
+        $type = 'all',
+        $filter = 'all'
+    ) {
+        $zones = !empty($zone_id) ? json_decode($zone_id, true) : null;
+
+        $query = Item::query()
+            ->when(isset($store_id), function ($q) use ($store_id) {
                 $q->where('store_id', $store_id);
             })
-            ->whereHas('store', function($query)use($zone_id){
-                $query->when(config('module.current_module_data'), function($query){
-                    $query->where('module_id', config('module.current_module_data')['id'])->whereHas('zone.modules',function($query){
-                        $query->where('modules.id', config('module.current_module_data')['id']);
+
+            ->when(empty($store_id), function ($q) use ($zones) {
+                $q->whereHas('store', function ($query) use ($zones) {
+
+                    $query->when(config('module.current_module_data'), function ($query) {
+                        $query->where('module_id', config('module.current_module_data')['id'])
+                            ->whereHas('zone.modules', function ($query) {
+                                $query->where('modules.id', config('module.current_module_data')['id']);
+                            });
                     });
-                })->whereIn('zone_id', json_decode($zone_id, true));
-            })->active()->type($type)->Recommended()
-            ->when($filter == 'new_arrival',function ($qurey){
-                $qurey->latest();
-            })
-            ->when($filter == 'top_rated',function ($qurey){
-                $qurey->withCount('reviews')->orderBy('reviews_count','desc');
-            })
-            ->when($filter == 'best_selling',function ($qurey){
-                $qurey->popular();
-            })
-            ->paginate($limit, ['*'], 'page', $offset);
-                $data = $paginator->items();
-        }
-        else{
-            $paginator = Item::when(isset($store_id), function($q)use($store_id){
-                $q->where('store_id', $store_id);
-            })->active()->type($type)->whereHas('store', function($query)use($zone_id){
-                $query->when(config('module.current_module_data'), function($query){
-                    $query->where('module_id', config('module.current_module_data')['id'])->whereHas('zone.modules',function($query){
-                        $query->where('modules.id', config('module.current_module_data')['id']);
+
+                    $query->when(!empty($zones), function ($query) use ($zones) {
+                        $query->whereIn('zone_id', $zones);
                     });
-                })->whereIn('zone_id', json_decode($zone_id, true));
-            })->Recommended()
-            ->when($filter == 'new_arrival',function ($qurey){
-                $qurey->latest();
+                });
             })
-            ->when($filter == 'new_arrival',function ($qurey){
-                $qurey->withCount('reviews')->orderBy('reviews_count','desc');
-            })
-            ->when($filter == 'best_selling',function ($qurey){
-                $qurey->popular();
-            })
-            ->limit(50)->get();
-            $data =$paginator;
+
+            ->active()
+            ->type($type)
+            ->Recommended()
+
+            ->when($filter === 'new_arrival', fn($q) => $q->latest())
+            ->when($filter === 'top_rated', fn($q) => $q->withCount('reviews')->orderBy('reviews_count', 'desc'))
+            ->when($filter === 'best_selling', fn($q) => $q->popular());
+
+        if ($limit !== null && $offset !== null) {
+            $paginator = $query->paginate($limit, ['*'], 'page', $offset);
+            $items = $paginator->items();
+            $total = $paginator->total();
+        } else {
+            $items = $query->limit(50)->get();
+            $total = $items->count();
         }
 
         return [
-            'total_size' => $paginator->count(),
+            'total_size' => $total,
             'limit' => $limit,
             'offset' => $offset,
-            'items' => $data
+            'items' => $items
         ];
     }
 
@@ -566,7 +663,7 @@ class ProductLogic
         if ($filter && in_array('most_loved', $filter)) {
             $withCount[] = 'whislists';
         }
-      
+
 
         $query = Item::with('store')->
             whereHas('store', function($query)use($zone_id){
@@ -618,6 +715,122 @@ class ProductLogic
                 'categories' => self::getCategoryData($query),
             ];
 
+    }
+
+    public static function top_rated_products($zone_id, $limit = 25, $offset = 1, $type = 'all', $category_ids = null, $filter = null, $min = 0, $max = false, $rating_count = null, $search = null)
+    {
+        $category_ids = isset($category_ids) ? (is_array($category_ids) ? $category_ids : json_decode($category_ids)) : [];
+        $best_reviewed_item_default_status = Helpers::get_business_settings('best_reviewed_item_default_status') ?? 1;
+        $best_reviewed_item_sort_by_general = Helpers::getPriorityList(name: 'best_reviewed_item_sort_by_general', type: 'general');
+        $best_reviewed_item_sort_by_unavailable = Helpers::getPriorityList(name: 'best_reviewed_item_sort_by_unavailable', type: 'unavailable');
+        $best_reviewed_item_sort_by_temp_closed = Helpers::getPriorityList(name: 'best_reviewed_item_sort_by_temp_closed', type: 'temp_closed');
+
+        $withCount = ['reviews'];
+        if ($filter && in_array('most_loved', $filter)) {
+            $withCount[] = 'whislists';
+        }
+
+        $query = Item::with('store')
+            ->whereHas('store', function($query)use($zone_id){
+                $query->whereIn('zone_id', json_decode($zone_id, true));
+            })
+            ->when(config('module.current_module_data'), function($query){
+                $query->where('module_id', config('module.current_module_data')['id']);
+            })
+            ->select(['items.*'])
+            ->selectSub(function ($subQuery) {
+                $subQuery->selectRaw('active as temp_available')
+                    ->from('stores')
+                    ->whereColumn('stores.id', 'items.store_id');
+            }, 'temp_available')
+            ->active()->type($type)
+            ->where('avg_rating', '>', 0);
+
+        $query = self::filterQurey($query, $filter, $min ?? 0, $max, $category_ids, $rating_count, $withCount, $search);
+
+        if ($best_reviewed_item_default_status == '1'){
+            $query = $query->orderByDesc('avg_rating')->orderByDesc('rating_count')->orderByDesc('reviews_count');
+        } else {
+            if(config('module.current_module_data')['module_type']  !== 'food'){
+                $query = match ($best_reviewed_item_sort_by_unavailable) {
+                    'remove' => $query->where('stock', '>', 0),
+                    'last' => $query->orderByRaw('CASE WHEN stock = 0 THEN 1 ELSE 0 END'),
+                    default => $query,
+                };
+            }
+
+            $query = match ($best_reviewed_item_sort_by_temp_closed) {
+                'remove' => $query->having('temp_available', '>', 0),
+                'last' => $query->orderByDesc('temp_available'),
+                default => $query,
+            };
+
+            $query = match ($best_reviewed_item_sort_by_general) {
+                'review_count' => $query->orderByDesc('reviews_count'),
+                'order_count' => $query->orderByDesc('order_count'),
+                'a_to_z' => $query->orderBy('name'),
+                'z_to_a' => $query->orderByDesc('name'),
+                'latest_created' => $query->latest(),
+                'first_created' => $query->oldest(),
+                'rating' => $query->orderByDesc('avg_rating')->orderByDesc('rating_count'),
+                default => $query->orderByDesc('avg_rating')->orderByDesc('rating_count'),
+            };
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $offset);
+        return [
+            'total_size' => $paginator->total(),
+            'limit' => $limit,
+            'offset' => $offset,
+            'products' => $paginator->items(),
+            'categories' => self::getCategoryData($query),
+        ];
+    }
+
+    public static function recently_viewed_products($zone_id, $limit = 25, $offset = 1, $type = 'all', $category_ids = null, $filter = null, $min = 0, $max = false, $rating_count = null, $search = null)
+    {
+        $category_ids = isset($category_ids) ? (is_array($category_ids) ? $category_ids : json_decode($category_ids)) : [];
+        $withCount = [];
+
+        if ($filter && in_array('top_rated', $filter)) {
+            $withCount[] = 'reviews';
+        }
+        if ($filter && in_array('most_loved', $filter)) {
+            $withCount[] = 'whislists';
+        }
+
+        $visitorLogQuery = DB::table('visitor_logs')
+            ->selectRaw('visitor_log_id, SUM(visit_count) as total_view_count')
+            ->where('visitor_log_type', Item::class)
+            ->groupBy('visitor_log_id');
+
+        $query = Item::with('store')
+            ->joinSub($visitorLogQuery, 'visitor_log_summary', function ($join) {
+                $join->on('visitor_log_summary.visitor_log_id', '=', 'items.id');
+            })
+            ->whereHas('store', function($query)use($zone_id){
+                $query->whereIn('zone_id', json_decode($zone_id, true));
+            })
+            ->when(config('module.current_module_data'), function($query){
+                $query->where('items.module_id', config('module.current_module_data')['id']);
+            })
+            ->select(['items.*'])
+            ->selectRaw('COALESCE(visitor_log_summary.total_view_count, 0) as total_view_count')
+            ->active()
+            ->type($type);
+
+        $query = self::filterQurey($query, $filter, $min ?? 0, $max, $category_ids, $rating_count, $withCount, $search);
+        $query = $query->orderByDesc('total_view_count')->latest('items.created_at');
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $offset);
+
+        return [
+            'total_size' => $paginator->total(),
+            'limit' => $limit,
+            'offset' => $offset,
+            'products' => $paginator->items(),
+            'categories' => self::getCategoryData($query),
+        ];
     }
 
     public static function discounted_products($zone_id, $limit = 25, $offset = 1, $type = 'all', $category_ids = null, $filter = null,$min=0, $max=false, $rating_count = null, $brand_ids = null, $search = null)
@@ -962,6 +1175,12 @@ class ProductLogic
                     $sub_category_id = $category['id'];
                 }
             }
+            $addOns = json_decode($item->add_ons, true);
+            $variations = json_decode($item->variations, true);
+            $foodVariations = json_decode($item->food_variations, true);
+            $choiceOptions = json_decode($item->choice_options, true);
+            $attributes = json_decode($item->attributes, true);
+
             $storage[] = [
                 'Id'=>$item->id,
                 'Name'=>$item->name,
@@ -977,16 +1196,24 @@ class ProductLogic
                 'DiscountType'=>$item->discount_type,
                 'AvailableTimeStarts'=>$item->available_time_starts,
                 'AvailableTimeEnds'=>$item->available_time_ends,
-                'Variations'=>$module_type == 'food'?$item->food_variations:$item->variations,
-                'ChoiceOptions'=>$item?->choice_options,
-                'AddOns'=>$item->add_ons,
-                'Attributes'=>$item->attributes,
+                'Variations'=>$module_type == 'food'?(!empty($foodVariations) ? $item->food_variations : 'N/A'):(!empty($variations) ? $item->variations : 'N/A'),
+                'ChoiceOptions'=>!empty($choiceOptions) ? $item->choice_options : 'N/A',
+                'AddOns'=>!empty($addOns) ? $item->add_ons : 'N/A',
+                'Attributes'=>!empty($attributes) ? $item->attributes : 'N/A',
                 'StoreId'=>$item->store_id,
                 'ModuleId'=>$item->module_id,
                 'Status'=>$item->status == 1 ? 'active' : 'inactive',
                 'Veg'=>$item->veg == 1 ? 'yes' : 'no',
                 'Recommended'=>$item->recommended == 1 ? 'yes' : 'no',
             ];
+            if ($module_type === 'pharmacy') {
+                $storage[count($storage) - 1]['IsPrescriptionRequired']
+                    = $item?->pharmacy_item_details?->is_prescription_required ?? 0;
+                $storage[count($storage) - 1]['CommonConditions']
+                    = $item?->pharmacy_item_details?->common_condition_id ?? 0;
+                $storage[count($storage) - 1]['IsBasic']
+                    = $item?->pharmacy_item_details?->is_basic ?? 0;
+            }
         }
 
         return $storage;
@@ -1088,7 +1315,7 @@ class ProductLogic
         return $item;
     }
 
-    public static function update_flash_stock($item, $quantity)
+    public static function update_flash_stock($item, $quantity, $decreaseStock =false)
     {
         $item = FlashSaleItem::Active()->whereHas('flashSale', function ($query) {
             $query->Active()->Running();
@@ -1096,8 +1323,13 @@ class ProductLogic
         ->where(['item_id' => $item->id])->first();
         if($item){
 
-            $item->sold = $item->sold + $quantity;
-            $item->available_stock = $item->stock - $item->sold;
+            if ($decreaseStock) {
+                $item->sold = max(0, $item->sold - $quantity);
+                $item->available_stock = $item->stock + $item->sold;
+            } else {
+                $item->sold += $quantity;
+                $item->available_stock = max(0, $item->stock - $item->sold);
+            }
         }
         return $item;
     }
@@ -1259,6 +1491,158 @@ class ProductLogic
             'offset' => $offset,
             'products' => $paginator->items(),
             'categories'=>$categories
+        ];
+    }
+
+    public static function organic_products($zone_id, $limit = 25, $offset = 1, $type = 'all', $category_ids = null, $filter = null, $min = false, $max = false, $rating_count = null, $search = null)
+    {
+        $latest_items_default_status = 1;
+        $latest_items_sort_by_general = PriorityList::where('name', 'latest_items_sort_by_general')->where('type','general')->first()?->value ?? '';
+        $latest_items_sort_by_unavailable = PriorityList::where('name', 'latest_items_sort_by_unavailable')->where('type','unavailable')->first()?->value ?? '';
+        $latest_items_sort_by_temp_closed = PriorityList::where('name', 'latest_items_sort_by_temp_closed')->where('type','temp_closed')->first()?->value ?? '';
+
+        $category_ids = isset($category_ids) ? (is_array($category_ids) ? $category_ids : json_decode($category_ids)) : [];
+        $filter = $filter ? (is_array($filter) ? $filter : str_getcsv(trim($filter, "[]"), ',')) : '';
+
+        $withCount = [];
+        if ($filter && in_array('top_rated', $filter)) {
+            $withCount[] = 'reviews';
+        }
+        if ($filter && in_array('most_loved', $filter)) {
+            $withCount[] = 'whislists';
+        }
+        if ($latest_items_sort_by_general === 'review_count') {
+            $withCount[] = 'reviews';
+        }
+
+        $query = Item::with('store')
+            ->when(config('module.current_module_data'), function($query){
+                $query->where('module_id', config('module.current_module_data')['id']);
+            })
+            ->where('organic', 1)
+            ->whereHas('store', function($query)use($zone_id , $filter){
+                $query->whereIn('zone_id', json_decode($zone_id, true))
+                    ->when($filter && in_array('free_delivery',$filter),function ($qurey){
+                        return $qurey->where('free_delivery',1);
+                    })
+                    ->when($filter && in_array('coupon',$filter),function ($qurey){
+                        return $qurey->has('activeCoupons');
+                    });
+            })
+            ->select(['items.*'])
+            ->selectSub(function ($subQuery) {
+                $subQuery->selectRaw('active as temp_available')
+                    ->from('stores')
+                    ->whereColumn('stores.id', 'items.store_id');
+            }, 'temp_available')
+            ->active()->type($type);
+
+        $query = self::filterQurey($query, $filter, $min ?? 0, $max, $category_ids, $rating_count, $withCount, $search);
+
+        if ($latest_items_default_status == '1'){
+            $query = $query->latest();
+        } else {
+            if(config('module.current_module_data')['module_type']  !== 'food'){
+                if($latest_items_sort_by_unavailable == 'remove'){
+                    $query = $query->where('stock', '>', 0);
+                }elseif($latest_items_sort_by_unavailable == 'last'){
+                    $query = $query->orderByRaw('CASE WHEN stock = 0 THEN 1 ELSE 0 END');
+                }
+            }
+
+            if($latest_items_sort_by_temp_closed == 'remove'){
+                $query = $query->having('temp_available', '>', 0);
+            }elseif($latest_items_sort_by_temp_closed == 'last'){
+                $query = $query->orderByDesc('temp_available');
+            }
+
+            if ($latest_items_sort_by_general == 'rating') {
+                $query = $query->orderByDesc('avg_rating');
+            } elseif ($latest_items_sort_by_general == 'review_count') {
+                $query = $query->orderByDesc('reviews_count');
+            } elseif ($latest_items_sort_by_general == 'a_to_z') {
+                $query = $query->orderBy('name');
+            } elseif ($latest_items_sort_by_general == 'z_to_a') {
+                $query = $query->orderByDesc('name');
+            } elseif ($latest_items_sort_by_general == 'latest_created') {
+                $query = $query->latest();
+            } elseif ($latest_items_sort_by_general == 'first_created') {
+                $query = $query->oldest();
+            }
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $offset);
+
+        return [
+            'total_size' => $paginator->total(),
+            'limit' => $limit,
+            'offset' => $offset,
+            'products' => $paginator->items(),
+            'categories' => self::getCategoryData($query),
+        ];
+    }
+
+    public static function recent_ordered_items($user_id, $zone_id, $limit = 10, $offset = 1, $type = 'all', $module_id = null)
+    {
+        $zones = json_decode($zone_id, true);
+
+        $query = Item::with('store')
+            ->when($module_id, function ($query) use ($module_id) {
+                $query->where('module_id', $module_id);
+            })
+            ->when(!$module_id && config('module.current_module_data'), function ($query) {
+                $query->where('module_id', config('module.current_module_data')['id']);
+            })
+            ->whereHas('module.zones', function($query)use($zones){
+                $query->whereIn('zones.id', $zones);
+            })
+            ->whereHas('store', function($query)use($zones, $module_id){
+                $query->whereIn('zone_id', $zones)
+                    ->when($module_id, function ($query) use ($module_id) {
+                        $query->where('module_id', $module_id)->whereHas('zone.modules', function($q) use ($module_id){
+                            $q->where('modules.id', $module_id);
+                        });
+                    })
+                    ->when(!$module_id && config('module.current_module_data'), function ($query) {
+                        $query->where('module_id', config('module.current_module_data')['id'])->whereHas('zone.modules', function($q){
+                            $q->where('modules.id', config('module.current_module_data')['id']);
+                        });
+                    });
+            })
+            ->whereHas('orders.order', function($query)use($user_id, $module_id){
+                $query->where('user_id', $user_id)
+                    ->where('is_guest', 0)
+                    ->where('order_type', '<>', 'pos')
+                    ->whereNotIn('order_status', ['failed', 'canceled'])
+                    ->when($module_id, function ($query) use ($module_id) {
+                        $query->where('module_id', $module_id);
+                    });
+            })
+            ->select(['items.*'])
+            ->selectSub(function ($subQuery) use ($user_id, $module_id) {
+                $subQuery->from('order_details')
+                    ->join('orders', 'orders.id', '=', 'order_details.order_id')
+                    ->selectRaw('MAX(orders.created_at)')
+                    ->whereColumn('order_details.item_id', 'items.id')
+                    ->where('orders.user_id', $user_id)
+                    ->where('orders.is_guest', 0)
+                    ->where('orders.order_type', '<>', 'pos')
+                    ->whereNotIn('orders.order_status', ['failed', 'canceled'])
+                    ->when($module_id, function ($query) use ($module_id) {
+                        $query->where('orders.module_id', $module_id);
+                    });
+            }, 'latest_ordered_at')
+            ->active()
+            ->type($type)
+            ->orderByDesc('latest_ordered_at');
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $offset);
+
+        return [
+            'total_size' => $paginator->total(),
+            'limit' => $limit,
+            'offset' => $offset,
+            'items' => $paginator->items(),
         ];
     }
 }

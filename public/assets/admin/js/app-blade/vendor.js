@@ -194,7 +194,7 @@ $(document).on("ready", function () {
             }
 
             // Attach event listener with debouncing
-            $(".select2-search input").on(
+            $rendered.find(".select2-search input").off("input").on(
                 "input",
                 debounce(function () {
                     const inputValue = $(this).val().toLowerCase();
@@ -208,7 +208,7 @@ $(document).on("ready", function () {
                 }, 100)
             );
 
-            $(".select2-search input").on("keydown", function (e) {
+            $rendered.find(".select2-search input").off("keydown").on("keydown", function (e) {
                 if (e.which === 13) {
                     e.preventDefault();
 
@@ -394,3 +394,30 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     // ---- tabindex priority set logic ends
 });
+
+//New Character Count code ,
+function initTextMaxLimit(selector = 'input[data-maxlength], textarea[data-maxlength], input[maxlength], textarea[maxlength]') {
+    const fields = document.querySelectorAll(selector);
+
+    fields.forEach(function (field) {
+        const maxLength = parseInt(field.getAttribute('data-maxlength') || field.getAttribute('maxlength'), 10);
+        const counter = field.parentElement.querySelector('.text-counting');
+
+        const updateCounter = () => {
+            if (field.value.length > maxLength) {
+                field.value = field.value.slice(0, maxLength);
+            }
+            if (counter) {
+                counter.textContent = `${field.value.length}/${maxLength}`;
+            }
+        };
+
+        field.addEventListener('input', updateCounter);
+        updateCounter();
+    });
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        initTextMaxLimit();
+    });
+
+ 

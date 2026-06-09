@@ -23,6 +23,7 @@ class ParcelController extends Controller
 {
     public function orders(Request $request, $status)
     {
+
         $key = isset($request->search) ? explode(' ', $request->search) : null;
         if (session()->has('zone_filter') == false) {
             session()->put('zone_filter', 0);
@@ -31,7 +32,6 @@ class ParcelController extends Controller
         if (session()->has('order_filter')) {
             $request = json_decode(session('order_filter'));
         }
-        // dd($request->zone);
         Order::withOutGlobalScope(ZoneScope::class)->where(['checked' => 0, 'order_type' => 'parcel'])->update(['checked' => 1]);
 
         $orders = Order::withOutGlobalScope(ZoneScope::class)->with(['customer', 'store'])
@@ -265,6 +265,40 @@ class ParcelController extends Controller
             return $query->withCount('orders');
         },'parcelCancellation'])->where(['id' => $id])->ParcelOrder()->first();
         if (isset($order)) {
+
+            $isUnpaid = false;
+
+            if (
+                in_array($order->order_status, ['pending','failed']) &&
+                !in_array($order->payment_method, ['cash_on_delivery', 'wallet'])
+            ) {
+                // CASE 1: partial payment
+                if ($order->payment_method == 'partial_payment') {
+                    if ($order->payment_method === 'partial_payment') {
+                        $isUnpaid = $order->payments()
+                            ->where('payment_status', 'unpaid')
+                            ->whereNotIn('payment_method', ['cash_on_delivery', 'wallet'])
+                            ->exists();
+                    }
+
+                }
+
+                // CASE 2: offline payment
+                elseif ($order->payment_method == 'offline_payment') {
+                    if ($order?->offline_payments?->count() == 0) {
+                        $isUnpaid = true;
+                    }
+                }
+
+                else {
+                    $isUnpaid = true;
+                }
+            }
+
+            $order->is_unpaid_order = $isUnpaid ? true : false;
+
+
+
             $deliveryMen = DeliveryMan::withOutGlobalScope(ZoneScope::class)->where('zone_id', $order->zone_id)->where(function ($query) use ($order) {
                 $query->where('vehicle_id', $order->dm_vehicle_id)->orWhereNull('vehicle_id');
             })->available()->active()->get();
@@ -274,6 +308,7 @@ class ParcelController extends Controller
             $editing = false;
             $deliveryMen = Helpers::deliverymen_list_formatting($deliveryMen);
             $keyword = null;
+
             return view('admin-views.order.parcel-order-view', compact('order', 'deliveryMen', 'categories', 'products', 'category', 'keyword', 'editing'));
         } else {
             Toastr::info(translate('messages.no_more_orders'));

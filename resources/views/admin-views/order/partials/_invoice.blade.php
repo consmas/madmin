@@ -113,7 +113,7 @@
                         <thead class="border-0">
                             <tr class="border-0">
                                 <th>{{ translate('messages.desc') }}</th>
-                                <th class="w-10p"></th>
+                                <th class="w-10p">{{ translate('qty') }}</th>
                                 <th>{{ translate('messages.price') }}</th>
                             </tr>
                         </thead>
@@ -249,6 +249,15 @@
                                     -
                                     {{ \App\CentralLogics\Helpers::format_currency($order['coupon_discount_amount']) }}
                                 </dd>
+
+                                @if ($order->extra_discount_amount > 0)
+                                <dt class="col-6">{{ translate('messages.extra_discount') }}:</dt>
+                                <dd class="col-6">
+                                    -
+                                    {{ \App\CentralLogics\Helpers::format_currency($order['extra_discount_amount']) }}
+                                </dd>
+
+                                @endif
                                 @if ($order['ref_bonus_amount'] > 0)
                                     <dt class="col-6">{{ translate('messages.Referral_Discount') }}:</dt>
                                     <dd class="col-6">
@@ -345,7 +354,9 @@
                     <div class="text-uppercase text-center">{{ translate('THANK YOU') }}</div>
                     <img src="{{ asset('/public/assets/admin/img/invoice-star.png') }}" alt="" class="w-100">
                     <div class="copyright">
-                        Processed by ConsMas Supply Chains Solution Ltd
+                        &copy; {{ \App\Models\BusinessSetting::where(['key' => 'business_name'])->first()->value }}.
+                        <span
+                            class="d-none d-sm-inline-block">{{ \App\Models\BusinessSetting::where(['key' => 'footer_text'])->first()->value }}</span>
                     </div>
                 </div>
             </div>

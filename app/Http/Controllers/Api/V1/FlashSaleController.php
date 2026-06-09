@@ -12,13 +12,7 @@ use Illuminate\Support\Facades\Validator;
 class FlashSaleController extends Controller
 {
     public function get_flash_sales(Request $request){
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 200);
-        }
+       Helpers::setZoneIds($request);
         $zone_id= $request->header('zoneId');
         try {
             $flash_sales = FlashSale::with(['activeProducts','activeProducts.item'])
@@ -51,13 +45,7 @@ class FlashSaleController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 200);
-        }
+        Helpers::setZoneIds($request);
         $limit = isset($request['limit'])?$request['limit']:50;
         $offset = isset($request['offset'])?$request['offset']:1;
         $zone_id= $request->header('zoneId');
@@ -65,7 +53,7 @@ class FlashSaleController extends Controller
             $query->whereIn('zones.id', json_decode($zone_id, true));
         })->module(config('module.current_module_data')['id'])
         ->running()->active()->first();
- 
+
         if(!$flash_sale){
             return response()->json([
                 'errors' => [
@@ -78,6 +66,8 @@ class FlashSaleController extends Controller
 
             ->wherehas('item.store', function($query)use($zone_id){
                 $query->whereIn('zone_id',json_decode($zone_id, true));
+            })->wherehas('item',function($query){
+                $query->active();
             })
 
             ->paginate($limit, ['*'], 'page', $offset);

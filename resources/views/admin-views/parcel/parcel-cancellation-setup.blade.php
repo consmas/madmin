@@ -87,17 +87,37 @@
                                                         placeholder="Ex: 10">
                                                 </div>
                                             </div>
-                                            <div class="d-flex align-item-center justify-content-between cursor-pointer">
-                                                <div class="form-check mr-4 m-0">
-                                                    <input class="form-check-input checkbox-theme-20 single-select"
-                                                        {{ $parcel_cancellation_basic_setup['do_not_charge_return_fee_on_deliveryman_cancel'] ?? null ? 'checked' : '' }}
-                                                        type="checkbox" value="1"
-                                                        name="do_not_charge_return_fee_on_deliveryman_cancel"
-                                                        id="cancalation_address_">
-                                                </div>
-                                                <label class="form-check-label ml-2 fs-14 " for="cancalation_address_">
-                                                    {{ translate('Do not charge any return fee to customer if deliveryman cancel the order after pickup') }}
+                                            <div class="col-sm-12">
+                                                <label for="" class="fs-14 color-222324 mb-2">
+                                                    {{ translate('If Delivery Man Cancels the Delivery After Pickup ') }}
                                                 </label>
+                                                <div class="d-flex bg-white min-h-45px rounded border w-100 py-2 px-3 flex-wrap flex-sm-nowrap gap-2">
+                                                    <div class="d-flex align-item-center cursor-pointer w-100">
+                                                        <div class="form-check m-0">
+                                                            <input class="form-check-input checkbox-theme-16 single-select"
+                                                                {{ $parcel_cancellation_basic_setup['do_not_charge_return_fee_on_deliveryman_cancel'] ?? null ? 'checked' : '' }}
+                                                                type="checkbox" value="1"
+                                                                name="do_not_charge_return_fee_on_deliveryman_cancel"
+                                                                id="cancalation_address_">
+                                                        </div>
+                                                        <label class="form-check-label mb-0 ml-2 fs-14 lh-24" for="cancalation_address_">
+                                                            {{ translate('Do not charge any return fee to customer ') }}
+                                                        </label>
+                                                    </div>
+
+                                                    <!-- <div class="d-flex align-item-center justify-content-between cursor-pointer">
+                                                        <div class="form-check m-0">
+                                                            <input class="form-check-input checkbox-theme-16 single-select"
+                                                                {{ $parcel_cancellation_basic_setup['do_not_charge_return_fee_on_deliveryman_cancel'] ?? null ? 'checked' : '' }}
+                                                                type="checkbox" value="1"
+                                                                name="do_not_charge_return_fee_on_deliveryman_cancel"
+                                                                id="cancalation_address_">
+                                                        </div>
+                                                        <label class="form-check-label mt-1 mb-0 ml-2 fs-14 " for="cancalation_address_">
+                                                            {{ translate('Do not charge any return fee to customer if deliveryman cancel the order after pickup') }}
+                                                        </label>
+                                                    </div> -->
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -137,7 +157,7 @@
                                                         {{ translate('Set Time') }}
                                                         <span class="fs-12 color-A7A7A7" data-toggle="tooltip"
                                                             data-placement="top"
-                                                            data-original-title="{{ translate('Set Time') }}">
+                                                            data-original-title="{{ translate('Define the time period during which customers have to return a parcel') }}">
                                                             <i class="tio-info"></i>
                                                         </span>
                                                         <span class="text-danger">* </span>
@@ -163,7 +183,7 @@
                                                         ({{ \App\CentralLogics\Helpers::currency_symbol() }})
                                                         <span class="fs-12 color-A7A7A7" data-toggle="tooltip"
                                                             data-placement="top"
-                                                            data-original-title="{{ translate('Return Fee for Driver if Time Exceeds ') }}">
+                                                            data-original-title="{{ translate('Set the return fee that will be applied if the allowed time period is exceeded') }}">
                                                             <i class="tio-info"></i>
                                                             <span class="text-danger">* </span>
                                                         </span>
@@ -220,6 +240,11 @@
                         <div class="form-group m-0">
                             <label class="fs-14 mb-2 color-222324">{{ translate('Parcel cancellation reason') }}
                                 ({{ translate('Default') }})
+                                <span class="fs-12 color-A7A7A7" data-toggle="tooltip"
+                                    data-placement="top"
+                                    data-original-title="{{ translate('Define the valid reasons for parcel cancellation, which will be shown to customers for selection') }}">
+                                    <i class="tio-info"></i>
+                                </span>
                                  <span class="text-danger">* </span>
                             </label>
                             <textarea rows="1" name="reason[]" data-target="#char-count"
@@ -319,7 +344,7 @@
                                 <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
                                     alt="Image Description">
-                                .{{ translate('messages.csv') }}
+                                {{ translate('messages.csv') }}
                             </a>
                         </div>
                     </div>

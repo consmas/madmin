@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AddOn;
 use App\Traits\ActivationClass;
 use Exception;
 use Illuminate\Http\Request;
@@ -108,6 +109,11 @@ class AddonService
             'status' => (int)$status,
             'message' => $message
         ];
+    }
+
+    public function checkAddonExistsForThisStore(int|string $storeId, string $addonName): bool
+    {
+        return AddOn::where('store_id', $storeId)->where('name', $addonName)->exists();
     }
 
 }

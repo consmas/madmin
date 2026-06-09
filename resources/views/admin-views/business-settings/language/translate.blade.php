@@ -5,94 +5,115 @@
 
 @section('content')
     <div class="content container-fluid">
-        <div class="row __mt-20">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="search--button-wrapper justify-content-between">
-                            <h5 class="m-0">{{translate('language_content_table')}}</h5>
-                            <form class="search-form min--260">
-                                <!-- Search -->
-                                <div class="input-group input--group">
-                                    <input id="datatableSearch_" type="search" name="search" class="form-control h--40px"
-                                            placeholder="{{ translate('messages.Ex : Search') }}" aria-label="{{translate('messages.search')}}" value="{{ request()?->search ?? null }}" required>
-                                    <input type="hidden">
-                                    <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
+        <div class="mb-3">
+            <h2 class="h1 font-bold mb-1 text-capitalize">
+                {{translate('View Translations')}} - {{ \App\CentralLogics\Helpers::get_language_name($lang) }} ({{$lang}})
+            </h2>
+            <h6 class="text-info fs-12 d-flex gap-2 align-items-center mb-0">
+                <i class="tio-back-ui fs-10"></i>
+                <a style="color: #245BD1;" href="{{ route('admin.business-settings.language.index') }}">{{ translate('messages.Back to Language Setup') }}</a>
+            </h6>
+        </div>
+        <div class="fs-12 text-title px-3 py-2 rounded bg-warning d-flex align-items-center gap-2 h-100 bg-opacity-10 mb-3">
+            <span class="text-warning lh-1 fs-14">
+                <i class="tio-info"></i>
+            </span>
+            <span>
+                {{ translate('messages.If you change your default language full') }}
+                <span class="font-semibold">{{ translate('messages.System Language') }}</span>
+                {{ lcfirst(translate('messages.will changed. So, make sure before change')) }}
+                <span class="font-semibold">{{ translate('messages.Default Language.') }}</span>
+            </span>
 
-                                </div>
-                                <!-- End Search -->
-                            </form>
-                        </div>
-                        @if ($lang !== 'en')
-                        <button class="btn btn--primary ml-2" id="translate-confirm-btn" >{{ translate('Translate_All') }}</button>
-                        @endif
+        </div>
+        <div class="card card-body">
+            <div class="d-flex align-items-center flex-wrap justify-content-end gap-3 mb-20">
+                <h4 class="m-0 text-capitalize flex-grow-1">{{translate('language_content_table')}}</h4>
+                <form class="search-form min--260">
+                    <!-- Search -->
+                    <div class="input-group input--group">
+                        <input id="datatableSearch_" type="search" name="search" class="form-control h--40px"
+                                placeholder="{{ translate('messages.Search_Language') }}" aria-label="{{translate('messages.search')}}" value="{{ request()?->search ?? null }}" required>
+                        <input type="hidden">
+                        <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
+
                     </div>
-                    <input type="hidden" value="0" id="translating-count">
+                    <!-- End Search -->
+                </form>
+                @if ($lang !== 'en')
+                <button class="btn btn--primary d-flex align-items-center justify-content-center gap-2" id="translate-confirm-btn">
+                    <img width="14" height="14" class="svg" src="{{asset('public/assets/admin/img/svg/language-exchange.svg')}}" alt="public">
+                    {{ translate('Translate_All') }}
+                </button>
+                @endif
+            </div>
+            <input type="hidden" value="0" id="translating-count">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" >
+                    <thead class="thead-light table-nowrap">
+                    <tr>
+                        <th>{{translate('SL#')}}</th>
+                        <th class="__width-400">{{translate('Current_value')}}</th>
+                        <th class="__min-width">{{translate('translated_value')}}</th>
+                        <th class="text-center">{{translate('auto_translate')}}</th>
+                        <th class="text-center">{{translate('update')}}</th>
+                    </tr>
+                    </thead>
 
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered" id="dataTable" >
-                                <thead class="thead-light table-nowrap">
-                                <tr>
-                                    <th>{{translate('SL#')}}</th>
-                                    <th class="__width-400">{{translate('Current_value')}}</th>
-                                    <th class="__min-width">{{translate('translated_value')}}</th>
-                                    <th>{{translate('auto_translate')}}</th>
-                                    <th>{{translate('update')}}</th>
-                                </tr>
-                                </thead>
+                    <tbody>
+                    @php($count=0)
+                    @foreach($full_data as $key=>$value)
+                    @php($count++)
 
-                                <tbody>
-                                @php($count=0)
-                                @foreach($full_data as $key=>$value)
-                                @php($count++)
-
-                                <tr id="lang-{{$count}}">
-                                    <td>{{ $count+$full_data->firstItem() -1}}</td>
-                                    <td >
-                                        <input type="text" name="key[]"
-                                        value="{{$key}}" hidden>
-                                        <div style="max-inline-size: 450px"> {{translate($key) }}</div>
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control" name="value[]"
-                                        id="value-{{$count}}"
-                                        value="{{$full_data[$key]}}">
-                                    </td>
-                                    <td >
-                                        <button type="button"
-                                                data-key="{{$key}}" data-id="{{$count}}"
-                                                class="btn btn-ghost-success btn-block auto-translate-btn"><i class="tio-globe"></i>
-                                        </button>
-                                    </td>
-                                    <td >
-                                        <button type="button"
-                                                data-key="{{$key}}"
-                                                data-id="{{$count}}"
-                                                class="btn btn--primary btn-block update-language-btn"><i class="tio-save-outlined"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                                </tbody>
-                            </table>
-                            @if(count($full_data) !== 0)
-                            <hr>
-                            @endif
-                            <div class="page-area">
-                                {!! $full_data->appends(request()->query())->links() !!}
+                    <tr id="lang-{{$count}}">
+                        <td>{{ $count+$full_data->firstItem() -1}}</td>
+                        <td >
+                            <input type="text" name="key[]"
+                            value="{{$key}}" hidden>
+                            <div style="max-inline-size: 450px"> {{translate($key) }}</div>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control" name="value[]"
+                            id="value-{{$count}}"
+                            value="{{$full_data[$key]}}">
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-center align-items-center">
+                                <button type="button"
+                                    data-key="{{$key}}" data-id="{{$count}}"
+                                    class="btn btn--primary btn-outline-primary action-btn auto-translate-btn">
+                                    <img width="14" height="14" class="svg" src="{{asset('public/assets/admin/img/svg/language-exchange.svg')}}" alt="public">
+                                </button>
                             </div>
-                            @if(count($full_data) === 0)
-                            <div class="empty--data">
-                                <img src="{{asset('/public/assets/admin/svg/illustrations/sorry.svg')}}" alt="public">
-                                <h5>
-                                    {{translate('no_data_found')}}
-                                </h5>
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-center align-items-center">
+                                <button type="button"
+                                        data-key="{{$key}}"
+                                        data-id="{{$count}}"
+                                        class="btn btn--primary action-btn update-language-btn">
+                                         <img width="14" height="14" class="svg" src="{{asset('public/assets/admin/img/svg/disk.svg')}}" alt="public">
+                                </button>
                             </div>
-                            @endif
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
+                @endforeach
+                    </tbody>
+                </table>
+                @if(count($full_data) !== 0)
+                <hr>
+                @endif
+                <div class="page-area">
+                    {!! $full_data->appends(request()->query())->links() !!}
                 </div>
+                @if(count($full_data) === 0)
+                <div class="empty--data">
+                    <img src="{{asset('/public/assets/admin/svg/illustrations/sorry.svg')}}" alt="public">
+                    <h5>
+                        {{translate('no_data_found')}}
+                    </h5>
+                </div>
+                @endif
             </div>
         </div>
     </div>

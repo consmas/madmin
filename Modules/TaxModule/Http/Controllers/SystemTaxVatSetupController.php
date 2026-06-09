@@ -40,6 +40,7 @@ class SystemTaxVatSetupController extends Controller
             'vendor' => 'vendor',
             'parcel' => 'parcel',
             'prescription' => 'prescription',
+            'ride-share' => 'ride_module',
         ];
         $systemTaxVatForPrescription = null;
         $tax_payer = $type_map[$request->type] ?? 'vendor';
@@ -51,7 +52,7 @@ class SystemTaxVatSetupController extends Controller
             ->where('tax_payer', $tax_payer)
             ->first();
 
-        if ($this->getProjectName() == 'ConsMas' && $systemTaxVat?->tax_payer == 'vendor') {
+        if ($this->getProjectName() == '6ammart' && $systemTaxVat?->tax_payer == 'vendor') {
             $systemTaxVatForPrescription = $this->systemTaxVat->with('additionalData')->when($this->getCountryType() !== 'single', function ($query) use($request) {
                 $query->where('country_code', $request->country_code);
             })
@@ -137,12 +138,12 @@ class SystemTaxVatSetupController extends Controller
                 $systemTaxVat->is_default = false;
             }
             $systemTaxVat->tax_payer = $request->type;
-            $systemTaxVat->tax_type = $request->tax_type ?? $request->type == 'rental_provider' ?  'trip_wise' : 'order_wise';
+            $systemTaxVat->tax_type = $request->tax_type ?? $request->type == 'rental_provider' ?  'trip_wise' : ($request->type == 'ride_module' ?  'ride_wise' : 'order_wise');
         }
         $systemTaxVat->is_active = !$systemTaxVat->is_active;
         $systemTaxVat->save();
 
-        if ($systemTaxVat?->tax_payer == 'vendor' && $this->getProjectName() == 'ConsMas') {
+        if ($systemTaxVat?->tax_payer == 'vendor' && $this->getProjectName() == '6ammart') {
 
             if ($request->prescription_system_id == null) {
                 $systemTaxVatForPrescription = $this->systemTaxVat->when($this->getCountryType() !== 'single', function ($query) use($request) {

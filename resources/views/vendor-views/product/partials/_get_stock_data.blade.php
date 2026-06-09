@@ -46,7 +46,7 @@
                         <input value="{{ $combination['type'] }}" name="type[]" type="hidden">
                         <input type="number" name="price_{{ $key  }}_{{ $combination['type'] }}"
                         value="{{$combination['price'] ?? 0}}" min="0"
-                        step="0.01"
+                        step="{{ \App\CentralLogics\Helpers::getDecimalPlaces() }}" max="999999999999.999"
                         class="form-control" >
                     </td>
                     <td class="w-200">

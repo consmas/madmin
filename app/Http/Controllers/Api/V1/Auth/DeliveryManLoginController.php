@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
+use Modules\RideShare\Entities\UserManagement\UserLevel;
 
 class DeliveryManLoginController extends Controller
 {
@@ -50,19 +51,42 @@ class DeliveryManLoginController extends Controller
                 ], 401);
             }
 
-            $delivery_man =  DeliveryMan::where(['phone' => $request['phone']])->first();
+            if($request->has('type'))
+            {
+                $type = $request->type;
+            }else{
+                $type = 'is_delivery';
+            }
+
+            $delivery_man =  DeliveryMan::withoutGlobalScope('delivery_only')->where(['phone' => $request['phone'], $type => 1])->first();
+            if(!$delivery_man){
+                $errors = [];
+                array_push($errors, ['code' => 'auth-001', 'message' => translate('Incorrect_credential,_please_try_again')]);
+                return response()->json([
+                    'errors' => $errors
+                ], 401);
+            }
             $delivery_man->auth_token = $token;
             $delivery_man->save();
 
-            $topic = 'restaurant_dm_'.$delivery_man?->store_id;
-            if(isset($delivery_man->zone)){
-                if($delivery_man->vehicle_id){
+            if($type == 'is_delivery'){
+                $topic = 'restaurant_dm_'.$delivery_man?->store_id;
+                if(isset($delivery_man->zone)){
+                    if($delivery_man->vehicle_id){
 
-                    $topic = 'delivery_man_'.$delivery_man->zone->id.'_'.$delivery_man->vehicle_id;
-                }else{
-                    $topic = $delivery_man->type=='zone_wise'?$delivery_man->zone->deliveryman_wise_topic:'restaurant_dm_'.$delivery_man->store_id;
+                        $topic = 'delivery_man_'.$delivery_man->zone->id.'_'.$delivery_man->vehicle_id;
+                    }else{
+                        $topic = $delivery_man->type=='zone_wise'?$delivery_man->zone->deliveryman_wise_topic:'restaurant_dm_'.$delivery_man->store_id;
+                    }
+                    $zone_topic =  $delivery_man->type=='zone_wise'?$delivery_man->zone->deliveryman_wise_topic.'_push':'';
                 }
-                $zone_topic =  $delivery_man->type=='zone_wise'?$delivery_man->zone->deliveryman_wise_topic.'_push':'';
+            }else{
+                $topic = 'admin';if(isset($delivery_man->zone)){
+                    if($delivery_man->vehicle_id){
+                        $topic = 'rider_'.$delivery_man->zone->id.'_'.$delivery_man->vehicle_id;
+                    }
+                    $zone_topic =  $delivery_man->type=='zone_wise'?'zone_'.$delivery_man->zone->id.'_rider':'';
+                }
             }
             return response()->json(['token' => $token, 'topic'=> isset($topic)?$topic:'No_topic_found', 'zone_topic' =>  $zone_topic?? ''], 200);
         } else {
@@ -84,8 +108,9 @@ class DeliveryManLoginController extends Controller
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:delivery_men',
             'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
             'zone_id' => 'required',
-            'vehicle_id' => 'required',
-            'earning' => 'required'
+            'vehicle_id' => 'required_if:type,is_delivery',
+            'earning' => 'required',
+            'type' => 'required'
         ], [
             'f_name.required' => translate('messages.first_name_is_required'),
             'zone_id.required' => translate('messages.select_a_zone'),
@@ -105,6 +130,11 @@ class DeliveryManLoginController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)],403);
         }
 
+        if($request->referral_code ){
+            $referal_user = DeliveryMan::withoutGlobalScope('delivery_only')->where('ref_code',$request->referral_code)->first();
+
+        }
+
         if ($request->has('image')) {
             $image_name = Helpers::upload('delivery-man/', 'png', $request->file('image'));
         } else {
@@ -120,6 +150,10 @@ class DeliveryManLoginController extends Controller
             $identity_image = json_encode($id_img_names);
         } else {
             $identity_image = json_encode([]);
+        }
+
+        if (addon_published_status('RideShare') &&  $request->type == 'is_ride') {
+              $firstLevel = UserLevel::where('user_type', DRIVER)->where('sequence', 1)->first();
         }
 
         $dm = New DeliveryMan();
@@ -138,17 +172,23 @@ class DeliveryManLoginController extends Controller
         $dm->zone_id = $request->zone_id;
         $dm->earning = $request->earning;
         $dm->password = bcrypt($request->password);
-
+        $dm->ref_by= $request->earning ? $referal_user?->id ?? null : null;
+        $dm->ref_code = Helpers::generate_referer_code('deliveryman');
+        $dm->is_delivery = isset($request->type)? ($request->type == 'is_delivery' ? 1 : 0) : 1;
+        $dm->is_ride = isset($request->type) && $request->type == 'is_ride' ? 1 : 0;
+        if(addon_published_status('RideShare')) {
+            $dm->user_level_id = $firstLevel?->id ?? null;
+        }
         $dm->save();
         try{
             $admin= Admin::where('role_id', 1)->first();
             $mail_status = Helpers::get_mail_status('registration_mail_status_dm');
             if(config('mail.status') && $mail_status == '1' && Helpers::getNotificationStatusData('deliveryman','deliveryman_registration','mail_status')){
-                Mail::to($request->email)->send(new \App\Mail\DmSelfRegistration('pending', $dm->f_name.' '.$dm->l_name));
+                Mail::to($request->email)->send(new \App\Mail\DmSelfRegistration('pending', $dm));
             }
             $mail_status = Helpers::get_mail_status('dm_registration_mail_status_admin');
             if(config('mail.status') && $mail_status == '1' && Helpers::getNotificationStatusData('admin','deliveryman_self_registration','mail_status')){
-                Mail::to($admin['email'])->send(new \App\Mail\DmRegistration('pending', $dm->f_name.' '.$dm->l_name));
+                Mail::to($admin?->getRawOriginal('email'))->send(new \App\Mail\DmRegistration('pending', $dm));
             }
         }catch(\Exception $ex){
             info($ex->getMessage());

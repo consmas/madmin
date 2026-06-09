@@ -43,9 +43,11 @@
         <tr>
             <th>{{ translate('sl') }}</th>
             <th>{{translate('messages.order_id')}}</th>
-            <th>{{translate('messages.distance')}}</th>
+            <th>{{translate('messages.date')}}</th>
+            {{-- <th>{{translate('messages.distance')}}</th> --}}
             <th>{{translate('messages.delivery_fee_earned')}}</th>
             <th>{{translate('messages.tips')}}</th>
+            <th>{{translate('messages.total_earning')}}</th>
         </thead>
         <tbody>
         @foreach($data['earnings'] as $key => $earning)
@@ -55,10 +57,14 @@
                     {{ $earning->order_id }}
                 </td>
                 <td>
-                    {{ $earning->order->distance }} km
+                    {{ \App\CentralLogics\Helpers::date_format($earning->created_at ) }}
                 </td>
-                <td>{{ $earning->original_delivery_charge }}</td>
-                <td>{{ $earning->dm_tips }}</td>
+                {{-- <td>
+                    {{ $earning->order->distance }} km
+                </td> --}}
+                <td>{{ \App\CentralLogics\Helpers::format_currency($earning->original_delivery_charge) }}</td>
+                <td>{{ \App\CentralLogics\Helpers::format_currency($earning->dm_tips) }}</td>
+                <td>{{ \App\CentralLogics\Helpers::format_currency($earning->original_delivery_charge + $earning->dm_tips) }}</td>
             </tr>
         @endforeach
         </tbody>

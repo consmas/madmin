@@ -6,6 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 @endpush
 
+@section('new_store_request')
+active
+@endsection
+
 @section('content')
     <div class="content container-fluid">
         <!-- Page Header -->

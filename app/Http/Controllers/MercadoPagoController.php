@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaymentRequest;
 use App\Models\User;
 use App\Traits\Processor;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Models\PaymentRequest;
-use Exception;
+use Illuminate\Routing\Controller;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Validator;
-use MercadoPago\Client\Payment\PaymentClient;
-use MercadoPago\Exceptions\MPApiException;
-use MercadoPago\MercadoPagoConfig;
 use MercadoPago\Client\Common\RequestOptions;
+use MercadoPago\Client\Payment\PaymentClient;
+use MercadoPago\MercadoPagoConfig;
 
 class MercadoPagoController extends Controller
 {
@@ -50,101 +53,67 @@ class MercadoPagoController extends Controller
         $config = $this->config;
         return view('payment-views.payment-view-marcedo-pogo', compact('config', 'data'));
     }
+
     public function make_payment(Request $request)
     {
         MercadoPagoConfig::setAccessToken($this->config->access_token);
+        $requestOptions = new RequestOptions();
+        $requestOptions->setCustomHeaders([
+            "x-idempotency-key" => (string)uniqid("mp_", true),
+        ]);
+        $paymentRequest = $this->paymentRequest->where('id', $request['payment_id'])->first();
         $client = new PaymentClient();
-        $data = [];
-        $data['transaction_amount'] = (float)$request['transactionAmount'];
-        $data['token'] = $request['token'];
-        $data['description'] = $request['description'];
-        $data['installments'] = (int)$request['installments'];
-        $data['payment_method_id'] = $request['paymentMethodId'];
-        $data['payer']['email'] = $request['payer']['email'];
-
-
-        $request_options = new RequestOptions();
-            $unigueId=uniqid();
-            $request_options->setCustomHeaders([
-                "X-Idempotency-Key: {$unigueId}"
-            ]);
 
         try {
-            $payment = $client->create($data, $request_options);
-            $response = array(
-                'status' => $payment->status,
-                'status_detail' => $payment->status_detail,
-                'id' => $payment->id
-            );
+            $payment = $client->create([
+                "token" => $request['token'],
+                "issuer_id" => $request['issuer_id'] ?? null,
+                "payment_method_id" => $request['payment_method_id'],
+                "transaction_amount" => (float)$request['transaction_amount'],
+                "installments" => (int)($request['installments'] ?? 1),
+                "external_reference" => $paymentRequest->id, // important!
+                "payer" => [
+                    "email" => $request['payer']['email'],
+                    "identification" => [
+                        "type" => $request['payer']['identification']['type'],
+                        "number" => $request['payer']['identification']['number']
+                    ]
+                ]
+            ], $requestOptions);
 
-        } catch (MPApiException $e) {
-            $response['error'] = $e->getApiResponse()->getContent();
-        } catch (Exception $e) {
-            $response['error'] =  $e->getMessage();
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'fail',
+                'message' => $e->getMessage(),
+                'error' => $e
+            ], 500);
         }
-
-
-        if(data_get($response,'error.message',null)){
-
-            $response['error'] =  data_get($response,'error.message',null);
-            return response()->json($response);
-        }
-
 
         if ($payment->status == 'approved') {
-            $paymentInfo = $this->paymentRequest::where(['id' => $request['payment_id']])->first();
-            if($paymentInfo){
-                $paymentInfo->transaction_id = $payment->id;
-                $paymentInfo->save();
-            }
-        }
-
-        return response()->json($response);
-    }
-
-    public function get_test_user(Request $request)
-    {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, "https://api.mercadopago.com/users/test_user");
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $this->config->access_token
-        ));
-        curl_setopt($curl, CURLOPT_POSTFIELDS, '{"site_id":"MLA"}');
-        $response = curl_exec($curl);
-    }
-
-    public function success(Request $request)
-    {
-        $paymentData = $this->paymentRequest::where(['id' => $request['payment_id']])->first();
-        if($paymentData->transaction_id != null){
-            $this->paymentRequest::where(['id' => $request['payment_id']])->update([
+            $this->paymentRequest::where(['id' => $paymentRequest->id])->update([
                 'payment_method' => 'mercadopago',
                 'is_paid' => 1,
+                'transaction_id' => $payment->id,
             ]);
             $data = $this->paymentRequest::where(['id' => $request['payment_id']])->first();
             if (isset($data) && function_exists($data->success_hook)) {
                 call_user_func($data->success_hook, $data);
             }
-            return $this->payment_response($data, 'success');
-        }else{
-            $paymentData = $this->paymentRequest::where(['id' => $request['payment_id']])->first();
-            if (isset($paymentData) && function_exists($paymentData->failure_hook)) {
-                call_user_func($paymentData->failure_hook, $paymentData);
-            }
-            return $this->payment_response($paymentData, 'fail');
+            return response()->json(['status' => 'success']);
         }
+        return response()->json(['status' => 'fail']);
     }
 
-    public function failed(Request $request)
+    public function callback(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
-        $paymentData = $this->paymentRequest::where(['id' => $request['payment_id']])->first();
-        if (isset($paymentData) && function_exists($paymentData->failure_hook)) {
-            call_user_func($paymentData->failure_hook, $paymentData);
+        if ($request['status'] == 'success') {
+            $data = $this->paymentRequest::where(['id' => $request['payment_id']])->first();
+            return $this->payment_response($data,'success');
         }
-        return $this->payment_response($paymentData, 'fail');
+        $payment_data = $this->paymentRequest::where(['id' => $request['payment_id']])->first();
+        if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
+            call_user_func($payment_data->failure_hook, $payment_data);
+        }
+        return $this->payment_response($payment_data,'fail');
     }
 }

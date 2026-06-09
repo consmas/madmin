@@ -89,7 +89,7 @@
         </div>
         <div class="tab-content">
             <div class="tab-pane fade show active">
-                <form action="{{ route('admin.business-settings.react-landing-page-settings', 'testimonial-title') }}"
+                <form action="{{ route('admin.business-settings.react-landing-page-settings-update', 'testimonial-title') }}"
                       method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="card mb-20">
@@ -322,7 +322,7 @@
                     </div>
                     <div class="card-body">
                         <form class="custom-validation"
-                              action="{{ route('admin.business-settings.react-landing-page-settings', 'testimonial-list') }}"
+                              action="{{ route('admin.business-settings.react-landing-page-settings-update', 'testimonial-list') }}"
                               method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="card p-xxl-3 mb-20 border-0">

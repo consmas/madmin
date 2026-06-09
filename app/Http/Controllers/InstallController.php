@@ -42,6 +42,7 @@ class InstallController extends Controller
             $permission['sodium'] = extension_loaded('sodium');
             $permission['pdo_mysql'] = extension_loaded('pdo_mysql');
             $permission['db_file_write_perm'] = is_writable(base_path('.env'));
+            $permission['config_file_write_perm'] = is_writable(base_path('config/system-addons.php'));
             $permission['routes_file_write_perm'] = is_writable(base_path('app/Providers/RouteServiceProvider.php'));
             return view('installation.step1', compact('permission'));
         }
@@ -164,7 +165,7 @@ class InstallController extends Controller
         if (self::check_database_connection($request->DB_HOST, $request->DB_DATABASE, $request->DB_USERNAME, $request->DB_PASSWORD)) {
 
             $key = base64_encode(random_bytes(32));
-            $output = 'APP_NAME=ConsMas'.time().
+            $output = 'APP_NAME=6ammart'.time().
                     'APP_ENV=live
                     APP_KEY=base64:' . $key . '
                     APP_DEBUG=false
@@ -199,7 +200,7 @@ class InstallController extends Controller
                     BUYER_USERNAME=' . session('username') . '
                     SOFTWARE_ID=MzY3NzIxMTI=
 
-                    SOFTWARE_VERSION=3.5
+                    SOFTWARE_VERSION=3.9
                     REACT_APP_KEY=45370351
                     ';
             $file = fopen(base_path('.env'), 'w');

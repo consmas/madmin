@@ -204,7 +204,7 @@
                                     <span class="text-truncate sidebar--badge-container">
                                         {{ translate('messages.Offline_Payments') }}
                                         <span class="badge badge-soft-danger bg-light badge-pill ml-1">
-                                            {{ \App\Models\Order::has('offline_payments')->StoreOrder()->module(Config::get('module.current_module_id'))->count() }}
+                                            {{ \App\Models\Order::where('payment_method', 'offline_payment')->whereHas('offline_payments')->StoreOrder()->module(Config::get('module.current_module_id'))->count() }}
                                         </span>
                                     </span>
                                 </a>
@@ -240,16 +240,6 @@
                             </a>
                         </li>
 
-                        {{--  {{-- <li class="nav-item {{ Request::is('admin/refund/settings') ? 'active' : '' }}">
-                            <a class="nav-link " href="{{ route('admin.refund.refund_settings') }}"
-                                title="{{ translate('refund_settings') }}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{ translate('refund_settings') }}
-
-                                </span>
-                            </a>
-                        </li> --}}
                     </ul>
                     </li>
                     <!-- Order refund End-->
@@ -371,6 +361,30 @@
                 </li>
             @endif
             <!-- End advertisement -->
+            @if (
+                addon_published_status('ReelsModule')
+                && \App\CentralLogics\Helpers::module_permission_check('reels')
+                && \Modules\ReelsModule\Support\ReelModuleConfig::isAllowedType(config('module.current_module_type'))
+            )
+                <li class="nav-item">
+                    <small class="nav-subtitle">{{ translate('messages.Reels_Management') }}</small>
+                    <small class="tio-more-horizontal nav-subtitle-replacer"></small>
+                </li>
+                <li class="navbar-vertical-aside-has-menu @yield('reels_create')">
+                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.reels.create') }}"
+                        title="{{ translate('messages.Create_Reels') }}">
+                        <i class="tio-video-camera-outlined nav-icon"></i>
+                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.Create_Reels') }}</span>
+                    </a>
+                </li>
+                <li class="navbar-vertical-aside-has-menu @yield('reels_list')">
+                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.reels.index') }}"
+                        title="{{ translate('messages.Reels_List') }}">
+                        <i class="tio-format-bullets nav-icon"></i>
+                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.Reels_List') }}</span>
+                    </a>
+                </li>
+            @endif
                     @endif
                 <!-- End marketing section -->
 
@@ -517,7 +531,11 @@
                                         <li class="nav-item {{  Request::is('admin/item/requested/item/view/*') || Request::is('admin/item/new/item/list') || (Request::is('admin/item/edit/*') && strpos(request()->fullUrl(), 'temp_product=1') !== false  ) ? 'active' : '' }}">
                                             <a class="nav-link " href="{{ route('admin.item.approval_list') }}" title="{{ translate('messages.New_Item_Request') }}">
                                                 <span class="tio-circle nav-indicator-icon"></span>
-                                                <span class="text-truncate">{{ translate('messages.New_Food_Request') }}</span>
+                                                <span class="text-truncate">{{ translate('messages.New_Food_Request') }}
+                                                     <span class="badge badge-soft-success bg-light badge-pill ml-1">
+                                                        {{ \App\Models\TempProduct::withoutGlobalScope(StoreScope::class)->module(Config::get('module.current_module_id'))->count() }}
+                                                    </span>
+                                                </span>
                                             </a>
                                         </li>
                                     @endif
@@ -554,10 +572,10 @@
                     <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                 </li>
 
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/store/pending-requests') ? 'active' : '' }}">
+                <li class="navbar-vertical-aside-has-menu @yield('new_store_request') {{ Request::is('admin/store/pending-requests') ? 'active' : '' }}">
                     <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.store.pending-requests') }}" title="{{ translate('messages.new_restaurants') }}">
                         <span class="tio-calendar-note nav-icon"></span>
-                        <span class="text-truncate position-relative overflow-visible">
+                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate text-capitalize">
                             {{ translate('messages.new_restaurants') }}
                             @php($new_str = \App\Models\Store::whereHas('vendor', function($query){
                                 return $query->where('status', null);
@@ -572,12 +590,12 @@
                 <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/store/add') ? 'active' : '' }}">
                     <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.store.add') }}" title="{{ translate('add new restaurant') }}">
                         <span class="tio-add-circle nav-icon"></span>
-                        <span class="text-truncate position-relative overflow-visible">
+                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate text-capitalize">
                             {{ translate('add new restaurant') }}
                         </span>
                     </a>
                 </li>
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/store/list') ||  Request::is('admin/store/view/*') ? 'active' : '' }}">
+                <li class="navbar-vertical-aside-has-menu @yield('store_update') {{ Request::is('admin/store/list') ||  Request::is('admin/store/view/*') ? 'active' : '' }}">
                     <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.store.list') }}" title="{{ translate('messages.restaurants_list') }}">
                         <span class="tio-layout nav-icon"></span>
                         <span class="text-truncate">{{ translate('messages.restaurants') }}
@@ -625,88 +643,8 @@
 
 
 @push('script_2')
-<script>
-    $(window).on('load' , function() {
-        if($(".navbar-vertical-content li.active").length) {
-            $('.navbar-vertical-content').animate({
-                scrollTop: $(".navbar-vertical-content li.active").offset().top - 150
-            }, 10);
-        }
-    });
 
-    var $rows = $('#navbar-vertical-content li');
-    $('#search-sidebar-menu').keyup(function() {
-        var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
+<script src="{{ asset('Modules/Rental/public/assets/js/admin/view-pages/rental-sidebar.js') }}"></script>
 
-        $rows.show().filter(function() {
-            var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
-            return !~text.indexOf(val);
-        }).hide();
-    });
-    $(document).ready(function() {
-            const $searchInput = $('#search');
-            const $suggestionsList = $('#search-suggestions');
-            const $rows = $('#navbar-vertical-content li');
-            const $subrows = $('#navbar-vertical-content li ul li');
-            {{--const suggestions = ['{{strtolower(translate('messages.order'))  }}', '{{ strtolower(translate('messages.campaign'))  }}', '{{ strtolower(translate('messages.category')) }}', '{{ strtolower(translate('messages.food')) }}','{{ strtolower(translate('messages.addon')) }}','{{ strtolower(translate('messages.restaurant')) }}'  ];--}}
-            const focusInput = () => updateSuggestions($searchInput.val());
-            const hideSuggestions = () => $suggestionsList.slideUp(700);
-            const showSuggestions = () => $suggestionsList.slideDown(700);
-            let clickSuggestion = function() {
-                let suggestionText = $(this).text();
-                $searchInput.val(suggestionText);
-                hideSuggestions();
-                filterItems(suggestionText.toLowerCase());
-                updateSuggestions(suggestionText);
-            };
-            let filterItems = (val) => {
-                let unmatchedItems = $rows.show().filter((index, element) => !~$(element).text().replace(
-                    /\s+/g, ' ').toLowerCase().indexOf(val));
-                let matchedItems = $rows.show().filter((index, element) => ~$(element).text().replace(/\s+/g,
-                    ' ').toLowerCase().indexOf(val));
-                unmatchedItems.hide();
-                matchedItems.each(function() {
-                    let $submenu = $(this).find($subrows);
-                    let keywordCountInRows = 0;
-                    $rows.each(function() {
-                        let rowText = $(this).text().toLowerCase();
-                        let valLower = val.toLowerCase();
-                        let keywordCountRow = rowText.split(valLower).length - 1;
-                        keywordCountInRows += keywordCountRow;
-                    });
-                    if ($submenu.length > 0) {
-                        $subrows.show();
-                        $submenu.each(function() {
-                            let $submenu2 = !~$(this).text().replace(/\s+/g, ' ')
-                                .toLowerCase().indexOf(val);
-                            if ($submenu2 && keywordCountInRows <= 2) {
-                                $(this).hide();
-                            }
-                        });
-                    }
-                });
-            };
-            let updateSuggestions = (val) => {
-                $suggestionsList.empty();
-                suggestions.forEach(suggestion => {
-                    if (suggestion.toLowerCase().includes(val.toLowerCase())) {
-                        $suggestionsList.append(
-                            `<span class="search-suggestion badge badge-soft-light m-1 fs-14">${suggestion}</span>`
-                        );
-                    }
-                });
-                // showSuggestions();
-            };
-            $searchInput.focus(focusInput);
-            $searchInput.on('input', function() {
-                updateSuggestions($(this).val());
-            });
-            $suggestionsList.on('click', '.search-suggestion', clickSuggestion);
-            $searchInput.keyup(function() {
-                filterItems($(this).val().toLowerCase());
-            });
-            $searchInput.on('focusout', hideSuggestions);
-            $searchInput.on('focus', showSuggestions);
-        });
-</script>
+
 @endpush

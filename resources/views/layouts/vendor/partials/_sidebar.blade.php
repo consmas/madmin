@@ -42,7 +42,7 @@
                     <div class="search--form-group">
                         <button type="button" class="btn"><i class="tio-search"></i></button>
                         <input type="text" class="form-control form--control"
-                            placeholder="{{ translate('messages.Search Menu...') }}" id="search-sidebar-menu">
+                            placeholder="{{ translate('messages.Search Menu...') }}" id="search">
                     </div>
                 </form>
                 <ul class="navbar-nav navbar-nav-lg nav-tabs">
@@ -521,6 +521,36 @@
                         </li>
                     @endif
 
+                    @if (
+                        addon_published_status('ReelsModule')
+                        && \App\CentralLogics\Helpers::get_business_settings('vendor_can_upload_reels')
+                        && \App\CentralLogics\Helpers::employee_module_permission_check('reels')
+                        && \Modules\ReelsModule\Support\ReelModuleConfig::isAllowedType(\App\CentralLogics\Helpers::get_store_data()?->module?->module_type)
+                    )
+                        <li class="nav-item">
+                            <small class="nav-subtitle">{{ translate('messages.Reels_Management') }}</small>
+                            <small class="tio-more-horizontal nav-subtitle-replacer"></small>
+                        </li>
+
+                        <li class="navbar-vertical-aside-has-menu @yield('vendor_reels_create')">
+                            <a class="js-navbar-vertical-aside-menu-link nav-link"
+                                href="{{ route('vendor.reels.create') }}"
+                                title="{{ translate('messages.Create_Reels') }}">
+                                <i class="tio-video-camera-outlined nav-icon"></i>
+                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.Create_Reels') }}</span>
+                            </a>
+                        </li>
+
+                        <li class="navbar-vertical-aside-has-menu @yield('vendor_reels')">
+                            <a class="js-navbar-vertical-aside-menu-link nav-link"
+                                href="{{ route('vendor.reels.index') }}"
+                                title="{{ translate('messages.Reels_List') }}">
+                                <i class="tio-format-bullets nav-icon"></i>
+                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.Reels_List') }}</span>
+                            </a>
+                        </li>
+                    @endif
+
                     <!-- DeliveryMan -->
                     @if (
                         \App\CentralLogics\Helpers::employee_module_permission_check('deliveryman') || App\CentralLogics\Helpers::employee_module_permission_check('deliveryman_list'))
@@ -547,7 +577,7 @@
 
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('deliveryman_list'))
                         <li
-                            class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/delivery-man/list') ? 'active' : '' }}">
+                            class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/delivery-man/list') || Request::is('vendor-panel/delivery-man/edit/*') || Request::is('vendor-panel/delivery-man/preview/*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                 href="{{ route('vendor.delivery-man.list') }}"
                                 title="{{ translate('messages.deliveryman') }}">
@@ -674,11 +704,19 @@
 
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('expense_report'))
                         <li
-                            class="navbar-vertical-aside-has-menu {{ Request::is('vendor/report/expense-report') ? 'active' : '' }}">
+                            class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/report/expense-report') ? 'active' : '' }}">
                             <a class="nav-link " href="{{ route('vendor.report.expense-report') }}"
                                 title="{{ translate('messages.expense_report') }}">
                                 <span class="tio-money nav-icon"></span>
                                 <span class="text-truncate">{{ translate('messages.expense_report') }}</span>
+                            </a>
+                        </li>
+                        <li
+                            class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/report/store-earning-report') ? 'active' : '' }}">
+                            <a class="nav-link " href="{{ route('vendor.report.store-earning-report') }}"
+                                title="{{ translate('messages.Store_Earning_Report') }}">
+                                <span class="tio-align-to-bottom nav-icon"></span>
+                                <span class="text-truncate">{{ translate('messages.Store_Earning_Report') }}</span>
                             </a>
                         </li>
                     @endif
@@ -827,23 +865,5 @@
 </div>
 
 @push('script_2')
-    <script>
-        $(window).on('load', function() {
-            if ($(".navbar-vertical-content li.active").length) {
-                $('.navbar-vertical-content').animate({
-                    scrollTop: $(".navbar-vertical-content li.active").offset().top - 150
-                }, 10);
-            }
-        });
-
-        var $rows = $('#navbar-vertical-content li');
-        $('#search-sidebar-menu').keyup(function() {
-            var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
-
-            $rows.show().filter(function() {
-                var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
-                return !~text.indexOf(val);
-            }).hide();
-        });
-    </script>
+   <script src="{{ asset('public/assets/admin/js/view-pages/sidebar.js') }}"></script>
 @endpush

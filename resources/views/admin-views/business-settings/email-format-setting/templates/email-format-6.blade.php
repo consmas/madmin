@@ -73,10 +73,9 @@ $company_name = App\Models\BusinessSetting::where('key', 'business_name')->first
                     </a>
                 </span>
                 <span class="copyright" id="mail-copyright">
-                    {{ $data['copyright_text']?? translate('Copyright 2023 ConsMas. All right reserved') }}
+                    {{ $data['copyright_text']?? translate('Copyright 2023 6ammart. All right reserved') }}
                 </span>
             </td>
         </tr>
     </tbody>
 </table>
-<script src="{{asset('public/assets/admin')}}/js/view-pages/common.js"></script>

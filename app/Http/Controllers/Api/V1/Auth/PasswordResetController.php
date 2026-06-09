@@ -73,7 +73,7 @@ class PasswordResetController extends Controller
 
 
             $token = rand(100000,999999);
-            if(env('APP_MODE') == 'test'){
+            if(getEnvMode() == 'test'){
                 $token = '123456';
             }
                DB::table('password_resets')->updateOrInsert(isset($request->phone) ? ['phone' => $request->phone] : ['email' => $request->email],
@@ -82,7 +82,7 @@ class PasswordResetController extends Controller
                 'created_at' => now(),
             ]);
 
-            if(env('APP_MODE') == 'test'){
+            if(getEnvMode() == 'test'){
                 return response()->json(['message' => translate('messages.Use_test_OTP')], 200);
             }
 
@@ -114,7 +114,7 @@ class PasswordResetController extends Controller
                 try {
                     $mailResponse=null;
                         if (Helpers::get_mail_status('forget_password_mail_status_user') == '1' && $customer['email']) {
-                            Mail::to($customer['email'])->send(new UserPasswordResetMail($token,$customer['f_name']));
+                            Mail::to($customer?->getRawOriginal('email'))->send(new UserPasswordResetMail($token,$customer['f_name']));
                             $mailResponse='success';
                         }
                 } catch (\Throwable $th) {
@@ -169,7 +169,7 @@ class PasswordResetController extends Controller
             ]], 404);
         }
 
-        if(env('APP_MODE')=='test')
+        if(getEnvMode()=='test')
         {
             if($request['reset_token']=="123456")
             {
@@ -273,7 +273,7 @@ class PasswordResetController extends Controller
 
         $data = PasswordReset::where(['token' => $request['reset_token']])->where(isset($request->phone) ? ['phone' => $request->phone] : ['email' => $request->email])->first();
 
-        if(env('APP_MODE')=='test')
+        if(getEnvMode()=='test')
         {
             if($request['reset_token']=="123456")
             {

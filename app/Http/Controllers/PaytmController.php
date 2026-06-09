@@ -4,8 +4,6 @@
 namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,13 +13,14 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PaymentRequest;
 use App\Traits\Processor;
+use Exception;
 
 class PaytmController extends Controller
 {
     use Processor;
 
     private mixed $config_values;
-
+	private  static $iv = "@@@@&&&&####$$$$";
     private PaymentRequest $payment;
     private User $user;
 
@@ -35,11 +34,11 @@ class PaytmController extends Controller
         }
         if (isset($config)) {
 
-            $PAYTM_STATUS_QUERY_NEW_URL = 'https://securegw-stage.paytm.in/merchant-status/getTxnStatus';
-            $PAYTM_TXN_URL = 'https://securegw-stage.paytm.in/theia/processTransaction';
+            $PAYTM_STATUS_QUERY_NEW_URL = 'https://securestage.paytmpayments.com/theia/api/v1/showPaymentPage';
+            $PAYTM_TXN_URL = 'https://securestage.paytmpayments.com/theia/api/v1/initiateTransaction';
             if ($config->mode == 'live') {
-                $PAYTM_STATUS_QUERY_NEW_URL = 'https://securegw.paytm.in/merchant-status/getTxnStatus';
-                $PAYTM_TXN_URL = 'https://securegw.paytm.in/theia/processTransaction';
+                $PAYTM_STATUS_QUERY_NEW_URL = 'https://secure.paytmpayments.com/theia/api/v1/showPaymentPage';
+                $PAYTM_TXN_URL = 'https://secure.paytmpayments.com/theia/api/v1/initiateTransaction';
             }
 
             $config = array(
@@ -59,127 +58,106 @@ class PaytmController extends Controller
         $this->user = $user;
     }
 
-    function encrypt_e($input, $ky): bool|string
-    {
-        $key = html_entity_decode($ky);
-        $iv = "@@@@&&&&####$$$$";
-        $data = openssl_encrypt($input, "AES-128-CBC", $key, 0, $iv);
-        return $data;
-    }
+	 public function encrypt($input, $key) {
+		$key = html_entity_decode($key);
 
-    function decrypt_e($crypt, $ky): bool|string
-    {
-        $key = html_entity_decode($ky);
-        $iv = "@@@@&&&&####$$$$";
-        $data = openssl_decrypt($crypt, "AES-128-CBC", $key, 0, $iv);
-        return $data;
-    }
+		if (function_exists('openssl_encrypt')) {
+			$data = openssl_encrypt($input, "AES-128-CBC", $key, 0, self::$iv);
+		} else {
+			throw new Exception('OpenSSL extension is not available. Please install the OpenSSL extension.');
+		}
+		return $data;
+	}
 
-    function generateSalt_e($length): string
-    {
-        $random = "";
-        srand((double)microtime() * 1000000);
+	 public function decrypt($encrypted, $key) {
+		$key = html_entity_decode($key);
 
-        $data = "AbcDE123IJKLMN67QRSTUVWXYZ";
-        $data .= "aBCdefghijklmn123opq45rs67tuv89wxyz";
-        $data .= "0FGH45OP89";
+		if(function_exists('openssl_decrypt')){
+			$data = openssl_decrypt ( $encrypted , "AES-128-CBC" , $key, 0, self::$iv );
+		} else {
+			throw new Exception('OpenSSL extension is not available. Please install the OpenSSL extension.');
+		}
+		return $data;
+	}
 
-        for ($i = 0; $i < $length; $i++) {
-            $random .= substr($data, (rand() % (strlen($data))), 1);
-        }
+	 public function generateSignature($params, $key) {
+		if(!is_array($params) && !is_string($params)){
+			throw new Exception("string or array expected, ".gettype($params)." given");
+		}
+		if(is_array($params)){
+			$params = self::getStringByParams($params);
+		}
+		return self::generateSignatureByString($params, $key);
+	}
 
-        return $random;
-    }
+	 public function verifySignature($params, $key, $checksum){
+		if(!is_array($params) && !is_string($params)){
+			throw new Exception("string or array expected, ".gettype($params)." given");
+		}
+		if(isset($params['CHECKSUMHASH'])){
+			unset($params['CHECKSUMHASH']);
+		}
+		if(is_array($params)){
+			$params = self::getStringByParams($params);
+		}
+		return self::verifySignatureByString($params, $key, $checksum);
+	}
 
-    function checkString_e($value)
-    {
-        if ($value == 'null')
-            $value = '';
-        return $value;
-    }
+	 private function generateSignatureByString($params, $key){
+		$salt = self::generateRandomString(4);
+		return self::calculateChecksum($params, $key, $salt);
+	}
 
-    function getChecksumFromArray($arrayList, $key, $sort = 1): bool|string
-    {
-        if ($sort != 0) {
-            ksort($arrayList);
-        }
-        $str = $this->getArray2Str($arrayList);
-        $salt = $this->generateSalt_e(4);
-        $finalString = $str . "|" . $salt;
-        $hash = hash("sha256", $finalString);
-        $hashString = $hash . $salt;
-        $checksum = $this->encrypt_e($hashString, $key);
-        return $checksum;
-    }
+	 private function verifySignatureByString($params, $key, $checksum){
+		$paytm_hash = self::decrypt($checksum, $key);
+		$salt = substr($paytm_hash, -4);
+		return $paytm_hash == self::calculateHash($params, $salt) ? true : false;
+	}
 
-    function verifychecksum_e($arrayList, $key, $checksumvalue): string
-    {
-        $arrayList = $this->removeCheckSumParam($arrayList);
-        ksort($arrayList);
-        $str = $this->getArray2StrForVerify($arrayList);
-        $paytm_hash = $this->decrypt_e($checksumvalue, $key);
-        $salt = substr($paytm_hash, -4);
+	 private function generateRandomString($length) {
+		$random = "";
+		$data = "9876543210ZYXWVUTSRQPONMLKJIHGFEDCBAabcdefghijklmnopqrstuvwxyz!@#$&_";
 
-        $finalString = $str . "|" . $salt;
+		for ($i = 0; $i < $length; $i++) {
+			$random .= substr($data, (rand() % (strlen($data))), 1);
+		}
 
-        $website_hash = hash("sha256", $finalString);
-        $website_hash .= $salt;
+		return $random;
+	}
 
-        if ($website_hash == $paytm_hash) {
-            $validFlag = "TRUE";
-        } else {
-            $validFlag = "FALSE";
-        }
-        return $validFlag;
-    }
+	 private function getStringByParams($params) {
+		ksort($params);
+		$params = array_map(function ($value){
+			return ($value !== null && strtolower($value) !== "null") ? $value : "";
+	  	}, $params);
+		return implode("|", $params);
+	}
 
-    function getArray2Str($arrayList): string
-    {
-        $findme = 'REFUND';
-        $findmepipe = '|';
-        $paramStr = "";
-        $flag = 1;
-        foreach ($arrayList as $key => $value) {
-            $pos = strpos($value, $findme);
-            $pospipe = strpos($value, $findmepipe);
-            if ($pos !== false || $pospipe !== false) {
-                continue;
-            }
+	 private function calculateHash($params, $salt){
+		$finalString = $params . "|" . $salt;
+		$hash = hash("sha256", $finalString);
+		return $hash . $salt;
+	}
 
-            if ($flag) {
-                $paramStr .= $this->checkString_e($value);
-                $flag = 0;
-            } else {
-                $paramStr .= "|" . $this->checkString_e($value);
-            }
-        }
-        return $paramStr;
-    }
+	 private function calculateChecksum($params, $key, $salt){
+		$hashString = self::calculateHash($params, $salt);
+		return self::encrypt($hashString, $key);
+	}
 
-    function getArray2StrForVerify($arrayList): string
-    {
-        $paramStr = "";
-        $flag = 1;
-        foreach ($arrayList as $key => $value) {
-            if ($flag) {
-                $paramStr .= $this->checkString_e($value);
-                $flag = 0;
-            } else {
-                $paramStr .= "|" . $this->checkString_e($value);
-            }
-        }
-        return $paramStr;
-    }
+	 private function pkcs5Pad($text, $blocksize) {
+		$pad = $blocksize - (strlen($text) % $blocksize);
+		return $text . str_repeat(chr($pad), $pad);
+	}
 
-    function removeCheckSumParam($arrayList)
-    {
-        if (isset($arrayList["CHECKSUMHASH"])) {
-            unset($arrayList["CHECKSUMHASH"]);
-        }
-        return $arrayList;
-    }
+	 private function pkcs5Unpad($text) {
+		$pad = ord($text[strlen($text) - 1]);
+		if ($pad > strlen($text))
+			return false;
+		return substr($text, 0, -1 * $pad);
+	}
 
-    public function payment(Request $request): View|Factory|JsonResponse|Application
+
+    public function payment(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'payment_id' => 'required|uuid'
@@ -194,43 +172,61 @@ class PaytmController extends Controller
             return response()->json($this->response_formatter(GATEWAYS_DEFAULT_204), 200);
         }
         $payer = json_decode($data['payer_information']);
-
-        $paramList = array();
         $ORDER_ID = time();
-        $INDUSTRY_TYPE_ID = $request["INDUSTRY_TYPE_ID"];
-        $CHANNEL_ID = $request["CHANNEL_ID"];
-        $TXN_AMOUNT = round($data->payment_amount, 2);
 
-        $paramList["MID"] = Config::get('paytm_config.PAYTM_MERCHANT_MID');
-        $paramList["ORDER_ID"] = $ORDER_ID;
-        $paramList["CUST_ID"] = $data['payer_id'];
-        $paramList["INDUSTRY_TYPE_ID"] = $INDUSTRY_TYPE_ID;
-        $paramList["CHANNEL_ID"] = $CHANNEL_ID;
-        $paramList["TXN_AMOUNT"] = $TXN_AMOUNT;
-        $paramList["WEBSITE"] = Config::get('paytm_config.PAYTM_MERCHANT_WEBSITE');
 
-        $paramList["CALLBACK_URL"] = route('paytm.response', ['payment_id' => $data->id]);
-        $paramList["MSISDN"] = $payer->phone;
-        $paramList["EMAIL"] = $payer->email;
-        $paramList["VERIFIED_BY"] = "EMAIL";
-        $paramList["IS_USER_VERIFIED"] = "YES";
+            $paytmParams = array();
 
-        $checkSum = $this->getChecksumFromArray($paramList, Config::get('paytm_config.PAYTM_MERCHANT_KEY'));
+            $paytmParams["body"] = array(
+            "requestType" => "Payment",
+            "mid"      => Config::get('paytm_config.PAYTM_MERCHANT_MID'),
+            "websiteName"  => Config::get('paytm_config.PAYTM_MERCHANT_WEBSITE'),
+            "orderId"    => $ORDER_ID,
+            "callbackUrl"  => route('paytm.response', ['payment_id' => $data->id]),
+            "txnAmount"   => array(
+                "value"   => (string) round($data->payment_amount, 2),
+                "currency" => "INR",
+            ),
+            "userInfo"   => array(
+                "custId"  => $data['payer_id'],
+            ),
+            );
 
-        return view('payment-views.paytm', compact('checkSum', 'paramList'));
+         
+            $checksum = self::generateSignature(json_encode($paytmParams["body"], JSON_UNESCAPED_SLASHES), Config::get('paytm_config.PAYTM_MERCHANT_KEY'));
+
+            $paytmParams["head"] = array(
+                "signature" => $checksum
+            );
+
+            $post_data = json_encode($paytmParams, JSON_UNESCAPED_SLASHES);
+
+
+            $url = Config::get('paytm_config.PAYTM_TXN_URL')
+                . "?mid=" . Config::get('paytm_config.PAYTM_MERCHANT_MID')
+                . "&orderId=" . $ORDER_ID;
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
+            $response = curl_exec($ch);
+
+
+            $data = json_decode($response, true);
+
+            $resultStatus = $data['body']['resultInfo']['resultStatus'] ?? null;
+            $resultMsg    = $data['body']['resultInfo']['resultMsg'] ?? null;
+            $txnToken     = $data['body']['txnToken'] ?? null;
+
+
+        return view('payment-views.paytm', compact('txnToken','ORDER_ID'));
     }
 
     public function callback(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
-        $paramList = $_POST;
-
-        $paytmChecksum = isset($_POST["CHECKSUMHASH"]) ? $_POST["CHECKSUMHASH"] : "";
-
-        $isValidChecksum = $this->verifychecksum_e($paramList, Config::get('paytm_config.PAYTM_MERCHANT_KEY'), $paytmChecksum); //will return TRUE or FALSE string.
-
-        if ($isValidChecksum == "TRUE") {
             if ($request["STATUS"] == "TXN_SUCCESS") {
-
                 $this->payment::where(['id' => $request['payment_id']])->update([
                     'payment_method' => 'paytm',
                     'is_paid' => 1,
@@ -244,7 +240,7 @@ class PaytmController extends Controller
                 }
                 return $this->payment_response($data, 'success');
             }
-        }
+
         $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
         if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
             call_user_func($payment_data->failure_hook, $payment_data);

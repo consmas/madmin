@@ -84,7 +84,7 @@
                                 </div>
                                 <div class="btn--container justify-content-end">
                                     <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
-                                    <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}" class="btn btn--primary mb-2">{{translate('messages.save')}}</button>
+                                    <button type="submit" class="btn btn--primary mb-2 call-demo">{{translate('messages.save')}}</button>
                                 </div>
                                 </div>
                             </div>
@@ -180,7 +180,7 @@
                                     </div>
                                     <div class="btn--container justify-content-end">
                                         <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
-                                        <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}" class="btn btn--primary mb-2">{{translate('messages.save')}}</button>
+                                        <button type="submit" class="btn btn--primary mb-2 call-demo">{{translate('messages.save')}}</button>
                                     </div>
                                 </div>
                             </form>

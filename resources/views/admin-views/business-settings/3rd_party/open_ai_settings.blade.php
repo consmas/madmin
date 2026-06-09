@@ -129,7 +129,7 @@
                             <div class="btn--container justify-content-end">
                                 <button type="reset" id="reset_btn"
                                     class="btn btn--reset location-reload">{{ translate('Reset') }}</button>
-                                <button type="{{ env('APP_MODE') != 'demo' ? 'submit' : 'button' }}" id="submit"
+                                <button type="{{ getEnvMode() != 'demo' ? 'submit' : 'button' }}" id="submit"
                                     class="btn btn--primary call-demo">{{ translate('Save_Information') }}</button>
                             </div>
                         </div>

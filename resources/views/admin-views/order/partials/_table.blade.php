@@ -60,9 +60,9 @@
         </div>
     </td>
     <td class="text-capitalize text-center">
-        @if($order['order_status']=='pending' || $order['order_status']=='pending_credit')
+        @if($order['order_status']=='pending')
             <span class="badge badge-soft-info">
-              {{translate('messages.'.$order['order_status'])}}
+              {{translate('messages.pending')}}
             </span>
         @elseif($order['order_status']=='confirmed')
             <span class="badge badge-soft-info">

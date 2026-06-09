@@ -45,6 +45,18 @@ class AutomatedMessageController extends Controller
         Toastr::success(translate('messages.status_updated'));
         return back();
     }
+
+
+      public function edit($id)
+    {
+        $message =AutomatedMessage::withoutGlobalScope('translate')->with('translations')->find($id);
+        $language = getWebConfig('language');
+        return response()->json([
+            'view' => view('admin-views.business-settings.settings.partials._automated_message_edit', compact('message','language'))->render(),
+        ]);
+    }
+
+
     public function update(Request $request)
     {
         $request->validate([
@@ -54,38 +66,10 @@ class AutomatedMessageController extends Controller
             'message.0.required'=>translate('default_message_is_required'),
         ]);
         $automatedMessage = AutomatedMessage::findOrFail($request->message_id);
-        $automatedMessage->message = $request->message[array_search('default', $request->lang1)];
+        $automatedMessage->message = $request->message[array_search('default', $request->lang)];
         $automatedMessage?->save();
+        Helpers::add_or_update_translations(request: $request, key_data: 'message', name_field: 'message', model_name: 'AutomatedMessage', data_id: $automatedMessage->id, data_value: $automatedMessage->message);
 
-
-        $default_lang = str_replace('_', '-', app()->getLocale());
-        foreach ($request->lang1 as $index => $key) {
-            if($default_lang == $key && !($request->message[$index])){
-                if ($key != 'default') {
-                    Translation::updateOrInsert(
-                        [
-                            'translationable_type' => 'App\Models\AutomatedMessage',
-                            'translationable_id' => $automatedMessage->id,
-                            'locale' => $key,
-                            'key' => 'message'
-                        ],
-                        ['value' => $automatedMessage->message]
-                    );
-                }
-            }else{
-                if ($request->message[$index] && $key != 'default') {
-                    Translation::updateOrInsert(
-                        [
-                            'translationable_type' => 'App\Models\AutomatedMessage',
-                            'translationable_id' => $automatedMessage->id,
-                            'locale' => $key,
-                            'key' => 'message'
-                        ],
-                        ['value' => $request->message[$index]]
-                    );
-                }
-            }
-        }
         Toastr::success(translate('Automated_message_updated_successfully'));
         return back();
     }

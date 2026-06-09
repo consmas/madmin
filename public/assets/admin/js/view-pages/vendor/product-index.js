@@ -38,31 +38,56 @@ $(document).ready(function() {
     });
 });
 
-function show_min_max(data) {
-    $('#min_max1_' + data).removeAttr("readonly");
-    $('#min_max2_' + data).removeAttr("readonly");
-    $('#min_max1_' + data).attr("required", "true");
-    $('#min_max2_' + data).attr("required", "true");
-}
+// function show_min_max(data) {
+//     $('#min_max1_' + data).removeAttr("readonly");
+//     $('#min_max2_' + data).removeAttr("readonly");
+//     $('#min_max1_' + data).attr("required", "true");
+//     $('#min_max2_' + data).attr("required", "true");
+// }
 
-function hide_min_max(data) {
-    $('#min_max1_' + data).val(null).trigger('change');
-    $('#min_max2_' + data).val(null).trigger('change');
-    $('#min_max1_' + data).attr("readonly", "true");
-    $('#min_max2_' + data).attr("readonly", "true");
-    $('#min_max1_' + data).attr("required", "false");
-    $('#min_max2_' + data).attr("required", "false");
-}
+// function hide_min_max(data) {
+//     $('#min_max1_' + data).val(null).trigger('change');
+//     $('#min_max2_' + data).val(null).trigger('change');
+//     $('#min_max1_' + data).attr("readonly", "true");
+//     $('#min_max2_' + data).attr("readonly", "true");
+//     $('#min_max1_' + data).attr("required", "false");
+//     $('#min_max2_' + data).attr("required", "false");
+// }
+
+// $(document).on('change', '.show_min_max', function () {
+//     let data = $(this).data('count');
+//     show_min_max(data);
+// });
+
+// $(document).on('change', '.hide_min_max', function () {
+//     let data = $(this).data('count');
+//     hide_min_max(data);
+// });
 
 $(document).on('change', '.show_min_max', function () {
-    let data = $(this).data('count');
-    show_min_max(data);
+    let count = $(this).data('count');
+    toggleMinMaxRequired(count, true);
 });
 
 $(document).on('change', '.hide_min_max', function () {
-    let data = $(this).data('count');
-    hide_min_max(data);
+    let count = $(this).data('count');
+    toggleMinMaxRequired(count, false);
 });
+
+function toggleMinMaxRequired(count, required) {
+    let $min = $('#min_max1_' + count);
+    let $max = $('#min_max2_' + count);
+
+    if (required) {
+        $min.prop('readonly', false).prop('required', true);
+        $max.prop('readonly', false).prop('required', true);
+    } else {
+        $min.prop('readonly', true).prop('required', false).val(null).trigger('change').removeClass('is-invalid');
+        $max.prop('readonly', true).prop('required', false).val(null).trigger('change').removeClass('is-invalid');
+        $('div.form-validation-error[data-for="options[' + count + '][min]"]').remove();
+        $('div.form-validation-error[data-for="options[' + count + '][max]"]').remove();
+    }
+}
 
 
 

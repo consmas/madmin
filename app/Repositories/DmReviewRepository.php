@@ -38,15 +38,21 @@ class DmReviewRepository implements DmReviewRepositoryInterface
     {
         $key = explode(' ', $searchValue);
         $data = $this->review->with($relations)->where($filters)
-            ->when(isset($key), function($query) use($key) {
-                $query->whereHas('delivery_man', function ($query) use ($key) {
-                    foreach ($key as $value) {
-                        $query->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");
-                    }
+            ->when($searchValue, function ($query) use ($key) {
+                $query->where(function ($q) use ($key) {
+                    $q->whereHas('delivery_man', function ($query) use ($key) {
+                        foreach ($key as $value) {
+                            $query->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");
+                        }
+                    })->orWhereHas('customer', function ($query) use ($key) {
+                        foreach ($key as $value) {
+                            $query->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");
+                        }
+                    });
                 });
             })
-        ->latest();
-        if($dataLimit == 'all'){
+            ->latest();
+        if ($dataLimit == 'all') {
             return $data->get();
         }
         return $data->paginate($dataLimit);
@@ -57,7 +63,7 @@ class DmReviewRepository implements DmReviewRepositoryInterface
         $key = explode(' ', $searchValue);
 
         $data = $this->review->with($relations)->where($filters)
-            ->when(isset($key), function($query) use($key) {
+            ->when(isset($key), function ($query) use ($key) {
                 $query->whereHas('delivery_man', function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");
@@ -65,12 +71,12 @@ class DmReviewRepository implements DmReviewRepositoryInterface
                 });
             });
 
-            if(count($orderBy) > 0 ){
-                $data->orderBy($orderBy['col'], $orderBy['type']);
-            } else{
-                $data->latest();
-            }
-        if($dataLimit == 'all'){
+        if (count($orderBy) > 0) {
+            $data->orderBy($orderBy['col'], $orderBy['type']);
+        } else {
+            $data->latest();
+        }
+        if ($dataLimit == 'all') {
             return $data->get();
         }
         return $data->paginate($dataLimit);

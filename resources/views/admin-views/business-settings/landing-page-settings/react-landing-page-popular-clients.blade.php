@@ -88,7 +88,7 @@
         </div>
 
         <div class="card mb-20">
-            <form action="{{ route('admin.business-settings.react-landing-page-settings', 'popular-client-section') }}"
+            <form action="{{ route('admin.business-settings.react-landing-page-settings-update', 'popular-client-section') }}"
                   method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="card-body">
@@ -115,7 +115,7 @@
                         ->get()
                         ->map(function ($item) {
                             return [
-                                'url' => Helpers::get_full_url('popular_client_section/', $item->value, 'react_landing_page'),
+                                'url' => Helpers::get_full_url('popular_client_section', $item->value,$item?->storage[0]?->value ?? 'public' ,'react_landing_page'),
                                 'filename' => $item->value,
                                 'path' => 'popular_client_section/'
                             ];
@@ -288,7 +288,7 @@
                         <div class="card-body">
                             {{-- Move form opening tag here --}}
                             {{--                <form class="custom-validation"--}}
-                            {{--                      action="{{ route('admin.business-settings.react-landing-page-settings', 'popular-client-section-images') }}"--}}
+                            {{--                      action="{{ route('admin.business-settings.react-landing-page-settings-update', 'popular-client-section-images') }}"--}}
                             {{--                      method="POST" enctype="multipart/form-data">--}}
                             {{--                    @csrf--}}
 

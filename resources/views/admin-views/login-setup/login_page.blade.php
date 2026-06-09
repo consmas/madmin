@@ -169,7 +169,7 @@
                     </div>
                     <div class="btn--container justify-content-end">
                         <button type="reset" class="btn btn--reset">{{ translate('reset') }}</button>
-                        <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}" class="btn btn--primary {{env('APP_MODE')!='demo'?'':'call-demo'}}">{{translate('messages.submit')}}</button>
+                        <button type="{{getEnvMode()!='demo'?'submit':'button'}}" class="btn btn--primary {{getEnvMode()!='demo'?'':'call-demo'}}">{{translate('messages.submit')}}</button>
                     </div>
 
                 </div>

@@ -153,7 +153,7 @@ class SocialAuthController extends Controller
                         'errors' => $errors
                     ], 403);
                 }
-                if($customer_verification && !$firebase_otp_verification && !auth()->user()->is_phone_verified && env('APP_MODE') != 'demo')
+                if($customer_verification && !$firebase_otp_verification && !auth()->user()->is_phone_verified && getEnvMode() != 'demo')
                 {
                     // $interval_time = BusinessSetting::where('key', 'otp_interval_time')->first();
                     // $otp_interval_time= isset($interval_time) ? $interval_time->value : 20;
@@ -180,7 +180,7 @@ class SocialAuthController extends Controller
                     try {
                         $mailResponse = null;
                         if (config('mail.status') && Helpers::get_mail_status('registration_otp_mail_status_user') == '1' && Helpers::getNotificationStatusData('customer', 'customer_registration_otp', 'mail_status')) {
-                            Mail::to($user->email)->send(new EmailVerification($otp, $user->email));
+                            Mail::to($user?->getRawOriginal('email'))->send(new EmailVerification($otp, $user->email));
                             $mailResponse = 'success';
                         }
 
@@ -350,7 +350,7 @@ class SocialAuthController extends Controller
                         'errors' => $errors
                     ], 403);
                 }
-                if($customer_verification && !$firebase_otp_verification && !auth()->user()->is_phone_verified && env('APP_MODE') != 'demo')
+                if($customer_verification && !$firebase_otp_verification && !auth()->user()->is_phone_verified && getEnvMode() != 'demo')
                 {
                     // $interval_time = BusinessSetting::where('key', 'otp_interval_time')->first();
                     // $otp_interval_time= isset($interval_time) ? $interval_time->value : 20;
@@ -376,7 +376,7 @@ class SocialAuthController extends Controller
                     try {
                         $mailResponse = null;
                         if (config('mail.status') && Helpers::get_mail_status('registration_otp_mail_status_user') == '1' && Helpers::getNotificationStatusData('customer', 'customer_registration_otp', 'mail_status')) {
-                            Mail::to($user->email)->send(new EmailVerification($otp, $user->email));
+                            Mail::to($user?->getRawOriginal('email'))->send(new EmailVerification($otp, $user->email));
                             $mailResponse = 'success';
                         }
 
@@ -561,7 +561,7 @@ class SocialAuthController extends Controller
                     'errors' => $errors
                 ], 403);
             }
-            if($customer_verification && !$firebase_otp_verification && !auth()->user()->is_phone_verified && env('APP_MODE') != 'demo')
+            if($customer_verification && !$firebase_otp_verification && !auth()->user()->is_phone_verified && getEnvMode() != 'demo')
             {
                 // $interval_time = BusinessSetting::where('key', 'otp_interval_time')->first();
                 // $otp_interval_time= isset($interval_time) ? $interval_time->value : 20;
@@ -588,7 +588,7 @@ class SocialAuthController extends Controller
                 try {
                     $mailResponse = null;
                     if (config('mail.status') && Helpers::get_mail_status('login_otp_mail_status_user') == '1' && Helpers::getNotificationStatusData('customer', 'customer_registration_otp', 'mail_status')) {
-                        Mail::to($user->email)->send(new EmailVerification($otp, $user->email));
+                        Mail::to($user?->getRawOriginal('email'))->send(new EmailVerification($otp, $user->email));
                         $mailResponse = 'success';
                     }
 

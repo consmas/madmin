@@ -58,6 +58,8 @@ return [
 
     'asset_url' => env('ASSET_URL', null),
 
+    'app_mode' => env('APP_MODE', 'live'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

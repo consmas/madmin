@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use App\Models\SubscriptionPackage;
 use Gregwar\Captcha\CaptchaBuilder;
 use App\Mail\VendorSelfRegistration;
+use App\Models\ModuleZone;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -178,9 +179,9 @@ class VendorController extends Controller
             }
 
             if($module?->module_type != 'rental' && config('mail.status') && Helpers::get_mail_status('store_registration_mail_status_admin') == '1' &&  Helpers::getNotificationStatusData('admin','store_self_registration','mail_status') ){
-                Mail::to($admin['email'])->send(new StoreRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
+                Mail::to($admin?->getRawOriginal('email'))->send(new StoreRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
             } elseif($module?->module_type == 'rental' && addon_published_status('Rental')&& config('mail.status') && Helpers::get_mail_status('rental_provider_registration_mail_status_admin') == '1' &&  Helpers::getRentalNotificationStatusData('admin','provider_self_registration','mail_status') ){
-                Mail::to($admin['email'])->send(new ProviderRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
+                Mail::to($admin?->getRawOriginal('email'))->send(new ProviderRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
             }
 
         }catch(\Exception $ex){
@@ -205,19 +206,6 @@ class VendorController extends Controller
                 $store->save();
 
             }
-            // else{
-            //     $admin_commission= BusinessSetting::where('key','admin_commission')->first();
-            //     $business_name= BusinessSetting::where('key','business_name')->first();
-            //     $packages= SubscriptionPackage::where('status',1)->where('module_type', 'all')->get();
-            //     Toastr::error(translate('messages.please_follow_the_steps_properly.'));
-            //     return view('vendor-views.auth.register-step-2',[
-            //         'admin_commission'=> $admin_commission?->value,
-            //         'business_name'=> $business_name?->value,
-            //         'packages'=> $packages,
-            //         'store_id' =>$store->id,
-            //         'type'=>$request->type
-            //         ]);
-            // }
         } else{
             $store->store_business_model = 'commission';
             $store->save();
@@ -260,10 +248,23 @@ class VendorController extends Controller
                 'module_type' => $module,
                 'view' => view('vendor-views.auth._package_data', compact('packages','module'))->render(),
             ]);
-            // return response()->json(['module_type' => $module->module_type, '' => $packages ?? null]);
         }
 
-        return response()->json(['module_type' => '']);
+        return response()->json(['module_type' => '','module_zone' => false]);
+    }
+
+
+    public function check_module_type(Request $request): JsonResponse
+    {
+        $module = Module::find($request->id);
+        $moduleZone= null;
+        if ($module) {
+            if($request->zone_id){
+            $moduleZone=  ModuleZone::where('module_id', $module->id)->where('zone_id', $request->zone_id)->exists();
+            }
+
+        }
+        return response()->json(['module_zone' => $moduleZone]);
     }
 
 
@@ -307,14 +308,14 @@ class VendorController extends Controller
 
     public function secondStep(Request $request){
         $store=Store::findOrFail($request->store_id);
-
         if ($request->business_plan == 'subscription-base' && $store->package_id != null ) {
+
             $key=['subscription_free_trial_days','subscription_free_trial_type','subscription_free_trial_status'];
             $free_trial_settings=BusinessSetting::whereIn('key', $key)->pluck('value','key');
 
             return view('vendor-views.auth.register-subscription-payment',[
-            'package_id'=> $request->package_id,
-            'store_id' => $request->store_id,
+            'package_id'=> $store->package_id,
+            'store_id' => $store->id,
             'free_trial_settings'=>$free_trial_settings,
             'payment_methods' => Helpers::getActivePaymentGateways(),
 
@@ -331,7 +332,6 @@ class VendorController extends Controller
             $admin_commission= BusinessSetting::where('key','admin_commission')->first();
             $business_name= BusinessSetting::where('key','business_name')->first();
             $packages= SubscriptionPackage::where('status',1)->where('module_type', 'all')->get();
-            // Toastr::error(translate('messages.please_follow_the_steps_properly.'));
             return view('vendor-views.auth.register-step-2',[
                 'admin_commission'=> $admin_commission?->value,
                 'business_name'=> $business_name?->value,

@@ -53,7 +53,7 @@ class AddonController extends Controller
         $directories = self::getDirectories($dir);
         $addons = [];
         foreach ($directories as $directory) {
-            if($directory !== 'TaxModule'){
+            if(!in_array($directory, ['TaxModule','ReelsModule','AI'])) {
                 $sub_dirs = self::getDirectories('Modules/' . $directory);
                 if (in_array('Addon', $sub_dirs)) {
                     $addons[] = 'Modules/' . $directory;
@@ -65,9 +65,11 @@ class AddonController extends Controller
 
     public function publish(Request $request): JsonResponse|int
     {
-        if (env('APP_MODE') == 'demo') {
-            Toastr::info(translate('messages.update_option_is_disable_for_demo'));
-            return back();
+        if (getEnvMode() == 'demo') {
+            return response()->json([
+                'status' => 'demo',
+                'message'=> translate('messages.update_option_is_disable_for_demo')
+            ]);
         }
         $full_data = include($request['path'] . '/Addon/info.php');
         $path = $request['path'];
@@ -86,6 +88,10 @@ class AddonController extends Controller
             $this->rentalPublish($full_data['is_published']);
         }
 
+        if ($full_data['name'] == 'RideShare') {
+            $this->rideSharePublish($full_data['is_published']);
+        }
+
         return response()->json([
             'status' => 'success',
             'message'=> 'status_updated_successfully'
@@ -94,7 +100,7 @@ class AddonController extends Controller
 
     public function activation(Request $request): Redirector|RedirectResponse|Application
     {
-        if (env('APP_MODE') == 'demo') {
+        if (getEnvMode() == 'demo') {
             Toastr::info(translate('messages.update_option_is_disable_for_demo'));
             return back();
         }
@@ -121,6 +127,7 @@ class AddonController extends Controller
             $str = "<?php return " . var_export($full_data, true) . ";";
             file_put_contents(base_path($request['path'] . '/Addon/info.php'), $str);
             $this->rentalPublish($full_data['is_published']);
+            $this->rideSharePublish($full_data['is_published']);
 
             Toastr::success(translate('activated_successfully'));
             return back();
@@ -146,6 +153,11 @@ class AddonController extends Controller
         }
 
         $file = $request->file('file_upload');
+        try {
+            Helpers::validateFile($file);
+        } catch (\App\Exceptions\InvalidUploadException $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
+        }
         $filename = $file->getClientOriginalName();
         $tempPath = $file->storeAs('temp', $filename);
         $zip = new \ZipArchive();
@@ -153,6 +165,11 @@ class AddonController extends Controller
         if ($zip->open(storage_path('app/' . $tempPath)) === TRUE) {
             // Extract the contents to a directory
             $extractPath = base_path('Modules/');
+            if (!File::isWritable($extractPath)) {
+                        $status = 'error';
+                        $message = translate('messages.File is not writable. Please check your file permissions.');
+                        return response()->json(['status' => $status, 'message' => $message]);
+                    }
             $zip->extractTo($extractPath);
             $zip->close();
             if(File::exists($extractPath.'/'.explode('.', $filename)[0].'/Addon/info.php')){
@@ -179,7 +196,7 @@ class AddonController extends Controller
     }
 
     public function delete_theme(Request $request){
-        if (env('APP_MODE') == 'demo') {
+        if (getEnvMode() == 'demo') {
             Toastr::info(translate('messages.update_option_is_disable_for_demo'));
             return back();
         }
@@ -204,14 +221,24 @@ class AddonController extends Controller
     //helper functions
     function getDirectories(string $path): array
     {
-        $directories = [];
-        $items = scandir($path);
-        foreach ($items as $item) {
-            if ($item == '..' || $item == '.')
-                continue;
-            if (is_dir($path . '/' . $item))
-                $directories[] = $item;
+        $fullPath = base_path($path);
+
+        if (!is_dir($fullPath)) {
+            return [];
         }
+
+        $directories = [];
+
+        foreach (scandir($fullPath) as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            if (is_dir($fullPath . DIRECTORY_SEPARATOR . $item)) {
+                $directories[] = $item;
+            }
+        }
+
         return $directories;
     }
 
@@ -221,6 +248,28 @@ class AddonController extends Controller
             $module = Module::firstOrNew(
                 ['module_type' => 'rental'],
                 ['module_name' => 'Rental']
+            );
+
+            if ($is_published) {
+                Artisan::call('migrate', ['--force' => true]);
+                $module->status = 1;
+            } else {
+                $module->status = 0;
+            }
+
+            $module->save();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    private function rideSharePublish(int|bool $is_published): bool
+    {
+        try {
+            $module = Module::firstOrNew(
+                ['module_type' => 'ride-share'],
+                ['module_name' => 'RideShare']
             );
 
             if ($is_published) {

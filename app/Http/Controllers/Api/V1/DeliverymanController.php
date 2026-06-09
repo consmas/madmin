@@ -2,12 +2,22 @@
 
 namespace App\Http\Controllers\Api\V1;
 
- 
+if (trait_exists(\Modules\RideShare\Traits\TransactionManagement\TransactionTrait::class)) {
+    class_alias(
+        \Modules\RideShare\Traits\TransactionManagement\TransactionTrait::class,
+        __NAMESPACE__ . '\ConditionalTransactionTrait'
+    );
+} else {
+    trait ConditionalTransactionTrait {}
+}
+
+
 
 ini_set('memory_limit', '-1');
 
 use App\CentralLogics\Helpers;
 use App\CentralLogics\OrderLogic;
+use App\CentralLogics\ProductLogic;
 use App\Http\Controllers\Controller;
 use App\Library\Payer;
 use App\Library\Payment as PaymentInfo;
@@ -16,8 +26,11 @@ use App\Mail\WithdrawRequestMail;
 use App\Models\AccountTransaction;
 use App\Models\Admin;
 use App\Models\BusinessSetting;
+use App\Models\DataSetting;
 use App\Models\DeliveryHistory;
 use App\Models\DeliveryMan;
+use App\Models\DeliverymanLoyaltyPointHistory;
+use App\Models\DeliverymanReferralHistory;
 use App\Models\DeliveryManWallet;
 use App\Models\DisbursementDetails;
 use App\Models\DisbursementWithdrawalMethod;
@@ -25,10 +38,13 @@ use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OrderPayment;
 use App\Models\OrderTransaction;
+use App\Models\ParcelCancellation;
+use App\Models\ParcelReturnFees;
 use App\Models\ProvideDMEarning;
 use App\Models\UserNotification;
 use App\Models\WithdrawalMethod;
 use App\Models\WithdrawRequest;
+use App\Models\Zone;
 use App\Traits\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -37,24 +53,68 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use MatanYadaev\EloquentSpatial\Objects\Point;
+use Modules\RideShare\Entities\TripManagement\RideRequest;
+use Modules\RideShare\Entities\UserManagement\RiderDetail;
+use Modules\RideShare\Entities\VehicleManagement\RiderVehicle;
+use Modules\RideShare\Http\Resources\UserManagement\DriverLevelResource;
+use Modules\RideShare\Http\Resources\UserManagement\TimeTrackResource;
+use Modules\RideShare\Interface\UserManagement\Service\TimeTrackServiceInterface;
+use Modules\RideShare\Interface\UserManagement\Service\UserLastLocationServiceInterface;
 
 class DeliverymanController extends Controller
 {
+    use ConditionalTransactionTrait;
+
     public function get_profile(Request $request)
     {
-        $dm = DeliveryMan::with(['rating'])->where(['auth_token' => $request['token']])->first();
-        $min_amount_to_pay_dm = BusinessSetting::where('key', 'min_amount_to_pay_dm')->first()->value ?? 0;
-        $dm['avg_rating'] = (float) (! empty($dm->rating[0]) ? $dm->rating[0]->average : 0);
-        $dm['rating_count'] = (float) (! empty($dm->rating[0]) ? $dm->rating[0]->rating_count : 0);
+        $dm = DeliveryMan::with(['rating','userinfo'])->where(['auth_token' => $request['token']])->first();
+
+        
+        if(addon_published_status('RideShare')){
+            $min_amount_to_pay_dm = DataSetting::where('key', 'min_amount_to_pay_rider')->first()->value ?? 0;
+            $dm['avg_rating'] = (float) (($dm->combinedRating->average) ? $dm->combinedRating->average : (!empty($dm->rating[0]) ? $dm->rating[0]->average : 0));
+            $dm['rating_count'] = (float) (($dm->combinedRating->total) ? $dm->combinedRating->total : (!empty($dm->rating[0]) ? $dm->rating[0]->rating_count : 0));
+            }else{
+            $min_amount_to_pay_dm = BusinessSetting::where('key', 'min_amount_to_pay_dm')->first()->value ?? 0;
+            $dm['avg_rating'] = (float) (!empty($dm->rating[0]) ? $dm->rating[0]->average : 0);
+            $dm['rating_count'] = (float) (!empty($dm->rating[0]) ? $dm->rating[0]->rating_count : 0);
+        }
+        
         $dm['order_count'] = (int) $dm->orders->count();
         $dm['todays_order_count'] = (int) $dm->todaysorders->count();
         $dm['this_week_order_count'] = (int) $dm->this_week_orders->count();
         $dm['member_since_days'] = (int) $dm->created_at->diffInDays();
+        $dm['referal_earning'] = (float) ($dm->referalHistory()->sum('amount'));
 
         // Added DM TIPS
-        $dm['todays_earning'] = (float) ($dm->todays_earning()->sum('original_delivery_charge') + $dm->todays_earning()->sum('dm_tips'));
-        $dm['this_week_earning'] = (float) ($dm->this_week_earning()->sum('original_delivery_charge') + $dm->this_week_earning()->sum('dm_tips'));
-        $dm['this_month_earning'] = (float) ($dm->this_month_earning()->sum('original_delivery_charge') + $dm->this_month_earning()->sum('dm_tips'));
+
+
+            $fees = ParcelCancellation::whereHas('order', function ($q) use ($dm) {
+                    $q->where('delivery_man_id', $dm->id);
+                })
+                ->where('return_fee_payment_status', 'paid')
+                ->selectRaw("
+                    SUM(CASE WHEN DATE(updated_at) = ? THEN return_fee ELSE 0 END) as today,
+                    SUM(CASE WHEN updated_at BETWEEN ? AND ? THEN return_fee ELSE 0 END) as week,
+                    SUM(CASE WHEN updated_at BETWEEN ? AND ? THEN return_fee ELSE 0 END) as month
+                ", [
+                    Carbon::today(),
+                    Carbon::now()->startOfWeek(),
+                    Carbon::now()->endOfWeek(),
+                    Carbon::now()->startOfMonth(),
+                    Carbon::now()->endOfMonth(),
+                ])
+                ->first();
+
+            $todays_return_fee    = (float) $fees->today;
+            $this_week_return_fee = (float) $fees->week;
+            $this_month_return_fee= (float) $fees->month;
+
+
+        $dm['todays_earning'] = (float) ($dm->todays_earning()->sum('original_delivery_charge') + $dm->todays_earning()->sum('dm_tips') + $todays_return_fee);
+        $dm['this_week_earning'] = (float) ($dm->this_week_earning()->sum('original_delivery_charge') + $dm->this_week_earning()->sum('dm_tips') + $this_week_return_fee);
+        $dm['this_month_earning'] = (float) ($dm->this_month_earning()->sum('original_delivery_charge') + $dm->this_month_earning()->sum('dm_tips')) + $this_month_return_fee;
 
         $dm['cash_in_hands'] = $dm->wallet ? $dm->wallet->collected_cash : 0;
         $dm['balance'] = $dm->wallet ? $dm->wallet->total_earning - ($dm->wallet->total_withdrawn + $dm?->wallet?->pending_withdraw) : 0;
@@ -63,6 +123,8 @@ class DeliverymanController extends Controller
         $dm['pending_withdraw'] = (float) ($dm?->wallet?->pending_withdraw ?? 0);
         $dm['withdraw_able_balance'] = (float) ($dm['balance'] - $dm?->wallet?->collected_cash > 0 ? abs($dm['balance'] - $dm?->wallet?->collected_cash) : 0);
         $dm['Payable_Balance'] = (float) ($dm?->wallet?->collected_cash ?? 0);
+        $dm['total_delivery_income'] =(float)($dm->order_transaction()->sum('original_delivery_charge'));
+        $dm['total_delivery_tips'] =(float)($dm->order_transaction()->sum('dm_tips'));
 
         $over_flow_balance = $dm['balance'] - $dm?->wallet?->collected_cash;
 
@@ -92,8 +154,8 @@ class DeliverymanController extends Controller
         }
 
         $Payable_Balance = $dm?->wallet?->collected_cash > 0 ? 1 : 0;
-        $cash_in_hand_overflow = BusinessSetting::where('key', 'cash_in_hand_overflow_delivery_man')->first()?->value;
-        $cash_in_hand_overflow_delivery_man = BusinessSetting::where('key', 'dm_max_cash_in_hand')->first()?->value;
+        $cash_in_hand_overflow = Helpers::get_business_settings('cash_in_hand_overflow_delivery_man');
+        $cash_in_hand_overflow_delivery_man = Helpers::get_business_settings('dm_max_cash_in_hand');
         $val = $cash_in_hand_overflow_delivery_man - (($cash_in_hand_overflow_delivery_man * 10) / 100);
         $dm['over_flow_warning'] = false;
         $dm['dm_max_cash_in_hand'] = (float) $cash_in_hand_overflow_delivery_man ?? 0;
@@ -107,11 +169,57 @@ class DeliverymanController extends Controller
             $dm['over_flow_block_warning'] = true;
         }
 
+        if($dm['balance'] > 0 ){
+            $dm['dynamic_balance'] = (float) abs($wallet_earning);
+                if($dm?->wallet?->balance ==  $wallet_earning){
+                    $dm['dynamic_balance_type']  = translate('messages.Withdrawable_Balance') ;
+                } else{
+                    $dm['dynamic_balance_type']  = translate('messages.Balance').' '.(translate('Unadjusted')) ;
+                }
+
+        } else{
+            $dm['dynamic_balance']   =  (float) abs($dm?->wallet?->collected_cash) ?? 0;
+            $dm['dynamic_balance_type']  = translate('messages.Payable_Balance') ;
+        }
+
         unset($dm['orders']);
         unset($dm['rating']);
         unset($dm['todaysorders']);
         unset($dm['this_week_orders']);
         unset($dm['wallet']);
+
+        if(addon_published_status('RideShare') && $dm->is_ride == 1){
+
+            $riderVehicle = RiderVehicle::withoutGlobalScope('translate')->with(['brand', 'model', 'category'])->where('rider_id', $dm->id)->first();
+            $dm['rider_vehicle'] = $riderVehicle;
+            $trips = $dm->driverTrips->where('payment_status', PAID);
+            $tips = $trips->sum('tips');
+            $totalEarning = $trips->sum('paid_fare');
+            $totalCommission = 0;
+            foreach ($trips as $trip) {
+                $totalCommission += $trip?->fee?->admin_commission ?? 0;
+            }
+
+
+            $dm['rider_level'] = DriverLevelResource::make($dm->level);
+            $dm['trip_income'] = ($totalEarning - $totalCommission - $tips);
+            $dm['total_trip_commission'] = $totalCommission;
+            $dm['total_trip_earning'] = $totalEarning;
+            $dm['total_trip_tips'] = $tips;
+            $dm['paid_amount'] = 0; // TODO: need to check if this is required or not, if required then need to add the logic for this.
+            $dm['level_up_reward_amount'] = 0; // TODO: need to check if this is required or not, if required then need to add the logic for this.
+            $dm['total_income'] = $dm['trip_income'] + $dm['total_delivery_income'];
+            $dm['total_tips'] = $tips + $dm['total_delivery_tips'];
+            $dm['ride_count'] =(integer)$dm->driverTrips->count();
+            $dm['todays_ride_count'] =(integer)$dm->todays_rides->count();
+            $dm['this_week_ride_count'] =(integer)$dm->this_week_rides->count();
+
+            $dm['time_track'] = $dm->latestTrack ? TimeTrackResource::make($dm->latestTrack) : null;
+
+            $dm['todays_earning'] +=(float)($dm->todays_rides->where('payment_status', PAID)->sum('paid_fare') - $dm->todays_rides->where('payment_status', PAID)->sum('fee.admin_commission') + $dm->todays_rides->where('payment_status', PAID)->sum('tips'));
+            $dm['this_week_earning'] +=(float)($dm->this_week_rides->where('payment_status', PAID)->sum('paid_fare') - $dm->this_week_rides->where('payment_status', PAID)->sum('fee.admin_commission') + $dm->this_week_rides->where('payment_status', PAID)->sum('tips'));
+            $dm['this_month_earning'] +=(float)($dm->this_month_rides->where('payment_status', PAID)->sum('paid_fare') - $dm->this_month_rides->where('payment_status', PAID)->sum('fee.admin_commission') + $dm->this_month_rides->where('payment_status', PAID)->sum('tips'));
+        }
 
         return response()->json($dm, 200);
     }
@@ -122,7 +230,7 @@ class DeliverymanController extends Controller
         $validator = Validator::make($request->all(), [
             'f_name' => 'required',
             'l_name' => 'required',
-            'email' => 'required|unique:delivery_men,email,'.$dm->id,
+            'email' => 'required|unique:delivery_men,email,' . $dm->id,
             'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
         ], [
             'f_name.required' => 'First name is required!',
@@ -175,22 +283,174 @@ class DeliverymanController extends Controller
         $dm->active = $dm->active ? 0 : 1;
         $dm->save();
 
+        if(addon_published_status('RideShare') && $dm->is_ride == 1){
+            if($dm->driverDetails != null) {
+                $details = $dm->driverDetails;
+            } else {
+                $details = new RiderDetail();
+                $details->user_id = $dm->id;
+            }
+
+            $details->is_online = $dm->active?1:0;
+            $details->availability_status = $dm->active? 'available': 'unavailable';
+            $details->save();
+
+            //update ride share data
+
+            $trackCriteria = [
+                'user_id' => $dm->id,
+                'date' => date('Y-m-d')
+            ];
+            $track = app(TimeTrackServiceInterface::class)->findOneBy(criteria: $trackCriteria,
+                relations: ['latestLog'], orderBy: ['created_at' => 'desc']);
+
+            if (!$track) {
+                $trackData = [
+                    'user_id' => $dm->id,
+                    'date' => now()
+                ];
+                $track = app(TimeTrackServiceInterface::class)->create($trackData);
+
+                //need to set driver to online if he is offline
+                $track->logs()->create([
+                    'online_at' => now(),
+                ]);
+            }
+
+            if (!$details['is_online']) {
+                //means he is going to be offline
+
+                $track->latestLog()->update([
+                    'offline_at' => now()
+                ]);
+                $track->total_online += Carbon::parse($track?->latestLog?->online_at)->diffInMinutes(now());
+                $track->save();
+
+            }
+
+            if ($details['is_online']) {
+                //means he is going to be online
+                $track->total_offline += Carbon::parse($track->latestLog?->offline_at)->diffInMinutes(now());
+                $track->save();
+                $track->latestLog()->create([
+                    'online_at' => now()
+                ]);
+            }
+        }
+
         return response()->json(['message' => translate('messages.active_status_updated')], 200);
     }
 
     public function get_current_orders(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'limit' => 'required',
+            'offset' => 'required',
+            'order_status' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
-        $orders = Order::with(['customer', 'store', 'parcel_category'])
-            ->whereIn('order_status', ['accepted', 'confirmed', 'pending', 'processing', 'picked_up', 'handover'])
-            ->where(['delivery_man_id' => $dm['id']])
+
+        $allowedStatuses = [
+            'accepted',
+            'confirmed',
+            'pending',
+            'processing',
+            'picked_up',
+            'handover'
+        ];
+
+        $query = Order::with(['customer', 'store', 'parcel_category'])
+            ->where('delivery_man_id', $dm->id)
+            ->dmOrder();
+
+        if ($request->filled('order_status') && $request->order_status !== 'all') {
+            if (in_array($request->order_status, $allowedStatuses)) {
+                $query->where('order_status', $request->order_status);
+            }
+
+        } else {
+            $query->whereIn('order_status', $allowedStatuses);
+        }
+
+        $paginator = $query
             ->orderBy('accepted')
             ->orderBy('schedule_at', 'desc')
-            ->dmOrder()
-            ->get();
-        $orders = Helpers::order_data_formatting($orders, true);
+            ->paginate($request->limit, ['*'], 'page', $request->offset);
 
-        return response()->json($orders, 200);
+        $orders = Helpers::order_data_formatting($paginator->items(), true);
+        $data = [
+            'total_size' => $paginator->total(),
+            'limit' => $request['limit'],
+            'offset' => $request['offset'],
+            'orders' => $orders,
+        ];
+
+        return response()->json($data, 200);
+    }
+
+    public function get_order_status_count(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'type' => 'required|in:current,history',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        $dm = DeliveryMan::where('auth_token', $request->token)->first();
+
+        if (!$dm) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $statusMap = [
+            'current' => [
+                'pending',
+                'accepted',
+                'confirmed',
+                'processing',
+                'handover',
+                'picked_up',
+            ],
+            'history' => [
+                'delivered',
+                'canceled',
+                'returned',
+                'refund_requested',
+                'refunded',
+                'failed',
+            ],
+        ];
+
+        $statuses = $statusMap[$request->type];
+
+        $counts = Order::where('delivery_man_id', $dm->id)
+            ->whereIn('order_status', $statuses)
+            ->selectRaw('order_status, COUNT(*) as total')
+            ->groupBy('order_status')
+            ->pluck('total', 'order_status');
+
+        $response = [];
+
+        $response[] = [
+            'key' => 'all',
+            'count' => $counts->sum(),
+        ];
+
+        foreach ($statuses as $status) {
+            $response[] = [
+                'key' => $status,
+                'count' => $counts[$status] ?? 0,
+            ];
+        }
+
+        return response()->json($response, 200);
     }
 
     public function get_latest_orders(Request $request)
@@ -253,18 +513,49 @@ class DeliverymanController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
+
+        if(addon_published_status('RideShare') && $dm->is_ride == 1){
+            $hasRunningTrip = RideRequest::whereIn('current_status', ['accepted','ongoing'])
+            ->where('driver_id', $dm->id)
+            ->exists();
+
+            if($hasRunningTrip){
+                return response()->json([
+                    'errors' => [
+                        ['code' => 'running_trip', 'message' => translate('You already have a ongoing ride. Please complete it before accepting a new order.')]
+                    ]
+                ], 409);
+            }
+        }
+
         $order = Order::where('id', $request['order_id'])
             // ->whereIn('order_status', ['pending', 'confirmed'])
             ->whereNull('delivery_man_id')
             ->dmOrder()
             ->first();
-        if (! $order) {
+        if (!$order) {
             return response()->json([
                 'errors' => [
                     ['code' => 'order', 'message' => translate('messages.can_not_accept')],
                 ],
             ], 404);
         }
+
+        if ($request->has('lat') && $request->has('lng') && $dm && $dm->earning && $order->order_type != 'parcel') {
+            try {
+            $zoneIds =  Zone::whereContains('coordinates', new Point($request->lat, $request->lng, POINT_SRID))->pluck('id')->toArray();
+            if (($dm->zone_id && !in_array($dm->zone_id, $zoneIds))) {
+                        return response()->json([
+                            'errors' => [
+                                ['code' => 'dm_out_of_zone', 'message' => translate('messages.You are outside the service area. Move closer to accept this order.')]
+                            ]
+                        ], 403);
+                    }
+                } catch (\Throwable $th) { }
+        }
+
+
+
         if ($dm->active != 1) {
             return response()->json([
                 'errors' => [
@@ -282,14 +573,16 @@ class DeliverymanController extends Controller
 
         $payments = $order->payments()->where('payment_method', 'cash_on_delivery')->exists();
         $cash_in_hand = $dm?->wallet?->collected_cash ?? 0;
-        $dm_max_cash = BusinessSetting::where('key', 'dm_max_cash_in_hand')->first();
-        $value = $dm_max_cash?->value ?? 0;
+        $dm_max_cash_status = Helpers::get_business_settings('cash_in_hand_overflow_delivery_man');
+        $dm_max_cash = Helpers::get_business_settings('dm_max_cash_in_hand');
+        $value = $dm_max_cash;
 
-        if (($order->payment_method == 'cash_on_delivery' || $payments) && (($cash_in_hand + $order->order_amount) >= $value)) {
+
+        if ($dm_max_cash_status == 1 && ($order->payment_method == 'cash_on_delivery' || $payments) && (($cash_in_hand + $order->order_amount) >= $value)) {
 
             return response()->json([
                 'errors' => [
-                    ['code' => 'dm_maximum_hand_in_cash', 'message' => \App\CentralLogics\Helpers::format_currency($value).' '.translate('max_cash_in_hand_exceeds')],
+                    ['code' => 'dm_maximum_hand_in_cash', 'message' => Helpers::format_currency($value) . ' ' . translate('max_cash_in_hand_exceeds')],
                 ],
             ], 405);
         }
@@ -343,6 +636,26 @@ class DeliverymanController extends Controller
             'created_at' => now(),
             'updated_at' => now()
         ]);
+
+        if(addon_published_status('RideShare') && $dm->is_ride == 1){
+            if(isset($request['zone_id']) && ($request['zone_id'] != null)) {
+                $data = [
+                    'type' => 'rider',
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
+                    'zone_id' => $request->zone_id,
+                    'user_id' => auth('delivery_men')->id()
+                ];
+
+                $lastLocation = app(UserLastLocationServiceInterface::class)->findOneBy(criteria: ['user_id' => auth('delivery_men')->id(), 'type' => 'rider']);
+                if (!$lastLocation) {
+                    app(UserLastLocationServiceInterface::class)->create(data: $data);
+                } else {
+                    app(UserLastLocationServiceInterface::class)->update(id: $lastLocation->id, data: $data);
+                }
+            }
+        }
+
         return response()->json(['message' => translate('location recorded')], 200);
     }
 
@@ -379,14 +692,14 @@ class DeliverymanController extends Controller
             });
         }
         $order = $order->dmOrder()->first();
-        if (! $order) {
+        if (!$order) {
             return response()->json([
                 'errors' => [
                     ['code' => 'order', 'message' => translate('messages.not_found')],
                 ],
             ], 404);
         }
-        $value = translate('your_order_is_ready_to_be_delivered,_plesae_share_your_otp_with_delivery_man.').' '.translate('otp:').$order->otp.', '.translate('order_id:').$order->id;
+        $value = translate('your_order_is_ready_to_be_delivered,_plesae_share_your_otp_with_delivery_man.') . ' ' . translate('otp:') . $order->otp . ', ' . translate('order_id:') . $order->id;
         try {
 
             $fcm_token = $order->is_guest == 0 ? $order?->customer?->cm_firebase_token : $order?->guest?->fcm_token;
@@ -436,7 +749,7 @@ class DeliverymanController extends Controller
 
         $order = Order::where(['id' => $request['order_id'], 'delivery_man_id' => $dm['id']])->dmOrder()->first();
 
-        if (! $order || (! $order->store && $order->order_type != 'parcel')) {
+        if (!$order || (!$order->store && $order->order_type != 'parcel')) {
             return response()->json([
                 'errors' => [
                     ['code' => 'not_found', 'message' => translate('messages.you_can_not_change_the_status_of_this_order')],
@@ -465,7 +778,7 @@ class DeliverymanController extends Controller
             ], 403);
         }
 
-        if ($request['status'] == 'canceled' && ! config('canceled_by_deliveryman')) {
+        if ($request['status'] == 'canceled' && !config('canceled_by_deliveryman')) {
             return response()->json([
                 'errors' => [
                     ['code' => 'status', 'message' => translate('messages.you_can_not_cancel_a_order')],
@@ -506,6 +819,7 @@ class DeliverymanController extends Controller
                         ],
                     ], 406);
                 }
+                Helpers::deliverymanLoyaltyPointHistory(deliveryManId: $dm->id, amount: $order->order_amount, transactionType: 'earn_on_order_completion', pointConversionType: 'credit', reference: $order->id);
             }
             if ($order->transaction) {
                 $order->transaction->update(['delivery_man_id' => $dm->id]);
@@ -531,7 +845,7 @@ class DeliverymanController extends Controller
 
             $img_names = [];
             $images = [];
-            if (! empty($request->file('order_proof'))) {
+            if (!empty($request->file('order_proof'))) {
                 foreach ($request->order_proof as $img) {
                     $image_name = Helpers::upload('order/', 'png', $img);
                     array_push($img_names, ['img' => $image_name, 'storage' => Helpers::getDisk()]);
@@ -548,6 +862,37 @@ class DeliverymanController extends Controller
                 $dm = $order->delivery_man;
                 $dm->current_orders = $dm->current_orders > 1 ? $dm->current_orders - 1 : 0;
                 $dm->save();
+            }
+
+
+
+            $hasStock = config('module.' . $order->module->module_type)['stock'];
+            $hasFlashDiscount = $order->flash_admin_discount_amount > 0 && $order->flash_store_discount_amount > 0;
+
+            if ($hasStock || $hasFlashDiscount) {
+                foreach ($order->details as $detail) {
+
+                    $item = $detail->campaign ?? $detail->item;
+
+                    if ($hasStock) {
+                        $variant = json_decode($detail->variation, true);
+                        $variantType = !empty($variant) ? $variant[0]['type'] : null;
+                        ProductLogic::update_stock($item, -$detail->quantity, $variantType)?->save();
+                    }
+
+                    if ($hasFlashDiscount) {
+                        ProductLogic::update_flash_stock($detail->item, $detail->quantity, true)?->save();
+                    }
+                }
+            }
+
+
+
+
+
+
+            if ($order->is_guest == 0) {
+                OrderLogic::refund_before_delivered($order);
             }
             $order->cancellation_reason = $request->reason;
             $order->canceled_by = 'deliveryman';
@@ -582,7 +927,7 @@ class DeliverymanController extends Controller
             $query->WhereNull('delivery_man_id')
                 ->orWhere('delivery_man_id', $dm['id']);
         })->Notpos()->first();
-        if (! $order) {
+        if (!$order) {
             return response()->json([
                 'errors' => [
                     ['code' => 'order', 'message' => translate('messages.not_found')],
@@ -622,7 +967,7 @@ class DeliverymanController extends Controller
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
 
         $order = Order::with(['customer', 'store', 'details', 'parcel_category', 'payments', 'ParcelCancellation'])->where(['delivery_man_id' => $dm['id'], 'id' => $request['order_id']])->Notpos()->first();
-        if (! $order) {
+        if (!$order) {
             return response()->json([
                 'errors' => [
                     ['code' => 'order', 'message' => translate('messages.not_found')],
@@ -638,6 +983,7 @@ class DeliverymanController extends Controller
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
             'offset' => 'required',
+            'order_status' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -646,12 +992,32 @@ class DeliverymanController extends Controller
 
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
 
-        $paginator = Order::with(['customer', 'store', 'parcel_category'])
-            ->where(['delivery_man_id' => $dm['id']])
-            ->whereIn('order_status', ['delivered', 'canceled', 'refund_requested', 'refunded', 'failed'])
+        $allowedStatuses = [
+            'delivered',
+            'canceled',
+            'returned',
+            'refund_requested',
+            'refunded',
+            'failed'
+        ];
+
+        $query = Order::with(['customer', 'store', 'parcel_category'])
+            ->where('delivery_man_id', $dm->id)
+            ->dmOrder();
+
+        if ($request->filled('order_status') && $request->order_status !== 'all') {
+            if (in_array($request->order_status, $allowedStatuses)) {
+                $query->where('order_status', $request->order_status);
+            }
+
+        } else {
+            $query->whereIn('order_status', $allowedStatuses);
+        }
+
+        $paginator = $query
             ->orderBy('schedule_at', 'desc')
-            ->dmOrder()
-            ->paginate($request['limit'], ['*'], 'page', $request['offset']);
+            ->paginate($request->limit, ['*'], 'page', $request->offset);
+
         $orders = Helpers::order_data_formatting($paginator->items(), true);
         $data = [
             'total_size' => $paginator->total(),
@@ -728,9 +1094,11 @@ class DeliverymanController extends Controller
 
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
 
+        $target = $dm->is_ride == 1 ? 'rider' : 'deliveryman';
+
         $notifications = Notification::active()->where(function ($q) use ($dm) {
             $q->whereNull('zone_id')->orWhere('zone_id', $dm->zone_id);
-        })->where('tergat', 'deliveryman')->where('created_at', '>=', \Carbon\Carbon::today()->subDays(7))->get();
+        })->where('tergat', $target)->where('created_at', '>=', \Carbon\Carbon::today()->subDays(7))->get();
 
         $user_notifications = UserNotification::where('delivery_man_id', $dm->id)->where('created_at', '>=', \Carbon\Carbon::today()->subDays(7))->get();
 
@@ -796,6 +1164,12 @@ class DeliverymanController extends Controller
             'business_name' => BusinessSetting::where(['key' => 'business_name'])->first()?->value,
             'business_logo' => \App\CentralLogics\Helpers::get_full_url('business', $store_logo?->value, $store_logo?->storage[0]?->value ?? 'public'),
         ];
+
+        if($dm->is_ride == 1){
+            $attribute = 'rider_collect_cash_payments';
+        }else{
+            $attribute = 'deliveryman_collect_cash_payments';
+        }
         $payment_info = new PaymentInfo(
             success_hook: 'collect_cash_success',
             failure_hook: 'collect_cash_fail',
@@ -807,7 +1181,7 @@ class DeliverymanController extends Controller
             additional_data: $additional_data,
             payment_amount: $request->amount,
             external_redirect_link: $request->has('callback') ? $request['callback'] : session('callback'),
-            attribute: 'deliveryman_collect_cash_payments',
+            attribute: $attribute,
             attribute_id: $dm->id,
         );
 
@@ -849,6 +1223,7 @@ class DeliverymanController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
+
         } else {
             $data = [
                 'delivery_man_id' => $dm->id,
@@ -862,10 +1237,24 @@ class DeliverymanController extends Controller
             ];
             $wallet->total_withdrawn = $wallet->total_withdrawn + $wallet->collected_cash;
             $wallet->collected_cash = 0;
+
         }
 
         $wallet->save();
         DB::table('provide_d_m_earnings')->insert($data);
+
+        // if(addon_published_status('RideShare') && $dm->is_ride == 1){
+        //     $dm_ride_account = $this->getUserAccount($dm->id, DRIVER);
+
+        //     if ($adj_amount > 0) {
+        //         $adjustedAmount = $dm_ride_account->receivable_balance;
+        //     } else {
+        //         $adjustedAmount = $dm_ride_account->payable_balance;
+        //     }
+
+        //     $this->adjustWalletTransaction($dm, $adjustedAmount);
+        // }
+
 
         return response()->json(['message' => translate('messages.Delivery_man_wallet_adjustment_successfull')], 200);
     }
@@ -1118,6 +1507,52 @@ class DeliverymanController extends Controller
         return response()->json($data, 200);
     }
 
+
+
+    private function reportData($request)
+    {
+
+        $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
+        $start = $request->start_date ?? null;
+        $end = $request->end_date ?? null;
+
+        $points = DeliverymanLoyaltyPointHistory::where('delivery_man_id', $dm->id)->applyDateFilter($request->date_range, $start, $end)->where('point_conversion_type', 'debit')->sum('converted_amount');
+        $referal = DeliverymanReferralHistory::where('delivery_man_id', $dm->id)->applyDateFilter($request->date_range, $start, $end)->sum('amount');
+        $type = $request['type'] ?? 'all';
+
+
+        $baseQuery = OrderTransaction::with(['order:id,payment_method'])
+            ->where('delivery_man_id', $dm['id'])
+            ->where(function ($query) {
+                $query->where('original_delivery_charge', '>', 0)
+                    ->orWhere('dm_tips', '>', 0);
+            })->applyDateFilter($request->date_range, $start, $end);
+        if ($type === 'delivery_fee') {
+            $baseQuery->where('original_delivery_charge', '>', 0);
+        } elseif ($type === 'delivery_tips') {
+            $baseQuery->where('dm_tips', '>', 0);
+        }
+
+        $total_dm_tips = (clone $baseQuery)->sum('dm_tips');
+        $total_delivery_charge = (clone $baseQuery)->sum('original_delivery_charge');
+        $total_admin_commission = (clone $baseQuery)->sum('delivery_fee_comission');
+
+        return [
+            'points' => $points,
+            'referal' => $referal,
+            'total_dm_tips' => $total_dm_tips,
+            'total_delivery_charge' => $total_delivery_charge,
+            'total_admin_commission' => $total_admin_commission,
+            'type' => $type,
+            'dm' => $dm,
+            'start' => $start,
+            'end' => $end,
+            'baseQuery' => $baseQuery
+        ];
+
+    }
+
+
     public function earningReport(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -1134,38 +1569,12 @@ class DeliverymanController extends Controller
 
         $limit = $request['limit'] ?? 25;
         $offset = $request['offset'] ?? 1;
-        $type = $request['type'] ?? 'all';
 
-        $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
-
-        $baseQuery = OrderTransaction::with(['order:id,payment_method'])
-            ->where('delivery_man_id', $dm['id'])
-            ->where(function ($query) {
-                $query->where('original_delivery_charge', '>', 0)
-                    ->orWhere('dm_tips', '>', 0);
-            });
-
-        if ($request->start_date && $request->end_date) {
-            $start = Carbon::parse($request->start_date)->startOfDay();
-            $end = Carbon::parse($request->end_date)->endOfDay();
-            $baseQuery->whereBetween('created_at', [$start, $end]);
-        } elseif ($request->start_date) {
-            $start = Carbon::parse($request->start_date)->startOfDay();
-            $baseQuery->where('created_at', '>=', $start);
-        } elseif ($request->end_date) {
-            $end = Carbon::parse($request->end_date)->endOfDay();
-            $baseQuery->where('created_at', '<=', $end);
-        }
-
-        if ($type === 'delivery_fee') {
-            $baseQuery->where('original_delivery_charge', '>', 0);
-        } elseif ($type === 'delivery_tips') {
-            $baseQuery->where('dm_tips', '>', 0);
-        }
-
-        $total_dm_tips = (clone $baseQuery)->sum('dm_tips');
-        $total_delivery_charge = (clone $baseQuery)->sum('original_delivery_charge');
-        $total_admin_commission = (clone $baseQuery)->sum('delivery_fee_comission');
+        $data = $this->reportData($request);
+        $total_dm_tips = $data['total_dm_tips'];
+        $total_delivery_charge = $data['total_delivery_charge'];
+        $total_admin_commission = $data['total_admin_commission'];
+        $baseQuery = $data['baseQuery'];
 
         $paginated_orders = (clone $baseQuery)
             ->select(['id', 'order_id', 'delivery_man_id', 'dm_tips', 'original_delivery_charge', 'delivery_fee_comission', 'created_at'])
@@ -1176,20 +1585,239 @@ class DeliverymanController extends Controller
             $item->dm_tips = (float) $item->dm_tips;
             $item->original_delivery_charge = (float) $item->original_delivery_charge;
             $item->delivery_fee_comission = (float) $item->delivery_fee_comission;
-
             return $item;
         });
 
         $data = [
             'earning' => $paginated_orders,
+            'total_loyalty_point_earning' => (float) $data['points'],
+            'total_referal' => (float) $data['referal'],
             'total_dm_tips' => (float) $total_dm_tips,
             'total_delivery_charge' => (float) $total_delivery_charge,
             'total_admin_commission' => (float) $total_admin_commission,
-            'type' => $type,
+            'type' => $data['type'],
             'limit' => $limit,
             'offset' => $offset,
         ];
 
+        return response()->json($data, 200);
+    }
+
+    public function loyaltyReport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'limit' => 'required|integer',
+            'offset' => 'required|integer',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        $limit = $request['limit'] ?? 25;
+        $offset = $request['offset'] ?? 1;
+
+        $data = $this->reportData($request);
+        $total_dm_tips = $data['total_dm_tips'];
+        $total_delivery_charge = $data['total_delivery_charge'];
+        $total_admin_commission = $data['total_admin_commission'];
+        $dm = $data['dm'];
+
+        $loyalityPoints = DeliverymanLoyaltyPointHistory::where('delivery_man_id', $dm->id)->applyDateFilter($request->date_range, $data['start'], $data['end'])->where('point_conversion_type', 'debit')
+            ->select(['id', 'transaction_id', 'transaction_type', 'converted_amount', 'point', 'created_at'])
+            ->latest()
+            ->paginate($limit, ['*'], 'page', $offset);
+
+        $data = [
+            'loyalityPoints' => $loyalityPoints->items(),
+            'total' => $loyalityPoints->total(),
+            'total_loyalty_point_earning' => (float) $data['points'],
+            'total_referal' => (float) $data['referal'],
+            'total_dm_tips' => (float) $total_dm_tips,
+            'total_delivery_charge' => (float) $total_delivery_charge,
+            'total_admin_commission' => (float) $total_admin_commission,
+            'type' => $data['type'],
+            'limit' => $limit,
+            'offset' => $offset,
+        ];
+
+        return response()->json($data, 200);
+    }
+
+    public function referralEarningReport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'limit' => 'required|integer',
+            'offset' => 'required|integer',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        $limit = $request['limit'] ?? 25;
+        $offset = $request['offset'] ?? 1;
+
+        $data = $this->reportData($request);
+        $total_dm_tips = $data['total_dm_tips'];
+        $total_delivery_charge = $data['total_delivery_charge'];
+        $total_admin_commission = $data['total_admin_commission'];
+        $dm = $data['dm'];
+
+
+        $refrealEarnings = DeliverymanReferralHistory::where('delivery_man_id', $dm->id)->applyDateFilter($request->date_range, $data['start'], $data['end'])
+            ->select(['id', 'transaction_id', 'amount', 'created_at'])
+            ->latest()
+            ->paginate($limit, ['*'], 'page', $offset);
+
+        $data = [
+            'refrealEarnings' => $refrealEarnings->items(),
+            'total' => $refrealEarnings->total(),
+            'total_loyalty_point_earning' => (float) $data['points'],
+            'total_referal' => (float) $data['referal'],
+            'total_dm_tips' => (float) $total_dm_tips,
+            'total_delivery_charge' => (float) $total_delivery_charge,
+            'total_admin_commission' => (float) $total_admin_commission,
+            'type' => $data['type'],
+            'limit' => $limit,
+            'offset' => $offset,
+        ];
+
+        return response()->json($data, 200);
+    }
+    public function referralEarninglist(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'limit' => 'required|integer',
+            'offset' => 'required|integer',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        $limit = $request['limit'] ?? 25;
+        $offset = $request['offset'] ?? 1;
+        $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
+        $start = $request->start_date ?? null;
+        $end = $request->end_date ?? null;
+
+
+        $refrealEarnings = DeliverymanReferralHistory::where('delivery_man_id', $dm->id)->applyDateFilter($request->date_range, $start, $end)
+            ->select(['id', 'transaction_id', 'amount', 'created_at'])
+            ->latest()
+            ->paginate($limit, ['*'], 'page', $offset);
+
+        $data = [
+            'total' => $refrealEarnings->total(),
+            'limit' => $limit,
+            'offset' => $offset,
+            'refrealEarnings' => $refrealEarnings->items(),
+        ];
+
+        return response()->json($data, 200);
+    }
+    public function parcelReturnEarningList(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'limit' => 'required|integer',
+            'offset' => 'required|integer',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        $limit = $request['limit'] ?? 25;
+        $offset = $request['offset'] ?? 1;
+        $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
+        $start = $request->start_date ?? null;
+        $end = $request->end_date ?? null;
+
+
+        $earnings = ParcelReturnFees::where('delivery_man_id', $dm->id)->applyDateFilter($request->date_range, $start, $end)
+            ->select(['id', 'transaction_id', 'order_id','amount', 'created_at'])
+            ->latest()
+            ->paginate($limit, ['*'], 'page', $offset);
+
+        $data = [
+            'total' => $earnings->total(),
+            'limit' => $limit,
+            'offset' => $offset,
+            'earnings' => $earnings->items(),
+        ];
+
+        return response()->json($data, 200);
+    }
+
+    public function loyaltyPointlist(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'limit' => 'required|integer',
+            'offset' => 'required|integer',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'type' => 'nullable|in:credit,debit,both',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        $limit = $request['limit'] ?? 25;
+        $offset = $request['offset'] ?? 1;
+        $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
+        $start = $request->start_date ?? null;
+        $end = $request->end_date ?? null;
+        $type = $request['type'] ?? 'both';
+
+
+
+        $loyalityPoints = DeliverymanLoyaltyPointHistory::where('delivery_man_id', $dm->id)->applyDateFilter($request->date_range, $start, $end)
+            ->when($type != 'both', function ($q) use ($type) {
+                $q->where('point_conversion_type', $type);
+            })
+            ->select(['id', 'transaction_id', 'transaction_type', 'converted_amount', 'point', 'created_at', 'reference', 'point_conversion_type'])
+            ->latest()
+            ->paginate($limit, ['*'], 'page', $offset);
+
+        $data = [
+            'total' => $loyalityPoints->total(),
+            'limit' => $limit,
+            'offset' => $offset,
+            'loyalityPoints' => $loyalityPoints->items(),
+        ];
+
+        return response()->json($data, 200);
+    }
+
+    public function income_statement(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'limit' => 'required',
+            'offset' => 'required'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+        $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
+        $orders = OrderTransaction::where(['delivery_man_id' => $dm['id']])->paginate($request['limit'], ['*'], 'page', $request['offset']);
+
+        $data = [
+            'total_size' => $orders->total(),
+            'limit' => $request['limit'],
+            'offset' => $request['offset'],
+            'data' => $orders->items(),
+        ];
+        
         return response()->json($data, 200);
     }
 
@@ -1268,7 +1896,7 @@ class DeliverymanController extends Controller
                 $admin = Admin::where('role_id', 1)->first();
                 $wallet_transaction = WithdrawRequest::where('delivery_man_id', $w->delivery_man_id)->latest()->first();
                 if (config('mail.status') && $mail_status == '1' && Helpers::getNotificationStatusData('admin', 'dm_withdraw_request', 'mail_status')) {
-                    Mail::to($admin->email)->send(new WithdrawRequestMail('admin_mail', $wallet_transaction, 'dm'));
+                    Mail::to($admin?->getRawOriginal('email'))->send(new WithdrawRequestMail('admin_mail', $wallet_transaction, 'dm'));
                 }
 
                 return response()->json(['message' => translate('messages.withdraw_request_placed_successfully')], 200);
@@ -1347,4 +1975,42 @@ class DeliverymanController extends Controller
 
         return response()->json(['message' => translate('messages.Parcel_returned_successfully')], 200);
     }
+
+    public function convertLoyaltyPoints(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'points' => 'required|numeric|min:0.001',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        if (Helpers::get_business_settings('dm_loyality_point_status') != 1) {
+            return response()->json(['message' => translate('messages.Loyalty_point_is_disabled')], 403);
+        } elseif (Helpers::get_business_settings('dm_min_loyality_point_to_convert') > $request->points) {
+            return response()->json(['message' => translate('You need to have at least') . ' ' . Helpers::get_business_settings('dm_min_loyality_point_to_convert') . ' ' . translate('points to convert')], 403);
+        }
+
+        $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
+        if (!$dm) {
+            return response()->json(['message' => translate('Deliveryman not found')], 403);
+        } elseif ($dm->loyalty_point < $request->points) {
+            return response()->json(['message' => translate('You have insufficent points')], 403);
+        }
+
+        $pointHistory = Helpers::deliverymanLoyaltyPointHistory(deliveryManId: $dm->id, amount: $request->points, transactionType: 'converted_to_wallet', pointConversionType: 'debit', reference: null);
+
+        if (data_get($pointHistory, 'status_code') === 403) {
+
+            return response()->json([
+                'errors' => [
+                    ['code' => data_get($pointHistory, 'code'), 'message' => data_get($pointHistory, 'message')]
+                ]
+            ], data_get($pointHistory, 'status_code'));
+        }
+
+        return response()->json(['message' => translate('messages.Loyalty_point_converted_successfully')], 200);
+
+    }
+
 }

@@ -123,13 +123,7 @@ class CategoryController extends Controller
 
     public function get_products($id, Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
             'offset' => 'required',
@@ -150,13 +144,7 @@ class CategoryController extends Controller
 
     public function get_category_products(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
             'offset' => 'required',
@@ -180,13 +168,7 @@ class CategoryController extends Controller
 
     public function get_stores($id, Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
             'offset' => 'required',
@@ -208,13 +190,7 @@ class CategoryController extends Controller
 
     public function get_category_stores(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
             'offset' => 'required',
@@ -240,13 +216,7 @@ class CategoryController extends Controller
 
     public function get_all_products($id,Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $zone_id= $request->header('zoneId');
 
         try {
@@ -258,13 +228,7 @@ class CategoryController extends Controller
 
     public function get_featured_category_products(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
             'offset' => 'required',

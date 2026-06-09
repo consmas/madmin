@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\Item;
+use App\Models\ItemCampaign;
 use App\Models\Order;
 use App\Models\Store;
 use App\Models\Review;
@@ -38,13 +39,7 @@ class ItemController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $zone_id = $request->header('zoneId');
         $type = $request->query('type', 'all');
         $product_id = $request->query('product_id')??null;
@@ -62,13 +57,7 @@ class ItemController extends Controller
 
     public function get_new_products(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $zone_id = $request->header('zoneId');
         $type = $request->query('type', 'all');
         $product_id = $request->query('product_id')??null;
@@ -85,13 +74,7 @@ class ItemController extends Controller
 
     public function get_searched_products(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'name' => 'required'
         ]);
@@ -199,7 +182,17 @@ class ItemController extends Controller
         ->when($min && $max, function($query)use($min,$max){
             $query->whereBetween('price',[$min,$max]);
         })
-        ->orderByRaw("FIELD(name, ?) DESC", [$request['name']])
+        ->orderByRaw("CASE
+                WHEN LOWER(REPLACE(name, ' ', '')) = LOWER(REPLACE(?, ' ', '')) THEN 1
+                WHEN LOWER(REPLACE(name, ' ', '')) LIKE LOWER(REPLACE(?, ' ', '')) THEN 2
+                WHEN LOWER(REPLACE(name, ' ', '')) LIKE LOWER(REPLACE(?, ' ', '')) THEN 3
+                ELSE 4
+            END,  LENGTH(name) ASC, name ASC ", [
+            $request['name'],            // exact match (normalized)
+            "{$request['name']}%",       // starts with (normalized)
+            "%{$request['name']}%",      // contains (normalized)
+        ])
+
 
         ->when($filter&&in_array('top_rated',$filter),function ($qurey){
             $qurey->withCount('reviews')->orderBy('reviews_count','desc');
@@ -246,13 +239,7 @@ class ItemController extends Controller
 
     public function get_searched_products_suggestion(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'name' => 'required'
         ]);
@@ -344,13 +331,7 @@ class ItemController extends Controller
 
     public function get_popular_products(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $min_price = $request->query('min_price');
         $max_price = $request->query('max_price');
         $rating_count = $request->query('rating_count');
@@ -370,13 +351,7 @@ class ItemController extends Controller
 
     public function get_most_reviewed_products(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
 
         $type = $request->query('type', 'all');
         $min_price = $request->query('min_price');
@@ -395,15 +370,30 @@ class ItemController extends Controller
         return response()->json($items, 200);
     }
 
+    public function get_top_rated_products(Request $request)
+    {
+        Helpers::setZoneIds($request);
+
+        $type = $request->query('type', 'all');
+        $min_price = $request->query('min_price');
+        $max_price = $request->query('max_price');
+        $rating_count = $request->query('rating_count');
+
+        $filter = $request->query('filter', '');
+        $filter = $filter?(is_array($filter)?$filter:str_getcsv(trim($filter, "[]"), ',')):'';
+        $category_ids = $request->query('category_ids', '');
+
+        $zone_id= $request->header('zoneId');
+        $items = ProductLogic::top_rated_products($zone_id, $request['limit']??25, $request['offset']??1, $type, $category_ids, $filter, $min_price, $max_price, $rating_count, $request['search']);
+        $items['categories'] = $items['categories'];
+        $items['products'] = Helpers::productListDataFormatting($items['products']);
+
+        return response()->json($items, 200);
+    }
+
     public function get_discounted_products(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
 
         $type = $request->query('type', 'all');
         $min_price = $request->query('min_price');
@@ -431,13 +421,7 @@ class ItemController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $zone_id = $request->header('zoneId');
 
         $type = $request->query('type', 'all');
@@ -448,21 +432,44 @@ class ItemController extends Controller
         return response()->json($items, 200);
     }
 
-    public function get_product($id)
+    public function get_product(Request $request, $id)
     {
         try {
+            if ($request['campaign'] == 1) {
+                $item = ItemCampaign::active()
+                ->when(config('module.current_module_data'), function ($query) {
+                        $query->module(config('module.current_module_data')['id']);
+                    })
+                    ->when(is_numeric($id), function ($qurey) use ($id) {
+                        $qurey->where('id', $id);
+                    })
+                    ->when(!is_numeric($id), function ($qurey) use ($id) {
+                        $qurey->where('slug', $id);
+                    })
+                    ->first();
+            } else {
+                $item = Item::withCount('whislists')->with(['tags', 'nutritions', 'allergies', 'reviews', 'reviews.customer'])->active()
+                    ->when(config('module.current_module_data'), function ($query) {
+                        $query->module(config('module.current_module_data')['id']);
+                    })
+                    ->when(is_numeric($id), function ($qurey) use ($id) {
+                        $qurey->where('id', $id);
+                    })
+                    ->when(!is_numeric($id), function ($qurey) use ($id) {
+                        $qurey->where('slug', $id);
+                    })
+                    ->first();
+            }
+            // Visitor Log
+            if ($item && auth('api')->check()) {
+                Helpers::visitor_log(
+                    model: 'item',
+                    user_id: auth('api')->id(),
+                    visitor_log_id: $item->id,
+                    order_count: false
+                );
+            }
 
-            $item = Item::withCount('whislists')->with(['tags','nutritions','allergies','reviews','reviews.customer'])->active()
-            ->when(config('module.current_module_data'), function($query){
-                $query->module(config('module.current_module_data')['id']);
-            })
-            ->when(is_numeric($id),function ($qurey) use($id){
-                $qurey-> where('id', $id);
-            })
-            ->when(!is_numeric($id),function ($qurey) use($id){
-                $qurey-> where('slug', $id);
-            })
-            ->first();
             $store = StoreLogic::get_store_details($item->store_id);
             if($store)
             {
@@ -485,6 +492,7 @@ class ItemController extends Controller
             $item['store_details'] = $store;
             return response()->json($item, 200);
         } catch (\Exception $e) {
+            \Log::error($e);
             return response()->json([
                 'errors' => ['code' => 'product-001', 'message' => translate('messages.not_found')]
             ], 404);
@@ -493,13 +501,7 @@ class ItemController extends Controller
 
     public function get_related_products(Request $request,$id)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $zone_id= $request->header('zoneId');
         if (Item::find($id)) {
             $items = ProductLogic::get_related_products($zone_id,$id);
@@ -512,13 +514,7 @@ class ItemController extends Controller
     }
     public function get_related_store_products(Request $request,$id)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $zone_id= $request->header('zoneId');
         if (Item::find($id)) {
             $items = ProductLogic::get_related_store_products($zone_id,$id);
@@ -532,18 +528,13 @@ class ItemController extends Controller
 
     public function get_recommended(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
 
         $type = $request->query('type', 'all');
         $filter = $request->query('filter', 'all');
 
         $zone_id= $request->header('zoneId');
+
         $items = ProductLogic::recommended_items($zone_id, $request->store_id,$request['limit'], $request['offset'], $type, $filter);
         $items['items'] = Helpers::product_data_formatting($items['items'], true, false, app()->getLocale());
         return response()->json($items, 200);
@@ -687,13 +678,7 @@ class ItemController extends Controller
 
     public function item_or_store_search(Request $request){
 
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         if (!$request->hasHeader('longitude') || !$request->hasHeader('latitude')) {
             $errors = [];
             array_push($errors, ['code' => 'longitude-latitude', 'message' => translate('messages.longitude-latitude_required')]);
@@ -738,6 +723,17 @@ class ItemController extends Controller
             ];
             $q->applyRelationShipSearch(relationships:$relationships ,searchParameter:$key);
         })
+        ->orderByRaw("CASE
+                        WHEN LOWER(REPLACE(name, ' ', '')) = LOWER(REPLACE(?, ' ', '')) THEN 1
+                        WHEN LOWER(REPLACE(name, ' ', '')) LIKE LOWER(REPLACE(?, ' ', '')) THEN 2
+                        WHEN LOWER(REPLACE(name, ' ', '')) LIKE LOWER(REPLACE(?, ' ', '')) THEN 3
+                        ELSE 4
+                    END,  LENGTH(name) ASC, name ASC ", [
+                    $request['name'],            // exact match (normalized)
+                    "{$request['name']}%",       // starts with (normalized)
+                    "%{$request['name']}%",      // contains (normalized)
+                ])
+
         ->limit(50)
         ->get(['id','name','image']);
 
@@ -772,6 +768,16 @@ class ItemController extends Controller
             }
         })
         ->active()
+                ->orderByRaw("CASE
+                        WHEN LOWER(REPLACE(name, ' ', '')) = LOWER(REPLACE(?, ' ', '')) THEN 1
+                        WHEN LOWER(REPLACE(name, ' ', '')) LIKE LOWER(REPLACE(?, ' ', '')) THEN 2
+                        WHEN LOWER(REPLACE(name, ' ', '')) LIKE LOWER(REPLACE(?, ' ', '')) THEN 3
+                        ELSE 4
+                    END,  LENGTH(name) ASC, name ASC ", [
+                    $request['name'],            // exact match (normalized)
+                    "{$request['name']}%",       // starts with (normalized)
+                    "%{$request['name']}%",      // contains (normalized)
+                ])
         ->limit(50)
         ->select(['id','name','logo'])
         ->get();
@@ -785,13 +791,7 @@ class ItemController extends Controller
 
     public function get_store_condition_products(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'store_id' => 'required',
             'limit' => 'required',
@@ -807,33 +807,54 @@ class ItemController extends Controller
         $type = $request->query('type', 'all');
         $limit = $request['limit'];
         $offset = $request['offset'];
+        $zones = !empty($zone_id) ? json_decode($zone_id, true) : null;
 
-        $paginator = Item::
-        whereHas('module.zones', function($query)use($zone_id){
-            $query->whereIn('zones.id', json_decode($zone_id, true));
-        })
-        ->whereHas('store', function($query)use($zone_id){
-            $query->whereIn('zone_id', json_decode($zone_id, true))->whereHas('zone.modules',function($query){
-                $query->when(config('module.current_module_data'), function($query){
-                    $query->where('modules.id', config('module.current_module_data')['id']);
+        $paginator = Item::query()
+
+        ->when(empty($request->store_id), function ($query) use ($zones) {
+
+            $query->when(!empty($zones), function ($query) use ($zones) {
+                $query->whereHas('module.zones', function ($q) use ($zones) {
+                    $q->whereIn('zones.id', $zones);
+                });
+            });
+
+            $query->whereHas('store', function ($q) use ($zones) {
+
+                $q->when(!empty($zones), function ($q) use ($zones) {
+                    $q->whereIn('zone_id', $zones);
+                });
+
+                $q->whereHas('zone.modules', function ($q) {
+                    $q->when(config('module.current_module_data'), function ($q) {
+                        $q->where('modules.id', config('module.current_module_data')['id']);
+                    });
                 });
             });
         })
-        ->whereHas('pharmacy_item_details',function($q){
-            return $q->whereNotNull('common_condition_id');
+
+        ->when(is_numeric($request->store_id), function ($query) use ($request) {
+            $query->where('store_id', $request->store_id);
         })
-        ->whereHas('ecommerce_item_details',function($q){
-            return $q->whereNotNull('brand_id');
-        })
-        ->when(is_numeric($request->store_id),function ($qurey) use($request){
-            $qurey->where('store_id', $request->store_id);
-        })
+
         ->when(!is_numeric($request->store_id), function ($query) use ($request) {
             $query->whereHas('store', function ($q) use ($request) {
                 $q->where('slug', $request->store_id);
             });
         })
-        ->active()->type($type)->latest()->paginate($limit, ['*'], 'page', $offset);
+
+        ->whereHas('pharmacy_item_details', function ($q) {
+            $q->whereNotNull('common_condition_id');
+        })
+
+        ->whereHas('ecommerce_item_details', function ($q) {
+            $q->whereNotNull('brand_id');
+        })
+
+        ->active()
+        ->type($type)
+        ->latest()
+        ->paginate($limit, ['*'], 'page', $offset);
         $data=[
             'total_size' => $paginator->total(),
             'limit' => $limit,
@@ -855,13 +876,7 @@ class ItemController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $zone_id = $request->header('zoneId');
         $type = $request->query('type', 'all');
         $product_id = $request->query('product_id')??null;
@@ -876,13 +891,31 @@ class ItemController extends Controller
         return response()->json($items, 200);
     }
 
+    public function get_organic_products(Request $request)
+    {
+        Helpers::setZoneIds($request);
+
+        $type = $request->query('type', 'all');
+        $min_price = $request->query('min_price');
+        $max_price = $request->query('max_price');
+        $rating_count = $request->query('rating_count');
+
+        $filter = $request->query('filter', '');
+        $filter = $filter?(is_array($filter)?$filter:str_getcsv(trim($filter, "[]"), ',')):'';
+        $category_ids = $request->query('category_ids', '');
+
+        $zone_id = $request->header('zoneId');
+
+        $items = ProductLogic::organic_products($zone_id, $request['limit']??25, $request['offset']??1, $type, $category_ids, $filter, $min_price, $max_price, $rating_count, $request['search']);
+        $items['categories'] = $items['categories'];
+        $items['products'] = Helpers::productListDataFormatting($items['products']);
+
+        return response()->json($items, 200);
+    }
+
     public function get_products(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]];
-            return response()->json(['errors' => $errors], 403);
-        }
-
+        Helpers::setZoneIds($request);
         $data_type = $request->query('data_type', 'all');
 
         $zone_id = $request->header('zoneId');
@@ -908,6 +941,12 @@ class ItemController extends Controller
                 break;
             case 'new':
                 $items = ProductLogic::get_new_products($zone_id, $type, $min_price, $max_price, $product_id, $limit, $offset, $filter, $rating_count);
+                break;
+            case 'top_rated':
+                $items = ProductLogic::top_rated_products($zone_id, $limit, $offset, $type, $category_ids, $filter, $min_price, $max_price, $rating_count, $request['search']);
+                break;
+            case 'organic':
+                $items = ProductLogic::organic_products($zone_id, $limit, $offset, $type, $category_ids, $filter, $min_price, $max_price, $rating_count, $request['search']);
                 break;
             case 'category':
                 $validator = Validator::make($request->all(), [
@@ -947,6 +986,27 @@ class ItemController extends Controller
     public function getNutritionNameList(){
         $names= Nutrition::select(['nutrition'])->pluck('nutrition');
         return response()->json($names, 200);
+    }
+
+    public function get_recently_viewed_products(Request $request)
+    {
+        Helpers::setZoneIds($request);
+
+        $type = $request->query('type', 'all');
+        $min_price = $request->query('min_price');
+        $max_price = $request->query('max_price');
+        $rating_count = $request->query('rating_count');
+
+        $filter = $request->query('filter', '');
+        $filter = $filter?(is_array($filter)?$filter:str_getcsv(trim($filter, "[]"), ',')):'';
+        $category_ids = $request->query('category_ids', '');
+
+        $zone_id= $request->header('zoneId');
+        $items = ProductLogic::recently_viewed_products($zone_id, $request['limit']??25, $request['offset']??1, $type, $category_ids, $filter, $min_price, $max_price, $rating_count, $request['search']);
+        $items['categories'] = $items['categories'];
+        $items['products'] = Helpers::productListDataFormatting($items['products']);
+
+        return response()->json($items, 200);
     }
 
 

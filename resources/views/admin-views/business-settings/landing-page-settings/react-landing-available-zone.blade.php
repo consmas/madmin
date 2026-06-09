@@ -101,7 +101,7 @@
                 </div>
             </div>
         <form id="zone-setup-form"
-              action="{{ route('admin.business-settings.react-landing-page-settings', 'available-zone-section') }}"
+              action="{{ route('admin.business-settings.react-landing-page-settings-update', 'available-zone-section') }}"
               method="POST" enctype="multipart/form-data">
             @csrf
             <div class="row g-3">
@@ -275,7 +275,7 @@
                 <div class="custom-offcanvas-body custom-offcanvas-body-100  p-20">
                     <section class="common-section-view bg-white border rounded-10 my-xl-0 mx-xl-0">
                         <div
-                            class="common-section-inner d-flex flex-xl-nowrap justify-content-xl-between justify-content-center flex-wrap align-items-center gap-x-xl-20 bg-fafafa rounded-10 p-3">
+                            class="common-section-inner d-flex flex-xl-nowrap justify-content-xl-between justify-content-center flex-wrap align-items-center gap-xxl-20 bg-fafafa rounded-10 p-3">
                             <div class="max-w-400px">
                                 <h2 class="mb-xl-2 mb-1 fs-24">
                                     {!! \App\CentralLogics\Helpers::highlightWords(text:$available_zone_title?->value ?? 'Available Delivery $Areas / Zone$') !!}

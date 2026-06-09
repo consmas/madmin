@@ -70,7 +70,7 @@
             </div>
 
             <div class="col-lg-9">
-                <form action="{{env('APP_MODE')!='demo'?route('vendor.profile.update'):'javascript:'}}" method="post" enctype="multipart/form-data" id="vendor-settings-form">
+                <form action="{{getEnvMode()!='demo'?route('vendor.profile.update'):'javascript:'}}" method="post" enctype="multipart/form-data" id="vendor-settings-form">
                 @csrf
                 <!-- Card -->
                     <div class="card mb-3 mb-lg-5" id="generalDiv">
@@ -86,7 +86,7 @@
                             for="avatarUploader">
                             <img id="viewer"
                                  data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                 class="avatar-img onerror-image"
+                                 class="avatar-img onerror-image w-100"
                                  src="{{ \App\CentralLogics\Helpers::get_loggedin_user()?->image_full_url ?? asset('public/assets/admin/img/160x160/img1.jpg') }}"
                                  alt="Image">
 
@@ -132,11 +132,12 @@
 
                             <!-- Form Group -->
                             <div class="row form-group">
-                                <label for="phoneLabel" class="col-sm-3 col-form-label input-label">{{translate('messages.phone')}} <span
-                                        class="input-label-secondary">({{translate('messages.optional')}})</span></label>
+                                <label for="phoneLabel" class="col-sm-3 col-form-label input-label">{{translate('messages.phone')}}
+                                    {{-- <span class="input-label-secondary">({{translate('messages.optional')}})</span> --}}
+                                    </label>
 
                                 <div class="col-sm-9">
-                                    <input type="text" class="js-masked-input form-control" name="phone" id="phoneLabel"
+                                    <input type="tel" class="js-masked-input form-control" name="phone" id="phoneLabel"
                                            placeholder="+x(xxx)xxx-xx-xx" aria-label="+(xxx)xx-xxx-xxxxx"
                                            value="{{auth('vendor')->check()?auth('vendor')->user()->phone:auth('vendor_employee')->user()->phone}}"
                                            data-hs-mask-options='{
@@ -157,7 +158,7 @@
                             </div>
 
                             <div class="d-flex justify-content-end">
-                                <button type="button" data-id="vendor-settings-form" data-message="{{ translate('you_want_to_update_user_info') }}" class="btn btn-primary {{env('APP_MODE')!='demo'?'form-alert':'call-demo'}}">{{ translate('messages.Save_changes') }}</button>
+                                <button type="button" data-id="vendor-settings-form" data-message="{{ translate('you_want_to_update_user_info') }}" class="btn btn-primary {{getEnvMode()!='demo'?'form-alert':'call-demo'}}">{{ translate('messages.Save_changes') }}</button>
                             </div>
 
                             <!-- End Form -->
@@ -177,7 +178,7 @@
                     <div class="card-body">
                         <!-- Form -->
                         <form id="changePasswordForm"
-                            action="{{ env('APP_MODE') != 'demo' ? route('vendor.profile.settings-password') : 'javascript:' }}"
+                            action="{{ getEnvMode() != 'demo' ? route('vendor.profile.settings-password') : 'javascript:' }}"
                             method="post" enctype="multipart/form-data">
                             @csrf
 
@@ -201,7 +202,7 @@
                                                 name="password" id="signupSrPassword"
                                                 pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
                                                 title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
-                                                placeholder="{{ translate('messages.password_length_placeholder', ['length' => '8+']) }}"
+                                                placeholder="{{ translate('Minimum 8 characters') }}"
                                                 aria-label="8+ characters required" required
                                                 data-msg="Your password is invalid. Please try again."
                                                 data-hs-toggle-password-options='{
@@ -234,7 +235,7 @@
                                                     name="confirm_password" id="signupSrConfirmPassword"
                                                     pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
                                                     title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
-                                                    placeholder="{{ translate('messages.password_length_placeholder', ['length' => '8+']) }}"
+                                                    placeholder="{{ translate('Minimum 8 characters') }}"
                                                     aria-label="8+ characters required" required
                                                     data-msg="Password does not match the confirm password."
                                                     data-hs-toggle-password-options='{
@@ -258,7 +259,7 @@
                             <div class="d-flex justify-content-end">
                                 <button type="button" data-id="changePasswordForm"
                                     data-message="{{ translate('messages.want_to_update_admin_password') }}"
-                                    class="btn btn-primary {{ env('APP_MODE') != 'demo' ? 'form-alert' : 'call-demo' }}">{{ translate('messages.save') }}</button>
+                                    class="btn btn-primary {{ getEnvMode() != 'demo' ? 'form-alert' : 'call-demo' }}">{{ translate('messages.save') }}</button>
                             </div>
                         </form>
                         <!-- End Form -->

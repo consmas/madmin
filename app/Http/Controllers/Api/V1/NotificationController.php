@@ -12,15 +12,15 @@ class NotificationController extends Controller
 {
     public function get_notifications(Request $request){
 
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => 'Zone id is required!']);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $zone_id= $request->header('zoneId');
         $zone_id= json_decode($zone_id,true)  ?? [];
+
+        //for rideshare module start
+        if(is_int($zone_id)){
+            $zone_id = [$zone_id];
+        }
+        //for rideshare module end
 
         try {
             $notifications = Notification::active()->where('tergat', 'customer')->where(function($q)use($zone_id){

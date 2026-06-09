@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\CentralLogics\CustomerLogic;
 use App\Models\Admin;
 use App\Models\Order;
 use App\Models\Store;
@@ -24,8 +25,11 @@ use App\Http\Controllers\Controller;
 use App\Models\OfflinePaymentMethod;
 use Illuminate\Support\Facades\Mail;
 use App\Models\ParcelDeliveryInstruction;
+use App\Models\Review;
 use App\Traits\PlaceNewOrder;
 use Illuminate\Support\Facades\Validator;
+use Modules\Rental\Entities\Trips;
+use Modules\RideShare\Entities\TripManagement\RideRequest;
 
 class OrderController extends Controller
 {
@@ -64,6 +68,8 @@ class OrderController extends Controller
             $order['min_delivery_time'] =  $order->store ? (int) explode('-', $order->store?->delivery_time)[0] ?? 0 : 0;
             $order['max_delivery_time'] =  $order->store ? (int) explode('-', $order->store?->delivery_time)[1] ?? 0 : 0;
             $order['offline_payment'] =  isset($order->offline_payments) ? Helpers::offline_payment_formater($order->offline_payments) : null;
+            $order['is_reviewed'] =   $order->details_count >  Review::whereOrderId($request->order_id)->count() ? False :True ;
+
 
             unset($order['offline_payments']);
             unset($order['details']);
@@ -74,6 +80,7 @@ class OrderController extends Controller
                 ]
             ], 404);
         }
+        $order = gettype($order) == 'object' ? $order->toArray() : $order;
         return response()->json($order, 200);
     }
 
@@ -177,8 +184,9 @@ class OrderController extends Controller
         } else if ($order->order_type == 'parcel' || $order->prescription_order == 1) {
             $order->delivery_address = json_decode($order->delivery_address, true);
             if ($order->prescription_order && $order->order_attachment) {
-                $order->order_attachment = json_decode($order->order_attachment, true);
+                $order->order_attachment = is_array($order->order_attachment)? $order->order_attachment : json_decode($order->order_attachment, true);
             }
+            $order = gettype($order) == 'object' ? $order->toArray() : $order;
             return response()->json(($order), 200);
         }
 
@@ -232,15 +240,31 @@ class OrderController extends Controller
                 return response()->json(['message' => data_get($cancel_parcel_order, 'message')], 200);
             }
         } else if ($order->order_status == 'pending' || $order->order_status == 'failed' || $order->order_status == 'canceled') {
-            if (config('module.' . $order->module->module_type)['stock']) {
+                $hasStock = config('module.' . $order->module->module_type)['stock'];
+            $hasFlashDiscount = $order->flash_admin_discount_amount > 0 && $order->flash_store_discount_amount > 0;
+
+            if ($hasStock || $hasFlashDiscount) {
                 foreach ($order->details as $detail) {
-                    $variant = json_decode($detail['variation'], true);
-                    $item = $detail->item;
-                    if ($detail->campaign) {
-                        $item = $detail->campaign;
+
+                    $item = $detail->campaign ?? $detail->item;
+
+                    if ($hasStock) {
+                        $variant = json_decode($detail->variation, true);
+                        $variantType = !empty($variant) ? $variant[0]['type'] : null;
+                        ProductLogic::update_stock($item, -$detail->quantity, $variantType)?->save();
                     }
-                    ProductLogic::update_stock($item, -$detail->quantity, count($variant) ? $variant[0]['type'] : null)->save();
+
+                    if ($hasFlashDiscount) {
+                        ProductLogic::update_flash_stock($detail->item, $detail->quantity, true)?->save();
+                    }
                 }
+            }
+
+
+
+            if($order->is_guest == 0){
+
+                OrderLogic::refund_before_delivered($order);
             }
             $order->order_status = 'canceled';
             $order->canceled = now();
@@ -324,7 +348,7 @@ class OrderController extends Controller
             $mail_status = Helpers::get_mail_status('refund_request_mail_status_admin');
             try {
                 if (config('mail.status') && $admin['email'] && $mail_status == '1' && Helpers::getNotificationStatusData('admin', 'order_refund_request', 'mail_status')) {
-                    Mail::to($admin['email'])->send(new RefundRequest($order->id));
+                    Mail::to($admin?->getRawOriginal('email'))->send(new RefundRequest($order->id));
                 }
             } catch (\Exception $exception) {
                 info([$exception->getFile(), $exception->getLine(), $exception->getMessage()]);
@@ -368,7 +392,7 @@ class OrderController extends Controller
             } else {
                 Order::where(['user_id' => $user_id, 'id' => $request['order_id']])->update([
                     'order_status' => 'pending',
-                    'pending' => now()
+                    'pending' => now(),
                 ]);
                 $payment = OrderPayment::where('payment_status', 'unpaid')->where('order_id', $request['order_id'])->first();
                 if ($payment) {
@@ -387,7 +411,7 @@ class OrderController extends Controller
                 Helpers::send_order_notification($order);
 
                 if ($order->is_guest == 0 && config('mail.status') && $order_mail_status == '1' && $order->customer && Helpers::getNotificationStatusData('customer', 'customer_order_notification', 'mail_status')) {
-                    Mail::to($order->customer->email)->send(new PlaceOrder($order->id));
+                    Mail::to($order->customer?->getRawOriginal('email'))->send(new PlaceOrder($order->id));
                 }
                 if ($order->is_guest == 1 && config('mail.status') && $order_mail_status == '1' && isset($address['contact_person_email']) && Helpers::getNotificationStatusData('customer', 'customer_order_notification', 'mail_status')) {
                     Mail::to($address['contact_person_email'])->send(new PlaceOrder($order->id));
@@ -499,6 +523,9 @@ class OrderController extends Controller
             $OfflinePayments->method_fields = json_encode($method?->method_fields);
             DB::beginTransaction();
             $OfflinePayments->save();
+
+            $order->order_status = 'pending';
+            $order->payment_method = 'offline_payment';
             $order->save();
             DB::commit();
 
@@ -598,13 +625,7 @@ class OrderController extends Controller
 
     public function order_again(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
 
         $longitude = $request->header('longitude') ?? 0;
         $latitude = $request->header('latitude') ?? 0;
@@ -613,7 +634,7 @@ class OrderController extends Controller
         $data = Store::withOpen($longitude, $latitude)->wherehas('orders', function ($q) use ($request) {
             $q->where('user_id', $request->user()->id)->where('is_guest', 0)->latest();
         })
-            ->where('module_id', $request->header('moduleId'))
+            ->where('module_id', getModuleId($request->header('moduleId')))
             ->withcount('items')
             ->with(['itemsForReorder'])
             ->Active()
@@ -629,6 +650,22 @@ class OrderController extends Controller
             });
 
         return response()->json(Helpers::store_data_formatting($data, true), 200);
+    }
+
+    public function get_recent_ordered_items(Request $request)
+    {
+        Helpers::setZoneIds($request);
+
+        $zone_id = $request->header('zoneId');
+        $module_id = getModuleId($request->header('moduleId'));
+        $type = $request->query('type', 'all');
+        $limit = $request->query('limit', 10);
+        $offset = $request->query('offset', 1);
+
+        $items = ProductLogic::recent_ordered_items($request->user()->id, $zone_id, $limit, $offset, $type, $module_id);
+        $items['items'] = Helpers::productListDataFormatting($items['items']);
+
+        return response()->json($items, 200);
     }
 
 
@@ -735,5 +772,126 @@ class OrderController extends Controller
         }
 
         return response()->json(['message' => translate('messages.Parcel_returned_successfully')], 200);
+    }
+
+    public function walletPayment(Request $request){
+        $validator = Validator::make($request->all(), [
+            'order_id' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        $order = Order::where(['id' => $request->order_id])->first();
+        if($order->payment_status == 'paid'){
+            return response()->json(['message' => translate('messages.Order_payment_successfully')], 200);
+        }
+
+        $walletTransaction = CustomerLogic::create_wallet_transaction($order->user_id, $order->order_amount, 'order_place', $order->id);
+        if($walletTransaction){
+            $order->order_status = 'confirmed';
+            $order->payment_status = 'paid';
+            $order->payment_method = 'wallet';
+            $order->update();
+
+            return response()->json(['message' => translate('messages.Order_payment_successfully')], 200);
+        }
+
+        return response()->json(['message' => translate('messages.some_thing_went_wrong')], 400);
+    }
+
+    public function get_all_running_orders(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'guest_id' => $request->user ? 'nullable' : 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        $user_id = $request->user ? $request->user->id : $request['guest_id'];
+
+        $orders = Order::when(isset($request->user), function ($query) {
+                $query->where('is_guest', 0);
+            })
+            ->where('user_id', $user_id)
+            ->whereNotIn('order_status', [
+                'delivered', 'canceled', 'refund_requested',
+                'refund_request_canceled', 'refunded', 'failed'
+            ])
+            ->Notpos()
+            ->latest()
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => (int)$order->id,
+                    'order_type' => 'order',
+                    'status' => $order->order_status,
+                    'is_repeat' => 0,
+                    'created_at' => $order->created_at,
+                ];
+            });
+
+        if(addon_published_status('RideShare')){
+            $rides = RideRequest::where('customer_id', $user_id)
+                ->where(fn($query) => $query->whereNotIn('current_status', ['completed', 'cancelled'])
+                ->orWhere(fn($query) => $query->whereNotNull('driver_id')
+                    ->whereHas('fee', function ($query) {
+                        $query->where(function ($q) {
+                            $q->where('cancelled_by', '!=', 'driver')
+                            ->orWhereNull('cancelled_by');
+                        });
+                    })
+                    ->whereIn('current_status', ['completed', 'cancelled'])
+                    ->where('payment_status', 'unpaid')
+                ))
+                ->latest()
+                ->get()
+                ->map(function ($ride) {
+                    return [
+                        'id' => (int)$ride->ref_id,
+                        'order_type' => 'ride',
+                        'status' => $ride->current_status,
+                        'is_repeat' => 0,
+                        'created_at' => $ride->created_at,
+                    ];
+                });
+        }else{
+            $rides = [];
+        }
+
+        if(addon_published_status('Rental')){
+            $trips = Trips::where('user_id', $user_id)
+                ->where(fn($query) => $query->whereNotIn('trip_status', ['completed', 'cancelled']))
+                ->latest()
+                ->get()
+                ->map(function ($ride) {
+                    return [
+                        'id' => (int)$ride->id,
+                        'order_type' => 'trip',
+                        'status' => $ride->trip_status,
+                        'is_repeat' => 0,
+                        'created_at' => $ride->created_at,
+                    ];
+                });
+        }else{
+            $trips = [];
+        }
+
+        // $merged = $orders->merge($rides)->merge($bookings);
+        // $sorted = collect(array_merge($orders->toArray(), $rides->toArray(), $bookings->toArray()))
+        //     ->sortByDesc('created_at')
+        //     ->take(50)
+        //     ->values();
+
+        $merged = $orders->concat($rides)->concat($trips);
+
+        $sorted = $merged->sortByDesc('created_at')->values()->take(50);
+
+        return response()->json([
+            'data' => $sorted
+        ], 200);
     }
 }

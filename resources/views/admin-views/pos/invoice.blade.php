@@ -243,9 +243,11 @@
                         <div class="d-flex flex-row justify-content-between border-top">
                             <span>{{ translate('messages.Paid by') }}:
                                 {{ translate('messages.' . $order->payment_method) }}</span>
-                            <span>{{ translate('messages.amount') }}:
-                                {{ $order->adjusment + $order->order_amount }}</span>
-                            <span>{{ translate('messages.change') }}: {{ abs($order->adjusment) }}</span>
+                                @if ($order->payment_method != 'wallet')
+                                    <span>{{ translate('messages.amount') }}:
+                                        {{ $order->adjusment + $order->order_amount }}</span>
+                                    <span>{{ translate('messages.change') }}: {{ abs($order->adjusment) }}</span>
+                                @endif
                         </div>
                     @endif
                 </div>
@@ -255,7 +257,8 @@
                 <div class="text-uppercase text-center">{{ translate('THANK YOU') }}</div>
                 <img src="{{ asset('/public/assets/admin/img/invoice-star.png') }}" alt="" class="w-100">
                 <div class="copyright">
-                    Processed by ConsMas Supply Chains Solution Ltd
+                    &copy; {{ \App\Models\BusinessSetting::where(['key' => 'business_name'])->first()->value }}. <span
+                        class="d-none d-sm-inline-block">{{ \App\Models\BusinessSetting::where(['key' => 'footer_text'])->first()->value }}</span>
                 </div>
             </div>
         </div>

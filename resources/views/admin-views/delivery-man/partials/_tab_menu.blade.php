@@ -1,9 +1,9 @@
 
 @if ($deliveryMan->application_status == 'approved')
 
-<div class="js-nav-scroller hs-nav-scroller-horizontal mt-2">
+<div class="js-nav-scroller hs-nav-scroller-horizontal mt-3">
     <!-- Nav -->
-    <ul class="nav nav-tabs mb-3 border-0 nav--tabs">
+    <ul class="nav nav-tabs nav--pills mb-3 border-0 nav--tabs">
         <li class="nav-item">
             <a class="nav-link {{request()?->tab == 'info' ||  !request()?->tab ? 'active' : ''}}"
                 href="{{ route('admin.users.delivery-man.preview', ['id' => $deliveryMan->id, 'tab' => 'info']) }}"
@@ -29,6 +29,18 @@
                 href="{{ route('admin.users.delivery-man.preview', ['id' => $deliveryMan->id, 'tab' => 'disbursement']) }}"
                 aria-disabled="true">{{ translate('messages.disbursements') }}</a>
         </li>
+        @if ($deliveryMan->earning)
+        <li class="nav-item">
+            <a class="nav-link {{request()?->tab == 'loyalty-point' ? 'active' : ''}}"
+                href="{{ route('admin.users.delivery-man.preview', ['id' => $deliveryMan->id, 'tab' => 'loyalty-point']) }}"
+                aria-disabled="true">{{ translate('Loyalty Points') }}</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{request()?->tab == 'referal-earn' ? 'active' : ''}}"
+                href="{{ route('admin.users.delivery-man.preview', ['id' => $deliveryMan->id, 'tab' => 'referal-earn']) }}"
+                aria-disabled="true">{{ translate('Refer & Earn') }}</a>
+        </li>
+        @endif
     </ul>
     <!-- End Nav -->
 </div>

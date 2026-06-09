@@ -121,7 +121,7 @@ class StoreLogic
                 return $qurey->orderBy('open', 'desc');
             });
             $query = $query->when(($filter && in_array('nearby',$filter))   ,function ($qurey){
-                return  $qurey->orderByDesc('distance');
+                return  $qurey->orderBy('distance');
             });
             $query = $query->when($filter_data=='delivery', function($q){
                 return $q->delivery();

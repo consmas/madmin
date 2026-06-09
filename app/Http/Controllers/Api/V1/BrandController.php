@@ -15,6 +15,7 @@ class BrandController extends Controller
 {
     public function get_brands(Request $request,$search=null)
     {
+        Helpers::setZoneIds($request);
 
         try {
             $brand_default_status = BusinessSetting::where('key', 'brand_default_status')->first()?->value ?? 1;
@@ -22,7 +23,7 @@ class BrandController extends Controller
             $key = explode(' ', $search);
 
             $zone_id= $request->header('zoneId');
-            $module_id= $request->header('moduleId');
+            $module_id= getModuleId($request->header('moduleId'));
 
             $brands = Brand::Active()
             ->where(function($query) use($module_id){
@@ -87,13 +88,7 @@ class BrandController extends Controller
 
     public function get_products($id, Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
             'offset' => 'required',

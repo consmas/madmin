@@ -13,7 +13,7 @@
                     </span>
                 </h1>
                 <p class="m-0">
-                    {{translate('connect_drivemond_system_with_ConsMas')}}
+                    {{translate('connect_drivemond_system_with_6ammart')}}
                 </p>
             </div>
             <div class="text--primary-2 py-1 d-flex flex-wrap align-items-center" type="button" data-toggle="modal"
@@ -41,7 +41,7 @@
                                 <div class="w-160px flex-grow-1">
                                     <h5>{{translate('Activation Mode')}}</h5>
                                     <p class="fs-12 m-0">
-                                        {{translate('Enable the switch to activate the purchased Software- Drivemond ride-sharing in the ConsMas system. You must input the correct information to make sure the functionality works properly.')}}
+                                        {{translate('Enable the switch to activate the purchased Software- Drivemond ride-sharing in the 6amMart system. You must input the correct information to make sure the functionality works properly.')}}
                                     </p>
                                 </div>
                                 <label class="toggle-switch toggle-switch-sm">
@@ -86,9 +86,9 @@
                                     @php($systemSelfToken = \App\Models\ExternalConfiguration::where('key', 'system_self_token')->first())
                                     <div class="p-3 p-sm-4 bg-soft-secondary rounded">
                                         <label
-                                            class="form-label">{{ (\App\CentralLogics\Helpers::get_business_data('business_name') ?? "ConsMas" ) . ' ' .translate('System Token') }}
+                                            class="form-label">{{ (\App\CentralLogics\Helpers::get_business_data('business_name') ?? "6amMart" ) . ' ' .translate('System Token') }}
                                             <i class="tio-info-outined text-primary"
-                                               title="{{ translate("Click on the Generate Token button, It will automatically generate the ConsMas System token and insert it into the input field.") }}"
+                                               title="{{ translate("Click on the Generate Token button, It will automatically generate the 6amMart System token and insert it into the input field.") }}"
                                                data-toggle="tooltip"></i>
                                         </label>
                                         <div class="input-group input-token-group">
@@ -172,19 +172,19 @@
                                     <div class="how-it-count">
                                         <span>3</span>
                                     </div>
-                                    <h5 class="mb-2">{{(\App\CentralLogics\Helpers::get_business_data('business_name') ?? "ConsMas" ) . ' ' .translate('System Token Generate')}}</h5>
+                                    <h5 class="mb-2">{{(\App\CentralLogics\Helpers::get_business_data('business_name') ?? "6amMart" ) . ' ' .translate('System Token Generate')}}</h5>
                                     <p>
                                         {{translate("At last,  Click on the  ")}}
                                         <strong>{{translate("Generate Token ")}}</strong>
                                         {{translate("button for automatic token generation & paste it Into the input field of ")}}
-                                        {{(\App\CentralLogics\Helpers::get_business_data('business_name') ?? "ConsMas" ) . ' ' .translate('System Token Generate')}}
+                                        {{(\App\CentralLogics\Helpers::get_business_data('business_name') ?? "6amMart" ) . ' ' .translate('System Token Generate')}}
                                     </p>
                                 </div>
                             </div>
                         </div>
                         <br>
                         <div class="pb-1">
-                            <i class="text-dark">{{translate('Note :  Follow the same steps on Drivemond to successfully connect ConsMas with Drivemond')}}</i>
+                            <i class="text-dark">{{translate('Note :  Follow the same steps on Drivemond to successfully connect 6amMart with Drivemond')}}</i>
                         </div>
                     </div>
                 </div>

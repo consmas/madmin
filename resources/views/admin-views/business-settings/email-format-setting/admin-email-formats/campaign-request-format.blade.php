@@ -58,7 +58,7 @@
                 </div>
                 @php($data=\App\Models\EmailTemplate::where('type','admin')->where('email_type', 'campaign_request')->first())
                 @php($template= $template ?? $data?->email_template ?? 1)
-                <form action="{{ route('admin.business-settings.email-setup', ['admin','campaign-request']) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('admin.business-settings.email-setup-update', ['admin','campaign-request']) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="card border-0">
                         <div class="card-body">
@@ -317,7 +317,7 @@
                                                             <label class="form-label">
                                                                 {{translate('Copyright Content')}}({{ translate('messages.default') }})
                                                             </label>
-                                                            <input type="text" data-id="mail-copyright" name="copyright_text[]"  placeholder="{{ translate('Ex:_Copyright_2023_ConsMas._All_right_reserved') }}" class="form-control" value="{{ $data?->getRawOriginal('copyright_text') }}">
+                                                            <input type="text" data-id="mail-copyright" name="copyright_text[]"  placeholder="{{ translate('Ex:_Copyright_2023_6amMart._All_right_reserved') }}" class="form-control" value="{{ $data?->getRawOriginal('copyright_text') }}">
                                                         </div>
                                                     @foreach(json_decode($language) as $lang)
                                                     <?php
@@ -335,7 +335,7 @@
                                                             <label class="form-label">
                                                                 {{translate('Copyright Content')}}({{strtoupper($lang)}})
                                                             </label>
-                                                            <input type="text" name="copyright_text[]"  placeholder="{{ translate('Ex:_Copyright_2023_ConsMas._All_right_reserved') }}" class="form-control" value="{{ $translate[$lang]['copyright_text']??'' }}">
+                                                            <input type="text" name="copyright_text[]"  placeholder="{{ translate('Ex:_Copyright_2023_6amMart._All_right_reserved') }}" class="form-control" value="{{ $translate[$lang]['copyright_text']??'' }}">
                                                         </div>
                                                     @endforeach
                                                 @else
@@ -343,7 +343,7 @@
                                                     <label class="form-label">
                                                         {{translate('Copyright Content')}}
                                                     </label>
-                                                    <input type="text" placeholder="{{ translate('Ex:_Copyright_2023_ConsMas._All_right_reserved') }}" class="form-control" name="copyright_text[]" value="">
+                                                    <input type="text" placeholder="{{ translate('Ex:_Copyright_2023_6amMart._All_right_reserved') }}" class="form-control" name="copyright_text[]" value="">
                                                 </div>
                                                 @endif
                                             </div>

@@ -16,9 +16,6 @@ active
 
         <div class="page-header d-flex flex-wrap align-items-center justify-content-between">
             <h1 class="page-header-title">
-                <span class="page-header-icon">
-                    <img src="{{asset('public/assets/admin/img/api.png')}}" class="w--26" alt="image">
-                </span>
                 <span>
                     {{translate('messages.Notification Channels Setup')}}
                 </span>
@@ -60,7 +57,7 @@ active
 
 
             <div class="card">
-                <div class="card-body p-0">
+                <div class="card-body">
                     <div class="table-responsive datatable-custom">
                         <table class="font-size-sm table table-borderless table-thead-bordered table-align-middle card-table">
                             <thead class="thead-light table-nowrap">

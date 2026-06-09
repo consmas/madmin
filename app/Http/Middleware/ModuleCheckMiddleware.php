@@ -37,7 +37,10 @@ class ModuleCheckMiddleware
                 'errors' => $errors
             ], 403);
         }
-        $module = Module::find($request->header('moduleId'));
+        $value = $request->header('moduleId');
+        $module = is_numeric($value)
+            ? Module::where('id', $value)->first()
+            : Module::where('slug', $value)->first();
         if(!$module) {
             $errors = [];
             array_push($errors, ['code' => 'moduleId', 'message' => translate('messages.not_found')]);

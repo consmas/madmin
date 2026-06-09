@@ -15,9 +15,8 @@
                 </span>
             </h1>
         </div>
-        @php($language=\App\Models\BusinessSetting::where('key','language')->first())
-        @php($language = $language->value ?? null)
-        @php($defaultLang = str_replace('_', '-', app()->getLocale()))
+        @php($language=\App\CentralLogics\Helpers::get_business_settings('language') ?? [])
+
         <!-- End Page Header -->
         <div class="row g-3">
             <div class="col-12">
@@ -32,7 +31,7 @@
                                             href="#"
                                             id="default-link">{{translate('messages.default')}}</a>
                                         </li>
-                                        @foreach (json_decode($language) as $lang)
+                                        @foreach ($language as $lang)
                                             <li class="nav-item">
                                                 <a class="nav-link lang_link"
                                                     href="#"
@@ -55,7 +54,7 @@
                                                 </div>
                                                 <input type="hidden" name="lang[]" value="default">
                                             </div>
-                                        @foreach (json_decode($language) as $lang)
+                                        @foreach ($language as $lang)
                                             <div class="d-none lang_form"
                                                 id="{{ $lang }}-form">
                                                 <div class="form-group">
@@ -82,14 +81,14 @@
                                             <div class="row g-3 __bg-F8F9FC-card">
                                                 <div class="col-sm-6">
                                                     <label class="form-label">{{ translate('admin') }}(%)</label>
-                                                <input type="number"  min=".01" step="0.001" max="100" name="admin_discount_percentage"
+                                                <input type="number"  min="{{\App\CentralLogics\Helpers::getDecimalPlaces() }}" step="{{\App\CentralLogics\Helpers::getDecimalPlaces() }}" max="100" name="admin_discount_percentage"
                                                         value=""
                                                         class="form-control" id="adminDiscount"
                                                         placeholder="{{ translate('Ex_:_50') }}" required>
                                                 </div>
                                                 <div class="col-sm-6">
                                                     <label class="form-label">{{ translate('messages.store_owner') }}(%)</label>
-                                                <input type="number"  min=".01" step="0.001" max="100" name="vendor_discount_percentage"
+                                                <input type="number"  min="{{ \App\CentralLogics\Helpers::getDecimalPlaces() }}" step="{{ \App\CentralLogics\Helpers::getDecimalPlaces() }}" max="100" name="vendor_discount_percentage"
                                                         value=""
                                                         class="form-control" id="storeDiscount"
                                                         placeholder="{{ translate('Ex_:_50') }}" required>

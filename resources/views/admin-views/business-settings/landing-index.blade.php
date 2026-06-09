@@ -11,217 +11,262 @@
 
     $custom_file = File::exists($filePath);
     ?>
-    <div class="content container-fluid">
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1 class="page-header-title mr-3">
-                <span class="page-header-icon">
-                    <img src="{{ asset('public/assets/admin/img/business.png') }}" class="w--26" alt="">
-                </span>
-                <span>
-                    {{ translate('messages.business_setup') }}
-                </span>
-            </h1>
-            @include('admin-views.business-settings.partials.nav-menu')
-        </div>
-        <!-- End Page Header -->
-        @php($config = \App\CentralLogics\Helpers::get_business_settings('landing_page'))
-        @php($landing_integration_type = \App\CentralLogics\Helpers::get_business_data('landing_integration_type'))
-        @php($redirect_url = \App\CentralLogics\Helpers::get_business_data('landing_page_custom_url'))
-        <div class="card mb-3">
-            <div class="card-body">
-                <div
-                    class="maintenance-mode-toggle-bar d-flex flex-wrap justify-content-between border rounded align-items-center p-2">
-                    <h5 class="text-capitalize m-0">
-                        {{ translate('admin_default_landing_page') }}
-                        <i class="tio-info-outined" data-toggle="tooltip"
-                            title="{{ translate('You_can_turn_off/on_system-provided_landing_page') }}"></i>
-                    </h5>
-                    <label class="toggle-switch toggle-switch-sm">
-                        <input type="checkbox" class="status toggle-switch-input landing-page"
-                            {{ isset($config) && $config ? 'checked' : '' }}>
-                        <span class="toggle-switch-label text mb-0">
-                            <span class="toggle-switch-indicator"></span>
-                        </span>
-                    </label>
-                </div>
-            </div>
-        </div>
 
-        <!--  -->
-        <div class="card">
-            <div class="card-header flex-wrap border-0">
-                <h3 class="card-title">
-                    {{ translate('Want_to_Integrate_Your_Own_Customised_Landing_Page_?') }}
-
-                </h3>
-                <div class="text--primary d-flex align-items-center gap-3 font-weight-bolder cursor-pointer"
-                    data-toggle="modal" data-target="#read-instructions">
-                    <span class="mr-2">{{ translate('Read_Instructions') }}</span>
-                    <div class="ripple-animation">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"
-                            fill="none" class="svg replaced-svg">
-                            <path
-                                d="M9.00033 9.83268C9.23644 9.83268 9.43449 9.75268 9.59449 9.59268C9.75449 9.43268 9.83421 9.2349 9.83366 8.99935V5.64518C9.83366 5.40907 9.75366 5.21463 9.59366 5.06185C9.43366 4.90907 9.23588 4.83268 9.00033 4.83268C8.76421 4.83268 8.56616 4.91268 8.40616 5.07268C8.24616 5.23268 8.16644 5.43046 8.16699 5.66602V9.02018C8.16699 9.25629 8.24699 9.45074 8.40699 9.60352C8.56699 9.75629 8.76477 9.83268 9.00033 9.83268ZM9.00033 13.166C9.23644 13.166 9.43449 13.086 9.59449 12.926C9.75449 12.766 9.83421 12.5682 9.83366 12.3327C9.83366 12.0966 9.75366 11.8985 9.59366 11.7385C9.43366 11.5785 9.23588 11.4988 9.00033 11.4993C8.76421 11.4993 8.56616 11.5793 8.40616 11.7393C8.24616 11.8993 8.16644 12.0971 8.16699 12.3327C8.16699 12.5688 8.24699 12.7668 8.40699 12.9268C8.56699 13.0868 8.76477 13.1666 9.00033 13.166ZM9.00033 17.3327C7.84755 17.3327 6.76421 17.1138 5.75033 16.676C4.73644 16.2382 3.85449 15.6446 3.10449 14.8952C2.35449 14.1452 1.76088 13.2632 1.32366 12.2493C0.886437 11.2355 0.667548 10.1521 0.666992 8.99935C0.666992 7.84657 0.885881 6.76324 1.32366 5.74935C1.76144 4.73546 2.35505 3.85352 3.10449 3.10352C3.85449 2.35352 4.73644 1.7599 5.75033 1.32268C6.76421 0.88546 7.84755 0.666571 9.00033 0.666016C10.1531 0.666016 11.2364 0.884905 12.2503 1.32268C13.2642 1.76046 14.1462 2.35407 14.8962 3.10352C15.6462 3.85352 16.24 4.73546 16.6778 5.74935C17.1156 6.76324 17.3342 7.84657 17.3337 8.99935C17.3337 10.1521 17.1148 11.2355 16.677 12.2493C16.2392 13.2632 15.6456 14.1452 14.8962 14.8952C14.1462 15.6452 13.2642 16.2391 12.2503 16.6768C11.2364 17.1146 10.1531 17.3332 9.00033 17.3327ZM9.00033 15.666C10.8475 15.666 12.4206 15.0168 13.7195 13.7185C15.0184 12.4202 15.6675 10.8471 15.667 8.99935C15.667 7.15213 15.0178 5.57907 13.7195 4.28018C12.4212 2.98129 10.8481 2.33213 9.00033 2.33268C7.1531 2.33268 5.58005 2.98185 4.28116 4.28018C2.98227 5.57852 2.3331 7.15157 2.33366 8.99935C2.33366 10.8466 2.98283 12.4196 4.28116 13.7185C5.57949 15.0174 7.15255 15.6666 9.00033 15.666Z"
-                                fill="currentColor"></path>
-                        </svg>
+    <div class="content">
+        <form id="theme_form" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="container-fluid">
+                <!-- Page Header -->
+                <div class="page-header pb-0">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start">
+                        <h1 class="mb-0">{{ translate('messages.Admin Landing Page') }}</h1>
                     </div>
+                    @include('admin-views.business-settings.partials.nav-menu')
                 </div>
-            </div>
-            <form id="theme_form" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="card-body">
-                    <label class="text-capitalize form-label form--label mb-3">
-                        {{ translate('Integrate_Your_Landing_Page_Via') }}
-                        <i class="tio-info-outined" data-toggle="tooltip"
-                            title="{{ translate('You_can_upload_your_landing_page_either_using_URL_or_File_Upload') }}"></i>
-                    </label>
-                    <div class="mb-30">
-                        <div class="resturant-type-group border d-inline-flex">
-                            <label class="form-check form--check mr-2 mr-md-4">
-                                <input class="form-check-input" type="radio" value="url" name="landing_integration_via"
-                                    {{ $landing_integration_type == 'url' ? 'checked' : '' }}>
-                                <span class="form-check-label">
-                                    {{ translate('messages.url') }}
-                                </span>
-                            </label>
-                            <label class="form-check form--check mr-2 mr-md-4">
-                                <input class="form-check-input" type="radio" value="file_upload"
-                                    name="landing_integration_via"
-                                    {{ $landing_integration_type == 'file_upload' ? 'checked' : '' }}>
-                                <span class="form-check-label">
-                                    {{ translate('file_upload') }}
-                                </span>
-                            </label>
-                            <label class="form-check form--check mr-2 mr-md-4">
-                                <input class="form-check-input" type="radio" value="none" name="landing_integration_via"
-                                    {{ $landing_integration_type == 'none' ? 'checked' : '' }}>
-                                <span class="form-check-label">
-                                    {{ translate('none') }}
-                                </span>
-                            </label>
+                <div class="card card-body mb-3">
+                    <h3 class="mb-1">{{ translate('messages.Admin Landing Page Setup') }}</h3>
+                    <p class="fs-12 mb-0">{{ translate('messages.Here you can manage the Landing Page setup which will be displayed') }}</p>
+                </div>
+
+                <div class="card card-body">
+                     @php($config = \App\CentralLogics\Helpers::get_business_settings('landing_page'))
+                    @php($landing_integration_type = \App\CentralLogics\Helpers::get_business_data('landing_integration_type'))
+                    @php($redirect_url = \App\CentralLogics\Helpers::get_business_data('landing_page_custom_url'))
+                    <div class="__bg-F8F9FC-card mb-20">
+                        <div class="row g-3">
+                            <div class="col-lg-6">
+                                <div>
+                                    <h4 class="mb-1">{{ translate('messages.Choose Admin Landing Page') }}</h4>
+                                    <p class="fs-12 mb-0">
+                                        {{ translate('messages.Setup which types of admin landing page you want to show.') }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="resturant-type-group border bg-white w-100 d-inline-flex gap-3">
+                                    <label class="form-check form--check flex-grow-1">
+                                        <input class="form-check-input landing-page"
+                                            type="radio"
+                                            name="choose_admin_landing"
+                                            id="default_landing"
+                                            value="default"
+                                            {{ isset($config) && $config ? 'checked' : '' }}>
+                                        <span class="form-check-label">
+                                            {{ translate('messages.Default Landing Page') }}
+                                        </span>
+                                    </label>
+
+                                    <label class="form-check form--check flex-grow-1">
+                                        <input class="form-check-input landing-page"
+                                            type="radio"
+                                            name="choose_admin_landing"
+                                            id="custom_landing"
+                                            value="custom"
+                                            {{ isset($config) && !$config ? 'checked' : '' }}>
+                                        <span class="form-check-label">
+                                            {{ translate('messages.Custom Landing Page') }}
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="mb-30">
-                        <div class="__input-tab {{ $landing_integration_type == 'url' ? 'active' : '' }}" id="url">
-                            <div class="__bg-F8F9FC-card">
-                                <div class="form-group mb-0 pb-2">
-                                    <label for="redirect_url" class="form-label text-capitalize">
+
+                    <div class="__bg-F8F9FC-card mb-20">
+                        <div class="row g-3 mb-20">
+                            <div class="col-lg-6">
+                                <div>
+                                    <h4 class="mb-1">{{ translate('messages.How to Integrate Custom Landing Page') }}</h4>
+                                    <p class="fs-12 mb-0">
+                                        {{ translate('messages.Select your preferred method for integrating your custom landing page.') }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="resturant-type-group border bg-white w-100 d-inline-flex gap-3">
+                                    <label class="form-check form--check flex-grow-1">
+                                        <input class="form-check-input" type="radio" value="url" name="landing_integration_via" {{  $landing_integration_type == 'url'?'checked':''  }}>
+                                        <span class="form-check-label">
+                                            {{ translate('messages.url') }}
+                                        </span>
+                                    </label>
+                                    <label class="form-check form--check flex-grow-1">
+                                        <input class="form-check-input" type="radio" value="file_upload" name="landing_integration_via" {{  $landing_integration_type == 'file_upload'?'checked':''  }}>
+                                        <span class="form-check-label">
+                                            {{ translate('file_upload') }}
+                                        </span>
+                                    </label>
+                                    <label class="form-check form--check flex-grow-1">
+                                        <input class="form-check-input" type="radio" value="none" name="landing_integration_via" {{ $landing_integration_type == 'none' ?'checked':'' }}>
+                                        <span class="form-check-label">
+                                            {{ translate('none') }}
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <div class="__input-tab {{  $landing_integration_type == 'url'?'active':''  }}" id="url">
+                                <div class="form-group mb-20">
+                                    <label class="input-label text-capitalize d-flex gap-1 align-items-center">
                                         {{ translate('landing_page_url') }}
+                                        <span class="tio-info text-light-gray fs-16" data-toggle="tooltip"
+                                            data-placement="right"
+                                            data-original-title="{{ translate('messages.need_content') }}">
+                                        </span>
                                     </label>
                                     <input type="text"
-                                        placeholder="{{ translate('messages.Ex: https://ConsMas-web.6amtech.com/') }}"
+                                        placeholder="{{ translate('messages.Ex: https://6ammart-web.6amtech.com/') }}"
                                         class="form-control h--45px" id="redirect_url" name="redirect_url" value="{{ $redirect_url }}">
                                 </div>
+                                <div class="fs-12 px-3 py-2 rounded bg-info bg-opacity-10">
+                                    <div class="d-flex gap-2 mb-3">
+                                        <span class="text-info lh-1 fs-14">
+                                            <img src="{{asset('public/assets/admin/img/svg/bulb.svg')}}" class="svg" alt="">
+                                        </span>
+                                        <h4 class="font-medium mb-0">
+                                            {{ translate('messages.If you want to set up your own landing page please follow tha instructions below') }}
+                                        </h4>
+                                    </div>
+                                    <ul class="d-flex flex-column gap-2">
+                                        <li>
+                                            {{ translate('messages.You can add your customized landing page via URL or upload ZIP file of the landing page.') }}
+                                        </li>
+                                        <li>
+                                            {{ translate('messages.If you want to use URL option. Just host you landing page and copy the page URL and click save information.') }}
+                                        </li>
+                                        <li>
+                                            {{ translate('messages.If you want to upload your landing page source code file:') }}
+                                            <ol type="a" class="pl-3">
+                                                <li>
+                                                    {{ translate('messages.Create an html file named index.blade.php and insert your landing page design code and make a zip file.') }}
+                                                </li>
+                                                <li>
+                                                    {{ translate('messages.Upload the zip file in file upload section and click save information.') }}
+                                                </li>
+                                            </ol>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
-                        <div class="__input-tab {{ $landing_integration_type == 'file_upload' ? 'active' : '' }}"
-                            id="file_upload">
-                            <div class="__bg-F8F9FC-card">
-                                <div class="form-group mb-0 pb-2">
+                            <div class="__input-tab {{  $landing_integration_type == 'file_upload'?'active':''  }}" id="file_upload">
+                                <div class="card card-body">
+                                    <div class="mb-20">
+                                        <h5 class="mb-1">{{ translate('messages.Upload PHP File') }}</h5>
+                                        <p class="fs-12 mb-0">
+                                            {{ translate('messages.Here you need to upload your custome designed PHP file that will work as a Admin Landing Page.') }}
+                                        </p>
+                                    </div>
                                     <div class="row g-3">
-                                        <div class="col-sm-6 col-lg-5 col-xl-4 col-xxl-3">
-                                            <!-- Drag & Drop Upload -->
-                                            <div class="uploadDnD">
-                                                <div class="form-group mb-0 inputDnD bg-white rounded">
-                                                    <input type="file" name="file_upload"
-                                                        class="form-control-file text--primary font-weight-bold read-file"
-                                                        id="inputFile"  accept=".zip"
-                                                        data-title="Drag & drop file or Browse file">
+                                        <div class="col-lg-6">
+                                            <div class="fs-12 text-dark px-3 py-2 rounded bg-info d-flex align-items-center h-100 bg-opacity-10">
+                                                <div>
+                                                    <div class="d-flex gap-2 mb-3">
+                                                        <span class="text-info lh-1 fs-14">
+                                                            <img src="{{asset('/public/assets/admin/img/svg/bulb.svg')}}" class="svg" alt="">
+                                                        </span>
+                                                        <h4 class="text-title mb-0">
+                                                            {{ translate('messages.Instructions') }}
+                                                        </h4>
+                                                    </div>
+                                                    <ul class="d-flex flex-column gap-2">
+                                                        <li>
+                                                            {{ translate('messages.Create an html file named index.blade.php and insert your landing page design code and make a zip file.') }}
+                                                        </li>
+                                                        <li>
+                                                            {{ translate('messages.Upload file must be zip file format in and click save information.') }}
+                                                        </li>
+                                                        <li>
+                                                            {{ translate('messages.Without save the changes Landing page can’t update properly and you can’t see the updated preview.') }}
+                                                        </li>
+                                                    </ul>
                                                 </div>
                                             </div>
-
-                                            <div class="mt-5 card px-3 py-2 d--none" id="progress-bar">
-                                                <div class="d-flex flex-wrap align-items-center gap-3">
-                                                    <div class="">
-                                                        <img width="24"
-                                                            src="{{ asset('/public/assets/admin/img/zip.png') }}"
-                                                            alt="">
-                                                    </div>
-                                                    <div class="flex-grow-1 text-start">
-                                                        <div
-                                                            class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                                            <span id="name_of_file" class="text-truncate fz-12"></span>
-                                                            <span class="text-muted fz-12" id="progress-label">0%</span>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="__bg-F8F9FC-card text-center">
+                                                <div class="file-upload-parent">
+                                                    <div class="custom-file-upload">
+                                                        <input type="file" accept=".zip" data-max-file-size="10MB" name="file_upload" data-warning-message="{{ translate('messages.please_delete_the_existing_landing_page_first') }}">
+                                                        <div class="text-center p-3 p-sm-4">
+                                                            <div class="mb-20">
+                                                                <img width="48" height="48" class="svg" src="{{ asset('/public/assets/admin/img/svg/upload-cloud.svg') }}" alt="">
+                                                            </div>
+                                                            <p class="mb-0 fs-14 mb-1 text-title">
+                                                                {{ translate('messages.Select a file or Drag & Drop here') }}
+                                                                <span class="font-semibold">{{ translate('messages. Drag & Drop') }} </span>
+                                                                {{ translate('messages.here') }}
+                                                            </p>
+                                                            <div class="mb-0 fs-12">{{ translate('messages.PHP file size no more than 10MB') }}</div>
+                                                            <div class="btn btn-outline-primary font-semibold mt-4 trigger_input_btn">
+                                                                {{ translate('messages.Select File') }}
+                                                            </div>
                                                         </div>
-                                                        <progress id="uploadProgress" class="w-100" value="0"
-                                                            max="100"></progress>
                                                     </div>
+                                                    <div class="file-preview-list d-flex flex-column gap-4"></div>
+                                                    <div id="file-upload-config" data-icon-src="{{ asset('/public/assets/admin/img/file-view.png') }}"></div>
+                                                </div>
+                                                <div class="mt-4">
+                                                    <button type="button" class="btn btn--primary min-w-120">{{ translate('messages.Upload') }}</button>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-sm-6 col-lg-5 col-xl-4 col-xxl-9">
-                                            <div class="pl-sm-5">
-                                                <h3 class="mb-3 d-flex">{{ translate('instructions') }}</h3>
-                                                <ul class="pl-3 d-flex flex-column gap-2 instructions-list mb-0">
-                                                    <li>
-                                                        {{ translate('Upload_content_as_a_single_ZIP_file_and_the_file_name_must_be') }}
-                                                        <b>index.blade.php</b>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
-
                             </div>
-                            @if ($custom_file)
-                            <div class="row g-1 g-sm-2 mt-2">
-                                <div class="col-6 col-md-4 col-xxl-3">
-                                    <div class="card theme-card">
-                                        <div class="card-body d-flex justify-content-between">
-                                            <h3>
-                                                index.blade.php
-                                            </h3>
-
-                                            <a class="btn action-btn btn--danger btn-outline-danger border-0 form-alert"  href="javascript:"
-                                               data-id="index_page"
-                                               data-message="{{ translate('Want to delete this index_page ?') }}" title="{{translate('messages.delete_index_page')}}"><i class="tio-delete-outlined"></i>
-                                        </a>
-                                        </div>
-                                    </div>
+                            <div class="__input-tab {{ $landing_integration_type == 'none' ?'active':'' }}" id="none">
+                                <div class="d-flex gap-2 fs-12 text-dark px-3 py-2 rounded bg-warning bg-opacity-10">
+                                    <span class="text-warning lh-1 fs-14">
+                                        <i class="tio-info"></i>
+                                    </span>
+                                    <span>
+                                        {{ translate('messages.Without save the changes,') }}
+                                        <span class="font-semibold">{{ translate('messages.Landing Page') }} </span>
+                                        {{ translate('messages.can’t update properly and you can’t see the updated preview.') }}
+                                    </span>
                                 </div>
-
-                            </div>
-                            @endif
-                        </div>
-                        <div class="__input-tab {{ $landing_integration_type == 'none' ? 'active' : '' }}" id="none">
-                            <div class="__bg-F8F9FC-card">
-
-                                @if (isset($config) && $config)
-                                    <div class="text-center max-w-595 mx-auto py-4">
-                                        <img src="{{ asset('/public/assets/admin/img/landing-icon-2.png') }}"
-                                            class="mb-3" alt="">
-                                        <p class="m-0">
-                                            {{ translate('Currently_you_are_using_ConsMas_Default_Admin_Landing_Page_Theme.') }}
-                                            <a href="{{ route('home') }}"
-                                                class="text--primary text-underline">{{ translate('Visit_Landing_Page') }}</a>
-                                        </p>
-                                    </div>
-                                @else
-                                    <div class="text-center max-w-487 mx-auto py-4">
-                                        <img src="{{ asset('/public/assets/admin/img/landing-icon-2.png') }}"
-                                            class="mb-3" alt="">
-                                        <p class="m-0">
-                                            {{ translate('You_have_no_business_landing_page_to_show._If_user_search_landing_page_URL_they_will_see_404_page.') }}
-                                        </p>
-                                    </div>
-                                @endif
                             </div>
                         </div>
                     </div>
-                    <div class="btn--container justify-content-end mt-20">
-                        <button type="reset" id="reset_btn" class="btn btn--reset">{{ translate('Reset') }}</button>
-                        <button type="button"  class="btn btn--primary mb-2 zip-upload" id="update_setting">
+
+                    <div class="__bg-F8F9FC-card d-flex flex-wrap gap-3 align-items-center justify-content-between">
+                         <div class="">
+                            <h4 class="mb-1">{{ translate('messages.Currently You are Using') }}</h4>
+                            <p class="fs-12 mb-0">
+                                <span class="font-semibold">{{ translate('messages.Custom Landing Page') }} </span>
+                                {{ translate('messages.with a') }}
+                                <span class="font-semibold">{{ translate('messages.PHP File.') }}</span>
+                            </p>
+                        </div>
+                        <a href="{{ route('home') }}"
+                            class="btn btn--primary
+                            @if(
+                                (isset($config) && $config == 0)
+                            ) disabled @endif">
+                                {{ translate('Visit_Landing_Page') }}
+                            <i class="tio-open-in-new"></i>
+                        </a>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="footer-sticky mt-2">
+                <div class="container-fluid">
+                    <div class="d-flex flex-wrap gap-3 justify-content-center py-3">
+                        <button type="reset" id="reset_btn" class="btn btn--reset min-w-120">{{ translate('Reset') }}</button>
+                        <button type="button"  class="btn btn--primary zip-upload" id="update_setting">
+                            <i class="tio-save"></i>
                             {{ translate('Save_Information') }}</button>
                     </div>
                 </div>
-
+            </div>
         </form>
-        <form action="{{route('admin.business-settings.delete-custom-landing-page')}}" method="post" id="index_page">
+         <form action="{{route('admin.business-settings.delete-custom-landing-page')}}" method="post" id="index_page">
             @csrf @method('delete')
         </form>
-
     </div>
 
     <div class="modal fade" id="read-instructions">
@@ -288,7 +333,7 @@
         $(document).ready(function() {
             $('.landing-page').on('click', function(event) {
                 event.preventDefault();
-                @if (env('APP_MODE') == 'demo')
+                @if (getEnvMode() == 'demo')
                 toastr.warning('Sorry! You can not change landing page in demo!');
                 @else
                 Swal.fire({
@@ -381,10 +426,32 @@
         });
 
         $('#reset_btn').click(function() {
-            $('.uploadDnD').empty().append(`<div class="form-group mb-0 inputDnD bg-white rounded">
-                                                        <input type="file" name="file_upload" class="form-control-file text--primary font-weight-bold read-file "
-                                                        id="inputFile"  accept=".zip" data-title="Drag & drop file or Browse file">
-                                                    </div>`)
+            $('.file-upload-parent').html(`
+                <div class="custom-file-upload">
+                    <input type="file" accept=".zip" data-max-file-size="10MB" name="file_upload" data-warning-message="{{ translate('messages.please_delete_the_existing_landing_page_first') }}">
+                    <div class="text-center p-3 p-sm-4">
+                        <div class="mb-20">
+                            <img width="48" height="48" class="svg" src="{{ asset('/public/assets/admin/img/svg/upload-cloud.svg') }}" alt="">
+                        </div>
+                        <p class="mb-0 fs-14 mb-1 text-title">
+                            {{ translate('messages.Select a file or Drag & Drop here') }}
+                            <span class="font-semibold">{{ translate('messages. Drag & Drop') }} </span>
+                            {{ translate('messages.here') }}
+                        </p>
+                        <div class="mb-0 fs-12">{{ translate('messages.PHP file size no more than 10MB') }}</div>
+                        <div class="btn btn-outline-primary font-semibold mt-4 trigger_input_btn">
+                            {{ translate('messages.Select File') }}
+                        </div>
+                    </div>
+                </div>
+                <div class="file-preview-list d-flex flex-column gap-4"></div>
+                <div id="file-upload-config" data-icon-src="{{ asset('/public/assets/admin/img/file-view.png') }}"></div>
+            `);
+
+            // Re-initialize file uploads and trigger inputs
+            initializeFileUploads();
+            setupTriggerInputs();
+
             $(`.__input-tab`).removeClass('active')
             $(`#{{ $landing_integration_type }}`).addClass('active')
         })

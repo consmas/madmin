@@ -3,6 +3,10 @@
         <!-- Nav -->
         <ul class="nav nav-tabs border-0 nav--tabs nav--pills">
             <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/pages/admin-landing-page-settings/setup') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.admin-landing-page-settings', 'setup') }}">{{translate('messages.setup')}}</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ Request::is('admin/business-settings/pages/admin-landing-page-settings/fixed-data') ? 'active' : '' }}"
                 href="{{ route('admin.business-settings.admin-landing-page-settings', 'fixed-data') }}">{{translate('messages.fixed_data')}}</a>
             </li>

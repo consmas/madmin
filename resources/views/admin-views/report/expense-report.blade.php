@@ -36,7 +36,7 @@
                                 title="{{ translate('messages.select_modules') }}">
                                 <option value="" {{ !request('module_id') ? 'selected' : '' }}>
                                     {{ translate('messages.all_modules') }}</option>
-                                @foreach (\App\Models\Module::notParcel()->get() as $module)
+                                @foreach (\App\Models\Module::WithoutAdditionalModules()->get(['id', 'module_name']) as $module)
                                     <option value="{{ $module->id }}"
                                         {{ request('module_id') == $module->id ? 'selected' : '' }}>
                                         {{ $module['module_name'] }}
@@ -193,7 +193,7 @@
                                 <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
                                     alt="Image Description">
-                                .{{ translate('messages.csv') }}
+                                {{ translate('messages.csv') }}
                             </a>
                         </div>
                     </div>
@@ -212,6 +212,9 @@
                                 <th class="border-0">{{translate('messages.order_id')}}</th>
                                 @if (addon_published_status('Rental'))
                                 <th class="border-0">{{translate('trip_id')}}</th>
+                                @endif
+                                @if (addon_published_status('RideShare'))
+                                <th class="border-0">{{translate('ride_id')}}</th>
                                 @endif
                                 <th class="border-0">{{translate('Date & Time')}}</th>
                                 <th class="border-0">{{ translate('Expense Type') }}</th>
@@ -243,6 +246,19 @@
 
                                     <div>
                                         <a class="text-dark" href="{{ route('admin.rental.trip.details', $exp->trip->id) }}">{{ $exp['trip_id'] }}</a>
+                                    </div>
+                                    @else
+                                    <label class="badge badge-primary">{{translate('messages.Other_Expenses')}}</label>
+                                    @endif
+                                </td>
+                                @endif
+                                @if (addon_published_status('RideShare'))
+                                <td>
+                                    @if ($exp->ride)
+
+                                    <div>
+                                        <a class="text-dark" href="{{ route('admin.ride-share.ride.show', $exp->ride->ref_id) }}">{{ $exp->ride->ref_id }}</a>
+                                    </div>
                                     </div>
                                     @else
                                     <label class="badge badge-primary">{{translate('messages.Other_Expenses')}}</label>
@@ -337,7 +353,7 @@
         $(document).on('ready', function() {
             $('.js-data-example-ajax').select2({
                 ajax: {
-                    url: '{{ url('/') }}/admin/store/get-stores',
+                    url: '{{ route('admin.store.get-stores') }}',
                     data: function(params) {
                         return {
                             q: params.term, // search term

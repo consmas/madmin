@@ -162,7 +162,7 @@ class CustomerController extends Controller
                 }
 
                 if ( config('mail.status') && Helpers::get_mail_status('suspend_mail_status_user') == '1' &&  Helpers::getNotificationStatusData('customer','customer_account_block','mail_status') )  {
-                    Mail::to($customer->email)->send(new \App\Mail\UserStatus('suspended', $customer->f_name.' '.$customer->l_name));
+                    Mail::to($customer?->getRawOriginal('email'))->send(new \App\Mail\UserStatus('suspended', $customer->f_name.' '.$customer->l_name));
                 }
 
             } else{
@@ -187,7 +187,7 @@ class CustomerController extends Controller
                 }
 
                 if ( config('mail.status') && Helpers::get_mail_status('unsuspend_mail_status_user')== '1' &&  Helpers::getNotificationStatusData('customer','customer_account_unblock','mail_status') ) {
-                    Mail::to($customer->email)->send(new \App\Mail\UserStatus('unsuspended', $customer->f_name.' '.$customer->l_name));
+                    Mail::to($customer?->getRawOriginal('email'))->send(new \App\Mail\UserStatus('unsuspended', $customer->f_name.' '.$customer->l_name));
                 }
             }
 
@@ -232,7 +232,8 @@ class CustomerController extends Controller
                 $query->Where('id', 'like', "%{$key}%");
             } )
             ->Notpos()->paginate(config('default_pagination'));
-            return view('admin-views.customer.customer-view', compact('customer', 'orders','total_order_amount'));
+            $moduleType = 'normal';
+            return view('admin-views.customer.customer-view', compact('customer', 'orders','total_order_amount','moduleType'));
         }
         Toastr::error(translate('messages.customer_not_found'));
         return back();
@@ -251,7 +252,8 @@ class CustomerController extends Controller
             ->when(isset($key), function($query) use($key){
                 $query->Where('id', 'like', "%{$key}%");
             })->paginate(config('default_pagination'));
-            return view('admin-views.customer.customer-rental-view', compact('customer', 'trips','total_trips_amount'));
+            $moduleType = 'rental';
+            return view('admin-views.customer.customer-rental-view', compact('customer', 'trips','total_trips_amount','moduleType'));
         }
         Toastr::error(translate('messages.customer_not_found'));
         return back();
@@ -447,7 +449,7 @@ class CustomerController extends Controller
 
     public function update_settings(Request $request)
     {
-        if (env('APP_MODE') == 'demo') {
+        if (getEnvMode()== 'demo') {
             Toastr::info(translate('messages.update_option_is_disable_for_demo'));
             return back();
         }
@@ -457,53 +459,17 @@ class CustomerController extends Controller
             'loyalty_point_exchange_rate'=>'nullable|numeric',
             'ref_earning_exchange_rate'=>'nullable|numeric',
         ]);
-        Helpers::businessUpdateOrInsert(['key' => 'customer_verification'], [
-            'value' => $request['customer_verification_status']??0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'wallet_status'], [
-            'value' => $request['customer_wallet']??0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'loyalty_point_status'], [
-            'value' => $request['customer_loyalty_point']??0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'ref_earning_status'], [
-            'value' => $request['ref_earning_status'] ?? 0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'wallet_add_refund'], [
-            'value' => $request['refund_to_wallet']??0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'loyalty_point_exchange_rate'], [
-            'value' => $request['loyalty_point_exchange_rate'] ?? 0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'ref_earning_exchange_rate'], [
-            'value' => $request['ref_earning_exchange_rate'] ?? 0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'loyalty_point_item_purchase_point'], [
-            'value' => $request['item_purchase_point']??0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'loyalty_point_minimum_point'], [
-            'value' => $request['minimun_transfer_point']??0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'add_fund_status'], [
-            'value' => $request['add_fund_status']??0
-        ]);
+            $keys=['guest_checkout_status','toggle_veg_non_veg','wallet_status','wallet_add_refund','add_fund_status','loyalty_point_status','loyalty_point_exchange_rate','loyalty_point_item_purchase_point',
+                    'loyalty_point_minimum_point','ref_earning_status','ref_earning_exchange_rate','new_customer_discount_status',
+                    'new_customer_discount_amount_type','new_customer_discount_validity_type','new_customer_discount_amount','new_customer_discount_amount_validity',
+                // 'country_picker_status',
+                ];
 
-        Helpers::businessUpdateOrInsert(['key' => 'new_customer_discount_status'], [
-            'value' => $request['new_customer_discount_status']??0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'new_customer_discount_amount'], [
-            'value' => $request['new_customer_discount_amount']??0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'new_customer_discount_amount_type'], [
-            'value' => $request['new_customer_discount_amount_type']?? 'percentage'
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'new_customer_discount_amount_validity'], [
-            'value' => $request['new_customer_discount_amount_validity']??0
-        ]);
-        Helpers::businessUpdateOrInsert(['key' => 'new_customer_discount_validity_type'], [
-            'value' => $request['new_customer_discount_validity_type']??'day'
-        ]);
-
+        foreach ($keys as $key) {
+            Helpers::businessUpdateOrInsert(['key' => $key], [
+                'value' => $request->$key ?? 0,
+            ]);
+        }
         Toastr::success(translate('messages.customer_settings_updated_successfully'));
         return back();
     }

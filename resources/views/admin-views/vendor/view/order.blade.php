@@ -18,35 +18,35 @@
                 <div class="col-md-12">
                     <div class="resturant-card-navbar">
 
-                        <div class="order-info-item filter-on-click" data-type='all_orders' data-filter="filter" data-url="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'order'])}}">
+                        <div class="order-info-item filter-on-click {{ (request()->get('filter') == 'all_orders' || !request()->get('filter')) ? 'bg-soft-success' : '' }}" data-type='all_orders' data-filter="filter" data-url="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'order'])}}">
                             <div class="order-info-icon">
                                 <img src="{{asset('public/assets/admin/img/navbar/all.png')}}" alt="public">
                             </div>
                             <h6 class="card-subtitle">{{translate('messages.all')}}<span class="amount text--primary">{{\App\Models\Order::where('store_id', $store->id)->StoreOrder()->count()}}</span></h6>
                         </div>
                         <span class="order-info-seperator"></span>
-                        <div class="order-info-item filter-on-click"  data-filter="filter"  data-type="scheduled_orders" data-url="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'order'])}}"  >
+                        <div class="order-info-item filter-on-click {{ request()->get('filter') == 'scheduled_orders' ? 'bg-soft-success' : '' }}"  data-filter="filter"  data-type="scheduled_orders" data-url="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'order'])}}"  >
                             <div class="order-info-icon">
                                 <img src="{{asset('public/assets/admin/img/navbar/schedule.png')}}" alt="public">
                             </div>
                             <h6 class="card-subtitle">{{translate('messages.scheduled')}}<span class="amount text--warning">{{\App\Models\Order::Scheduled()->where('store_id', $store->id)->StoreOrder()->count()}}</span></h6>
                         </div>
                         <span class="order-info-seperator"></span>
-                        <div class="order-info-item filter-on-click"   data-filter="filter"  data-type="pending_orders" data-url="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'order'])}}" >
+                        <div class="order-info-item filter-on-click {{ request()->get('filter') == 'pending_orders' ? 'bg-soft-success' : '' }}"   data-filter="filter"  data-type="pending_orders" data-url="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'order'])}}" >
                             <div class="order-info-icon">
                                 <img src="{{asset('public/assets/admin/img/navbar/pending.png')}}" alt="public">
                             </div>
                             <h6 class="card-subtitle">{{translate('messages.pending')}}<span class="amount text--info">{{\App\Models\Order::where(['order_status'=>'pending','store_id'=>$store->id])->StoreOrder()->OrderScheduledIn(30)->count()}}</span></h6>
                         </div>
                         <span class="order-info-seperator"></span>
-                        <div class="order-info-item filter-on-click"  data-filter="filter"  data-type="delivered_orders" data-url="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'order'])}}" >
+                        <div class="order-info-item filter-on-click {{ request()->get('filter') == 'delivered_orders' ? 'bg-soft-success' : '' }}"  data-filter="filter"  data-type="delivered_orders" data-url="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'order'])}}" >
                             <div class="order-info-icon">
                                 <img src="{{asset('public/assets/admin/img/navbar/delivered.png')}}" alt="public">
                             </div>
                             <h6 class="card-subtitle">{{translate('messages.delivered')}}<span class="amount text--success">{{\App\Models\Order::where(['order_status'=>'delivered', 'store_id'=>$store->id])->StoreOrder()->count()}}</span></h6>
                         </div>
                         <span class="order-info-seperator"></span>
-                        <div class="order-info-item filter-on-click"  data-filter="filter"  data-type="canceled_orders" data-url="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'order'])}}" >
+                        <div class="order-info-item filter-on-click {{ request()->get('filter') == 'canceled_orders' ? 'bg-soft-success' : '' }}"  data-filter="filter"  data-type="canceled_orders" data-url="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'order'])}}" >
                             <div class="order-info-icon">
                                 <img src="{{asset('public/assets/admin/img/navbar/cancel.png')}}" alt="public">
                             </div>
@@ -99,7 +99,7 @@
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
                                             src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
                                             alt="Image Description">
-                                        .{{ translate('messages.csv') }}
+                                        {{ translate('messages.csv') }}
                                     </a>
 
                                 </div>

@@ -33,7 +33,7 @@
                         <div class="maintenance-mode-toggle-bar d-flex flex-wrap justify-content-between border rounded align-items-center p-2">
                             <h5 class="text-capitalize m-0 text--primary pl-2">
                                 {{translate('Send_Mail_On_‘Forgot_Password’?')}}
-                        <span class="form-label-secondary text--primary" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('If_a_Deliveryman_tap_on_‘Forgot_Password’_during_login,_an_automated_email_will_be_sent_from_the_system_with_a_Reset_Password_Link.') }}">
+                        <span class="form-label-secondary text--primary" data-toggle="tooltip" data-placement="right" data-original-title="{{ \App\CentralLogics\Helpers::formatDeliverymanText(translate('If_a_Deliveryman_tap_on_‘Forgot_Password’_during_login,_an_automated_email_will_be_sent_from_the_system_with_a_Reset_Password_Link.'), null, true) }}">
                                     <img src="{{asset('public/assets/admin/img/info-circle.svg')}}" alt="">
                                 </span>
                             </h5>
@@ -45,8 +45,8 @@
                                        data-image-off="{{asset('/public/assets/admin/img/modal')}}/place-order-off.png"
                                        data-title-on="{{translate('Want_to_enable_Forget_Password_mail?')}}"
                                        data-title-off="{{translate('Want_to_disable_Forget_Password_mail?')}}"
-                                       data-text-on="<p>{{translate('If_enabled,_the_Deliveryman_will_receive_an_automated_email_with_a_Reset_Password_link.')}}</p>"
-                                       data-text-off="<p>{{translate('If_disabled,_the_Deliveryman_will_not_receive_any_for_password_reset.')}}</p>"
+                                       data-text-on="<p>{{ \App\CentralLogics\Helpers::formatDeliverymanText(translate('If_enabled,_the_Deliveryman_will_receive_an_automated_email_with_a_Reset_Password_link.'), null, true) }}</p>"
+                                       data-text-off="<p>{{ \App\CentralLogics\Helpers::formatDeliverymanText(translate('If_disabled,_the_Deliveryman_will_not_receive_any_for_password_reset.'), null, true) }}</p>"
                                        id="mail-status" {{$mail_status == '1'?'checked':''}}>
                                 <span class="toggle-switch-label text mb-0">
                                     <span class="toggle-switch-indicator"></span>
@@ -59,7 +59,7 @@
                 </div>
                 @php($data=\App\Models\EmailTemplate::where('type','dm')->where('email_type', 'forget_password')->first())
                 @php($template= $template ?? $data?->email_template ?? 4)
-                <form action="{{ route('admin.business-settings.email-setup', ['dm','forget-password']) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('admin.business-settings.email-setup-update', ['dm','forget-password']) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="card border-0">
                         <div class="card-body">
@@ -240,7 +240,7 @@
                                                             <label class="form-label">
                                                                 {{translate('Copyright Content')}}({{ translate('messages.default') }})
                                                             </label>
-                                                            <input type="text" data-id="mail-copyright" name="copyright_text[]"  placeholder="{{ translate('Ex:_Copyright_2023_ConsMas._All_right_reserved') }}" class="form-control" value="{{ $data?->getRawOriginal('copyright_text') }}">
+                                                            <input type="text" data-id="mail-copyright" name="copyright_text[]"  placeholder="{{ translate('Ex:_Copyright_2023_6amMart._All_right_reserved') }}" class="form-control" value="{{ $data?->getRawOriginal('copyright_text') }}">
                                                         </div>
                                                     @foreach(json_decode($language) as $lang)
                                                     <?php
@@ -258,7 +258,7 @@
                                                             <label class="form-label">
                                                                 {{translate('Copyright Content')}}({{strtoupper($lang)}})
                                                             </label>
-                                                            <input type="text" name="copyright_text[]"  placeholder="{{ translate('Ex:_Copyright_2023_ConsMas._All_right_reserved') }}" class="form-control" value="{{ $translate[$lang]['copyright_text']??'' }}">
+                                                            <input type="text" name="copyright_text[]"  placeholder="{{ translate('Ex:_Copyright_2023_6amMart._All_right_reserved') }}" class="form-control" value="{{ $translate[$lang]['copyright_text']??'' }}">
                                                         </div>
                                                     @endforeach
                                                 @else
@@ -267,7 +267,7 @@
                                                         {{translate('Copyright Content')}}
 
                                                     </label>
-                                                    <input type="text" placeholder="{{ translate('Ex:_Copyright_2023_ConsMas._All_right_reserved') }}" class="form-control" name="copyright_text[]" value="">
+                                                    <input type="text" placeholder="{{ translate('Ex:_Copyright_2023_6amMart._All_right_reserved') }}" class="form-control" name="copyright_text[]" value="">
                                                 </div>
                                                 @endif
                                             </div>
@@ -299,4 +299,3 @@
     <script src="{{asset('public/assets/admin/js/view-pages/email-templates.js')}}"></script>
     <!-- Email Template End-->
 @endpush
-

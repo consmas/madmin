@@ -37,7 +37,7 @@ class VendorPasswordResetController extends Controller
             ]);
             if (config('mail.status')) {
                 try {
-                    Mail::to($vendor['email'])->send(new \App\Mail\PasswordResetMail($token));
+                    Mail::to($vendor?->getRawOriginal('email'))->send(new \App\Mail\PasswordResetMail($token));
                 } catch (\Throwable $th) {
                   return response()->json(['errors' => [
                         ['code' => 'not-found', 'message' => 'Failed to send email.']
@@ -63,7 +63,7 @@ class VendorPasswordResetController extends Controller
         }
 
         $data = DB::table('password_resets')->where(['token' => $request['reset_token'],'email'=>$request->email])->first();
-        if (isset($data) || (env('APP_MODE')=='demo'&& $request['reset_token'] == '123456' )) {
+        if (isset($data) || (getEnvMode()=='demo'&& $request['reset_token'] == '123456' )) {
             return response()->json(['message'=>translate("OTP found, you can proceed")], 200);
         } else{
             // $otp_hit = BusinessSetting::where('key', 'max_otp_hit')->first();
@@ -149,7 +149,7 @@ class VendorPasswordResetController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        if(env('APP_MODE')=='demo') {
+        if(getEnvMode()=='demo') {
             if ($request['reset_token'] != '123456') {
                 return response()->json(['errors' => [
                     ['code' => 'invalid', 'message' => trans('messages.invalid_otp')]

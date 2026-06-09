@@ -1,5 +1,30 @@
 "use strict";
 
+// --- Fixed Action Button ---
+$(document).ready(function () {
+
+    // ----- sticky footer
+    function checkFooterState() {
+        const $footer = $('.footer-sticky');
+
+        const scrollPosition =
+            $(window).scrollTop() + $(window).height();
+
+        const documentHeight = $(document).height();
+
+        if (scrollPosition >= documentHeight - 20) {
+            $footer.addClass('not-active');
+        } else {
+            $footer.removeClass('not-active');
+        }
+    }
+
+    $(window).on('scroll', checkFooterState);
+    checkFooterState();
+
+});
+
+
 
 document.addEventListener("DOMContentLoaded", function () {
     let checkboxes = document.querySelectorAll(".dynamic-checkbox");
@@ -55,6 +80,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const titleOff = checkbox.getAttribute("data-title-off");
             const textOn = checkbox.getAttribute("data-text-on");
             const textOff = checkbox.getAttribute("data-text-off");
+            const footerTextOn = checkbox.getAttribute("data-footer-text-on");
+            const footerTextOff = checkbox.getAttribute("data-footer-text-off");
 
             const isChecked = checkbox.checked;
 
@@ -63,11 +90,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 $("#toggle-message").empty().append(textOn);
                 $("#toggle-image").attr("src", imageOn);
                 $("#toggle-ok-button").attr("toggle-ok-button", checkboxId);
+                $("#toggle-footer").empty().append(footerTextOn);
             } else {
                 $("#toggle-title").empty().append(titleOff);
                 $("#toggle-message").empty().append(textOff);
                 $("#toggle-image").attr("src", imageOff);
                 $("#toggle-ok-button").attr("toggle-ok-button", checkboxId);
+                $("#toggle-footer").empty().append(footerTextOff);
             }
 
             $("#toggle-modal").modal("show");
@@ -274,6 +303,7 @@ $(document).on("click", ".confirm-Toggle", function () {
     } else {
         $("#" + toggle_id).prop("checked", true);
     }
+    $("#" + toggle_id).trigger("change");
     $("#toggle-modal").modal("hide");
 
     // if (toggle_id === "admin_free_delivery_status") {
@@ -292,15 +322,16 @@ $(document).on("click", ".confirm-Toggle", function () {
     }
     if (toggle_id === "product_approval") {
         if ($("#product_approval").is(":checked")) {
-            $("#inlineCheckbox1").removeAttr("disabled");
-            $("#inlineCheckbox2").removeAttr("disabled");
-            $("#inlineCheckbox3").removeAttr("disabled");
-            $("#inlineCheckbox4").removeAttr("disabled");
+            $("#hide_show_approval_box").removeClass("d-none");
         } else {
-            $("#inlineCheckbox1").attr("disabled", true);
-            $("#inlineCheckbox2").attr("disabled", true);
-            $("#inlineCheckbox3").attr("disabled", true);
-            $("#inlineCheckbox4").attr("disabled", true);
+            $("#hide_show_approval_box").addClass("d-none");
+        }
+    }
+    if (toggle_id === "vendor_can_upload_reels") {
+        if ($("#vendor_can_upload_reels").is(":checked")) {
+            $("#reels_settings_box").removeClass("d-none");
+        } else {
+            $("#reels_settings_box").addClass("d-none");
         }
     }
     if (toggle_id === "additional_charge_status") {
@@ -347,6 +378,25 @@ $(document).on("click", ".confirm-Toggle", function () {
             $("#dm_max_cash_in_hand")
                 .attr("readonly", true)
                 .removeAttr("required");
+        }
+    }
+    if (toggle_id === "cash_in_hand_overflow_rider") {
+        if ($("#cash_in_hand_overflow_rider").is(":checked")) {
+            $("#rider_max_cash_in_hand")
+                .removeAttr("readonly")
+                .attr("required", true);
+            $("#min_amount_to_pay_rider")
+                .removeAttr("readonly")
+                .attr("required", true);
+
+        } else {
+            $("#rider_max_cash_in_hand")
+                .attr("readonly", true)
+                .removeAttr("required");
+            $("#min_amount_to_pay_rider")
+                .attr("readonly", true)
+                .removeAttr("required");
+
         }
     }
     if (toggle_id === "play-store-dm-status") {
@@ -528,21 +578,38 @@ $(document).on("click", ".location-reload-to-base", function () {
     nurl.searchParams.delete("search");
     location.href = nurl;
 });
-document.querySelectorAll('[name="search"]').forEach(function (element) {
-    element.addEventListener("input", function (event) {
-        if (this.value === "" && window.location.search !== "") {
-            let baseUrl = window.location.origin + window.location.pathname;
-            if ($(this).data("reload_url")) {
-                let reload_url = new URL($(this).data("reload_url"));
-                reload_url.searchParams.delete("search");
-                window.location.href = reload_url;
-            } else {
-                window.location.href = baseUrl;
-            }
 
+
+document.querySelectorAll('[name="search"]').forEach(function (element) {
+    element.addEventListener("input", function () {
+
+        if (this.value === "" && window.location.search !== "") {
+
+            let url = new URL($(this).data("reload_url") || window.location.href);
+
+            url.searchParams.delete("search");
+
+            window.location.href = url.toString();
         }
+
     });
 });
+
+// document.querySelectorAll('[name="search"]').forEach(function (element) {
+//     element.addEventListener("input", function (event) {
+//         if (this.value === "" && window.location.search !== "") {
+//             let baseUrl = window.location.origin + window.location.pathname;
+//             if ($(this).data("reload_url")) {
+//                 let reload_url = new URL($(this).data("reload_url"));
+//                 reload_url.searchParams.delete("search");
+//                 window.location.href = reload_url;
+//             } else {
+//                 window.location.href = baseUrl;
+//             }
+
+//         }
+//     });
+// });
 
 document.addEventListener("DOMContentLoaded", function () {
     const activeLink = document.querySelector(".nav-link.active");
@@ -882,8 +949,8 @@ $(document).ready(function () {
             dots: false,
             items: 2,
             responsive: {
-                0: {items: 1},
-                1200: {items: 2}
+                0: { items: 1 },
+                1200: { items: 2 }
             }
         });
         $prev.addClass('disabled');
@@ -922,9 +989,9 @@ $(document).ready(function () {
                     items: 2,
                     margin: 8,
                 },
-                380: {items: 2},
-                767: {items: 3},
-                1200: {items: 4}
+                380: { items: 2 },
+                767: { items: 3 },
+                1200: { items: 4 }
             }
         });
         $prev.addClass('disabled');
@@ -988,6 +1055,449 @@ $(document).ready(function () {
         });
     });
 
+    $('.js-product-media-gallery').each(function () {
+        const $gallery = $(this);
+        const $main = $gallery.find('.js-product-main-slider');
+        const $thumb = $gallery.find('.js-product-thumb-slider');
+        const $next = $gallery.find('.js-product-gallery-next');
+        const $prev = $gallery.find('.js-product-gallery-prev');
+
+        if (!$main.length || !$thumb.length || $main.hasClass('owl-loaded') || $thumb.hasClass('owl-loaded')) {
+            return;
+        }
+
+        const totalSlides = $main.children().length;
+
+        const syncCurrentSlide = (index) => {
+            const thumbCarousel = $thumb.data('owl.carousel');
+            if (!thumbCarousel) {
+                return;
+            }
+
+            $thumb.find('.owl-item').removeClass('synced').eq(index).addClass('synced');
+
+            const start = thumbCarousel.relative(thumbCarousel.current());
+            const end = start + thumbCarousel.settings.items - 1;
+
+            if (index > end) {
+                $thumb.trigger('to.owl.carousel', [index, 200, true]);
+            }
+
+            if (index < start) {
+                $thumb.trigger('to.owl.carousel', [Math.max(index - thumbCarousel.settings.items + 1, 0), 200, true]);
+            }
+        };
+
+        $main.owlCarousel({
+            items: 1,
+            slideSpeed: 2000,
+            nav: false,
+            autoplay: false,
+            dots: false,
+            loop: totalSlides > 1,
+            responsiveRefreshRate: 200,
+        }).on('changed.owl.carousel', function (event) {
+            const mainCarousel = $main.data('owl.carousel');
+            const activeIndex = mainCarousel ? mainCarousel.relative(event.item.index) : event.item.index;
+            syncCurrentSlide(activeIndex);
+        });
+
+        $thumb.owlCarousel({
+            items: Math.min(totalSlides, 4),
+            dots: false,
+            nav: false,
+            smartSpeed: 200,
+            slideSpeed: 500,
+            slideBy: 4,
+            margin: 6,
+            responsiveRefreshRate: 100,
+        }).on('initialized.owl.carousel', function () {
+            syncCurrentSlide(0);
+        }).on('click', '.owl-item', function () {
+            $main.trigger('to.owl.carousel', [$(this).index(), 200, true]);
+        });
+
+        $next.on('click', function () {
+            $main.trigger('next.owl.carousel');
+        });
+
+        $prev.on('click', function () {
+            $main.trigger('prev.owl.carousel');
+        });
+
+        if (totalSlides <= 1) {
+            $next.addClass('d-none');
+            $prev.addClass('d-none');
+        }
+    });
+
+});
+
+if (typeof FormValidation === 'undefined') {
+
+    // Form Validation
+    class FormValidation {
+        constructor(formSelector = '.validate-form') {
+            this.formSelector = formSelector;
+            this.init();
+        }
+
+        init() {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.attachValidators();
+                this.initPasswordValidation();
+                this.addRequiredAsterisks();
+            });
+        }
+
+        attachValidators() {
+            const forms = document.querySelectorAll(this.formSelector);
+            forms.forEach(form => {
+                if (form.dataset.validationInitialized === "true") return;
+
+                form.setAttribute('novalidate', true);
+
+                form.addEventListener('submit', (e) => {
+                    if (!FormValidation.validateForm(form)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
+
+                // Use event delegation for dynamic inputs
+                form.addEventListener('input', (e) => {
+                    if (e.target.matches('input, textarea, select, checkbox, radio, text')) {
+                        FormValidation.validateInput(e.target);
+                    }
+                });
+                form.addEventListener('change', (e) => {
+                    if (e.target.matches('input, textarea, select, checkbox, radio, text')) {
+                        FormValidation.validateInput(e.target);
+                    }
+                });
+
+                // Listen for select2 events using jQuery
+                $(form).on('select2:select select2:unselect', function (e) {
+                    FormValidation.validateInput(e.target);
+                });
+
+                form.dataset.validationInitialized = "true";
+            });
+        }
+
+        initPasswordValidation() {
+            let passwordInput = document.getElementById("signupSrPassword");
+            let confirmPasswordInput = document.querySelector("input[name='confirmPassword'], input[name='confirm-password']");
+            if (!passwordInput) {
+                passwordInput = document.getElementById("passwordWithRules");
+            }
+
+            if (!passwordInput) return;
+
+            let rulesContainer = document.getElementById("password-rules");
+
+            if (!rulesContainer) {
+                rulesContainer = document.createElement('div');
+                rulesContainer.id = 'password-rules';
+                rulesContainer.className = 'gap-4 mt-2 small list-unstyled text-muted';
+                rulesContainer.style.display = 'none';
+                rulesContainer.innerHTML = `
+                <ul class="fs-12 d-flex flex-wrap gap-1 list-unstyled">
+                    <li id="rule-length"><i class="text-danger">&#10060;</i> 8+ characters</li>
+                    <li id="rule-lower"><i class="text-danger">&#10060;</i> Lowercase letter</li>
+                    <li id="rule-upper"><i class="text-danger">&#10060;</i> Uppercase letter</li>
+                    <li id="rule-number"><i class="text-danger">&#10060;</i> Number</li>
+                    <li id="rule-symbol"><i class="text-danger">&#10060;</i> Symbol</li>
+                </ul>
+            `;
+                const container = passwordInput.closest('.form-group') || passwordInput.parentNode;
+                container.appendChild(rulesContainer);
+            }
+
+            const rules = {
+                length: rulesContainer.querySelector("#rule-length"),
+                lower: rulesContainer.querySelector("#rule-lower"),
+                upper: rulesContainer.querySelector("#rule-upper"),
+                number: rulesContainer.querySelector("#rule-number"),
+                symbol: rulesContainer.querySelector("#rule-symbol"),
+            };
+
+            passwordInput.addEventListener("input", function () {
+                const val = passwordInput.value;
+
+                if (val.length > 0) {
+                    rulesContainer.style.display = "block";
+                } else {
+                    rulesContainer.style.display = "none";
+                }
+
+                FormValidation.updateRule(rules.length, val.length >= 8);
+                FormValidation.updateRule(rules.lower, /[a-z]/.test(val));
+                FormValidation.updateRule(rules.upper, /[A-Z]/.test(val));
+                FormValidation.updateRule(rules.number, /\d/.test(val));
+                FormValidation.updateRule(rules.symbol, /[!@#$%^&*(),.?":{}|<>]/.test(val));
+            });
+
+            passwordInput.addEventListener("blur", function () {
+                if (passwordInput.value.length === 0) {
+                    rulesContainer.style.display = "none";
+                }
+            });
+
+            if (confirmPasswordInput) {
+                const validateMatch = () => {
+                    if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
+                        FormValidation.showError(confirmPasswordInput, confirmPasswordInput.getAttribute('data-msg') || 'Password does not match');
+                    } else {
+                        FormValidation.clearError(confirmPasswordInput);
+                    }
+                };
+
+                confirmPasswordInput.addEventListener('input', validateMatch);
+                passwordInput.addEventListener('input', () => {
+                    if (confirmPasswordInput.value) validateMatch();
+                });
+            }
+        }
+
+        addRequiredAsterisks() {
+            const forms = document.querySelectorAll(this.formSelector);
+            forms.forEach(form => {
+                const inputs = form.querySelectorAll('input[required], textarea[required], select[required]');
+                inputs.forEach(input => {
+                    const id = input.getAttribute('id');
+                    let label;
+                    if (id) {
+                        label = form.querySelector(`label[for="${id}"]`);
+                    }
+                    if (!label) {
+                        const formGroup = input.closest('.form-group');
+                        if (formGroup) {
+                            label = formGroup.querySelector('label');
+                        }
+                    }
+
+                    if (label) {
+                        if (label.innerHTML.indexOf('*') === -1) {
+                            label.insertAdjacentHTML('beforeend', ' <span class="text-danger">*</span>');
+                        }
+                    }
+                });
+            });
+        }
+
+        static updateRule(element, isValid) {
+            if (!element) return;
+            const icon = element.querySelector("i");
+            if (icon) {
+                icon.className = isValid ? "text-success" : "text-danger";
+                icon.innerHTML = isValid ? "&#10004;" : "&#10060;"; // ✓ or ✗
+            }
+        }
+
+        static validateForm(form) {
+            let isValid = true;
+            const inputs = form.querySelectorAll('input, textarea, select');
+
+            inputs.forEach(input => {
+                if (!FormValidation.validateInput(input)) {
+                    isValid = false;
+                }
+            });
+
+            return isValid;
+        }
+
+        static validateInput(input) {
+            if (input.type === 'hidden' || input.disabled) return true;
+
+            let isValid = true;
+            let errorMessage = '';
+
+            FormValidation.clearError(input);
+
+            if (input.type !== 'file' && input.hasAttribute('required') && !input.value.trim()) {
+                isValid = false;
+                errorMessage = 'This field is required.';
+            }
+
+            else if (input.type === 'email' && input.value.trim()) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(input.value.trim())) {
+                    isValid = false;
+                    errorMessage = 'Please enter a valid email address.';
+                }
+            }
+
+            else if ((input.name === 'confirmPassword' || input.name === 'confirm-password') && input.value.trim()) {
+                const passwordInput = document.querySelector("input[name='password']");
+                if (passwordInput && input.value !== passwordInput.value) {
+                    isValid = false;
+                    errorMessage = input.getAttribute('data-msg') || 'Password does not match.';
+                }
+            }
+
+            if (!isValid) {
+                FormValidation.showError(input, errorMessage);
+                input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
+                if (input.type !== 'checkbox' && input.type !== 'radio') {
+                    input.classList.add('is-valid');
+                }
+            }
+
+            return isValid;
+        }
+
+        static showError(input, message) {
+            const inputGroup = input.closest('.input-group');
+            let targetElement = inputGroup ? inputGroup : input;
+
+            if (input.tagName === 'SELECT' && $(input).hasClass('select2-hidden-accessible')) {
+                const select2Container = $(input).next('.select2-container');
+                if (select2Container.length) {
+                    targetElement = select2Container[0];
+                }
+            }
+
+            const formGroup = input.closest('.form-group');
+            let container = formGroup ? formGroup : targetElement.closest('div');
+
+            if (!container || container === targetElement) {
+                container = targetElement.parentNode;
+            }
+
+            // Handle floating--date-inner groups
+            if (container.closest('.floating--date-inner')) {
+                container = container.closest('.floating--date-inner').parentNode;
+                let errorWrapper = container.querySelector('.group-error-wrapper');
+                if (!errorWrapper) {
+                    errorWrapper = document.createElement('div');
+                    errorWrapper.className = 'group-error-wrapper d-flex gap-3 flex-wrap';
+                    container.appendChild(errorWrapper);
+                }
+                container = errorWrapper;
+
+                const inputName = input.getAttribute('name');
+                let existingErrorForThisInput = container.querySelector(`.form-validation-error[data-for="${inputName}"]`);
+
+                if (!existingErrorForThisInput && container.children.length > 0) {
+                    return;
+                }
+            }
+
+            const inputName = input.getAttribute('name');
+            let errorDiv = container.querySelector(`.form-validation-error[data-for="${inputName}"]`);
+
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'form-validation-error text-danger small';
+                errorDiv.setAttribute('data-for', inputName);
+                container.appendChild(errorDiv);
+            }
+
+            errorDiv.textContent = message;
+            $(errorDiv).hide().fadeIn(200);
+        }
+
+        static clearError(input) {
+            const formGroup = input.closest('.form-group');
+            const container = formGroup ? formGroup : input.parentNode;
+
+            const inputName = input.getAttribute('name');
+            const errorDiv = container.querySelector(`.form-validation-error[data-for="${inputName}"]`);
+
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+    }
+    window.FormValidation = FormValidation;
+    window.formValidation = new FormValidation();
+}
+
+// Global Ajax Form
+$(document).on('submit', '.global-ajax-form', function (e) {
+    e.preventDefault();
+
+    const form = this;
+
+    if (window.FormValidation && !window.FormValidation.validateForm(form)) {
+        return;
+    }
+
+    if (window.fileValidators) {
+        const formValidators = window.fileValidators.filter(validator =>
+            form.contains(validator.input)
+        );
+        if (formValidators.length > 0 && !window.FileUploadValidator.validateAll(formValidators)) {
+            return;
+        }
+    }
+
+    const formData = new FormData(form);
+    const submitBtn = $(form).find('button[type="submit"]');
+    const originalBtnText = submitBtn.html();
+
+    submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+
+    $.ajax({
+        url: $(form).attr('action'),
+        method: $(form).attr('method'),
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (response) {
+            if (response.errors) {
+                response.errors.forEach(error => {
+                    toastr.error(error.message || error);
+                });
+            } else {
+                toastr.success(response.message || 'Submitted successfully!');
+
+                if (response.redirect) {
+                    setTimeout(() => {
+                        window.location.href = response.redirect;
+                    }, 1000);
+                } else if (response.reload) {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
+            }
+        },
+        error: function (xhr) {
+            let errorMessage = 'Something went wrong!';
+
+            if (xhr.status === 422) {
+                const errors = xhr.responseJSON.errors;
+
+                for (const field in errors) {
+                    const input = form.querySelector(`[name="${field}"]`) || form.querySelector(`[name="${field}[]"]`);
+                    const errorMsg = errors[field][0];
+
+                    if (input && window.FormValidation) {
+                        window.FormValidation.showError(input, errorMsg);
+                        input.classList.add('is-invalid');
+                    }
+
+                    toastr.error(errorMsg);
+                }
+                return;
+            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            }
+
+            toastr.error(errorMessage);
+        },
+        complete: function () {
+            submitBtn.prop('disabled', false).html(originalBtnText);
+        }
+    });
 });
 
 (function () {
@@ -1015,6 +1525,7 @@ $(document).ready(function () {
 
             this.errorElement = this.initErrorElement();
             this.attachEventListeners();
+            this.input.fileValidator = this;
         }
 
         initErrorElement() {
@@ -1043,8 +1554,15 @@ $(document).ready(function () {
         }
 
         attachEventListeners() {
-            this.input.addEventListener('change', () => {
-                this.validate();
+            this.input.addEventListener('change', (e) => {
+                if (!this.validate()) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    this.showInvalidIcon();
+                    this.input.value = '';
+                    return;
+                }
+
                 if (this.input.files && this.input.files.length === 0) {
                     this.removePreview();
                 }
@@ -1063,9 +1581,34 @@ $(document).ready(function () {
                 }
                 overlay.style.display = 'block';
 
-                console.log('overlay hidden')
 
             });
+        }
+
+        showInvalidIcon() {
+            const parentDiv = this.input.closest('.upload-file_custom');
+            if (!parentDiv) return;
+
+            const textbox = parentDiv.querySelector('.upload-file-textbox');
+            const imgElement = parentDiv.querySelector('.upload-file-img');
+            const removeBtn = parentDiv.querySelector('.remove_btn');
+            const overlay = parentDiv.querySelector('.overlay');
+
+            if (textbox) textbox.style.display = 'none';
+            if (imgElement) {
+                const defaultImageSrc = document.getElementById('default-text-data').getAttribute('data-default-image-src');
+                const invalidIcon = defaultImageSrc.replace('upload-img.png', 'invalid-icon.png');
+                setTimeout(() => {
+                    imgElement.src = invalidIcon;
+                    imgElement.style.display = 'block';
+                    imgElement.style.objectFit = 'contain';
+                    imgElement.style.width = '25%';
+                }, 100);
+            }
+            if (removeBtn) removeBtn.style.opacity = 1;
+            if (overlay) overlay.classList.add('show');
+            parentDiv.classList.add('is-invalid-file-upload');
+            parentDiv.classList.add('input-disabled');
         }
 
         removePreview() {
@@ -1099,6 +1642,7 @@ $(document).ready(function () {
 
             const previews = parentDiv.querySelectorAll('.preview-image, .image-preview, .upload-preview, img.preview, [data-preview]:not(.overlay)');
             previews.forEach(el => el.remove());
+            this.clearError();
         }
 
         clearError() {
@@ -1107,6 +1651,11 @@ $(document).ready(function () {
                 this.errorElement.style.display = 'none';
             }
             this.input.classList.remove('is-invalid');
+            const parentDiv = this.input.closest('.upload-file_custom');
+            if (parentDiv) {
+                parentDiv.classList.remove('input-disabled');
+                parentDiv.classList.remove('is-invalid-file-upload');
+            }
         }
 
         showError(message) {
@@ -1119,6 +1668,11 @@ $(document).ready(function () {
         }
 
         validate() {
+            const parentDiv = this.input.closest('.upload-file_custom');
+            if (parentDiv && parentDiv.classList.contains('is-invalid-file-upload') && (!this.input.files || this.input.files.length === 0)) {
+                return this.showError('Invalid file');
+            }
+
             this.clearError();
 
             if (!this.input.files || this.input.files.length === 0) {
@@ -1189,6 +1743,8 @@ $(document).ready(function () {
         static validateAll(validators) {
             let allValid = true;
             validators.forEach(validator => {
+                console.log(validator && !validator.validate());
+
                 if (validator && !validator.validate()) {
                     allValid = false;
                 }
@@ -1202,18 +1758,25 @@ $(document).ready(function () {
             allowedTypes: ['webp', 'jpg', 'jpeg', 'png', 'gif']
         });
 
+        $(document).on('click', '.remove_btn', function () {
+            const input = $(this).closest('.upload-file_custom').find('.single_file_input')[0];
+            if (input && input.fileValidator) {
+                input.fileValidator.clearError();
+            }
+        });
+
         document.querySelectorAll('form').forEach(form => {
             form.addEventListener('submit', function (e) {
                 if (window.fileValidators && window.fileValidators.length > 0) {
                     const formValidators = window.fileValidators.filter(validator =>
                         form.contains(validator.input)
                     );
-
+                    console.log(formValidators.length > 0 && !FileUploadValidator.validateAll(formValidators));
                     if (formValidators.length > 0 && !FileUploadValidator.validateAll(formValidators)) {
                         e.preventDefault();
                         const firstError = form.querySelector('.is-invalid');
                         if (firstError) {
-                            firstError.scrollIntoView({behavior: 'smooth', block: 'center'});
+                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                     }
                 }
@@ -1234,3 +1797,844 @@ $(document).ready(function () {
     };
     window.FileUploadValidator = FileUploadValidator;
 })();
+
+$('input[name="dates"]').not('[data-no-global-daterangepicker]').daterangepicker({
+    startDate: moment(),
+    endDate: moment(),
+    maxDate: moment(),
+    locale: {
+        format: 'MM/DD/YYYY'
+    }
+});
+
+$('#date_range_type').on('change', function () {
+    $('#date_range').toggleClass('d-none', this.value !== 'custom');
+});
+
+document.addEventListener('click', function (e) {
+
+    const button = e.target.closest('.copy-btn');
+    if (!button) return;
+
+    const container = button.closest('div');
+
+    const textElement = container.querySelector('.copy-text');
+    if (!textElement) return;
+
+    const text = textElement.innerText.trim();
+
+    navigator.clipboard.writeText(text).then(() => {
+        toastr.success('Copied');
+    });
+});
+
+
+$(document).ready(function () {
+    //----- sticky footer
+    function checkFooterState() {
+        const $footer = $('.footer-sticky');
+        const scrollPosition = $(window).scrollTop() + $(window).height();
+        const documentHeight = $(document).height();
+
+        if (scrollPosition >= documentHeight - 20) {
+            $footer.addClass('not-active');
+        } else {
+            $footer.removeClass('not-active');
+        }
+    }
+
+    $(window).on('scroll', checkFooterState);
+    checkFooterState();
+
+    //----- Changing svg color
+    $("img.svg").each(function () {
+        var $img = jQuery(this);
+        var imgID = $img.attr("id");
+        var imgClass = $img.attr("class");
+        var imgURL = $img.attr("src");
+
+        jQuery.get(
+            imgURL,
+            function (data) {
+                var $svg = jQuery(data).find("svg");
+
+                if (typeof imgID !== "undefined") {
+                    $svg = $svg.attr("id", imgID);
+                }
+                if (typeof imgClass !== "undefined") {
+                    $svg = $svg.attr("class", imgClass + " replaced-svg");
+                }
+
+                $svg = $svg.removeAttr("xmlns:a");
+
+                if (
+                    !$svg.attr("viewBox") &&
+                    $svg.attr("height") &&
+                    $svg.attr("width")
+                ) {
+                    $svg.attr(
+                        "viewBox",
+                        "0 0 " + $svg.attr("height") + " " + $svg.attr("width")
+                    );
+                }
+                $img.replaceWith($svg);
+            },
+            "xml"
+        );
+    });
+});
+
+
+//update-exinting-product
+$(document).on('change', '.update_exinting_check, .schedule_order-in', function () {
+    const box = $('.update-exinting-product-box, .order-type-box');
+    if ($(this).is(':checked')) {
+        box.removeClass('d-none').addClass('d-block');
+    } else {
+        box.removeClass('d-block').addClass('d-none');
+    }
+});
+
+$(document).on('change', 'input[type="radio"]', function () {
+    if (!$(this).hasClass('schedule_order-in')) {
+        $('.update-exinting-product-box, .order-type-box')
+            .removeClass('d-block')
+            .addClass('d-none');
+    }
+});
+
+
+//Table Custom td Show & Hide
+document.querySelectorAll('.table-toggle-btn').forEach(function (button) {
+    button.addEventListener('click', function () {
+        const tableWrap = this.nextElementSibling;
+        const currentDisplay = window.getComputedStyle(tableWrap).display;
+
+        if (currentDisplay === 'none') {
+            tableWrap.style.display = 'block';
+        } else {
+            tableWrap.style.display = 'none';
+        }
+
+        this.classList.toggle('active');
+    });
+});
+
+
+//Employee Role , Sub Checked / Unchecked
+$(document).on("change", ".sub_slect_all_wrapper .sub_select-all", function () {
+    const wrapper = $(this).closest(".sub_slect_all_wrapper");
+    const isChecked = this.checked;
+
+    wrapper
+        .find("input[type='checkbox']:not(.sub_select-all)")
+        .prop("checked", isChecked);
+});
+
+
+//Pragraph See more and See less > Use global
+$(document).ready(function () {
+    $('.see-more_pragraph').each(function () {
+        let $p = $(this);
+        let limit = parseInt($p.data('character'), 10);
+        let fullText = $.trim(
+            $p.clone().children('.see__moreBtn').remove().end().text()
+        );
+
+        if (fullText.length <= limit) {
+            $p.find('.see__moreBtn').addClass('d-none');
+            return;
+        }
+
+        let shortText = fullText.substring(0, limit) + '...';
+
+        $p.data('full', fullText);
+        $p.data('short', shortText);
+
+        $p.html(shortText + ' <span class="text-info see__moreBtn">See more</span>');
+    });
+    $(document).on('click', '.see__moreBtn', function () {
+        let $p = $(this).closest('.see-more_pragraph');
+        let isExpanded = $(this).hasClass('expanded');
+        if (isExpanded) {
+            $p.html(
+                $p.data('short') +
+                ' <span class="text-info see__moreBtn">See more</span>'
+            );
+        } else {
+            $p.html(
+                $p.data('full') +
+                ' <span class="text-info see__moreBtn expanded">See less</span>'
+            );
+        }
+    });
+});
+
+//Select2 Inside search add custom placeholder
+$(document).ready(function () {
+    $(document).on('select2:open', function (e) {
+        let selectElement = $(e.target);
+        let searchPlaceholder = selectElement.data('search-placeholder');
+        // attribute
+        if (searchPlaceholder) {
+            $('.select2-search__field').attr('placeholder', searchPlaceholder);
+        }
+    });
+});
+
+class LinkValidator {
+    constructor(selector = '[data-link-validation], .js-link-validator') {
+        this.selector = selector;
+        this.defaultMessage = "Please enter a valid link.";
+        this.allowedProtocols = ["http:", "https:"];
+        this.bindEvents();
+        this.initExistingFields();
+    }
+
+    bindEvents() {
+        $(document).on("change input", this.selector, (event) => {
+            this.validateField(event.currentTarget);
+            this.updateFormSubmitState(event.currentTarget);
+        });
+
+        $(document).on("submit", "form", (event) => {
+            if (!this.validateForm(event.currentTarget)) {
+                event.preventDefault();
+                this.updateFormSubmitState(event.currentTarget);
+            }
+        });
+    }
+
+    initExistingFields() {
+        document.querySelectorAll(this.selector).forEach((field) => {
+            this.prepareFeedback(field);
+            this.validateField(field);
+            this.updateFormSubmitState(field);
+        });
+    }
+
+    validateField(field) {
+        if (field.disabled) {
+            this.clearError(field);
+            return true;
+        }
+
+        const value = field.value.trim();
+        const isRequired = field.hasAttribute("required");
+
+        this.prepareFeedback(field);
+
+        if (!value.length) {
+            if (isRequired) {
+                this.showError(field, this.getMessage(field));
+                return false;
+            }
+
+            this.clearError(field);
+            return true;
+        }
+
+        try {
+            const parsedUrl = new URL(value);
+            const isValidProtocol = this.allowedProtocols.includes(parsedUrl.protocol);
+            const hasHost = parsedUrl.hostname && parsedUrl.hostname.includes(".");
+
+            if (!isValidProtocol || !hasHost) {
+                this.showError(field, this.getMessage(field));
+                return false;
+            }
+        } catch (error) {
+            this.showError(field, this.getMessage(field));
+            return false;
+        }
+
+        this.clearError(field);
+        return true;
+    }
+
+    prepareFeedback(field) {
+        const nextSibling = field.nextElementSibling;
+
+        if (nextSibling && nextSibling.classList.contains("invalid-feedback")) {
+            return nextSibling;
+        }
+
+        const feedback = document.createElement("div");
+        feedback.className = "invalid-feedback";
+        feedback.textContent = this.getMessage(field);
+        field.insertAdjacentElement("afterend", feedback);
+
+        return feedback;
+    }
+
+    showError(field, message) {
+        const feedback = this.prepareFeedback(field);
+        field.classList.add("is-invalid");
+        feedback.textContent = message;
+    }
+
+    clearError(field) {
+        field.classList.remove("is-invalid");
+    }
+
+    getMessage(field) {
+        return field.dataset.linkValidationMessage || this.defaultMessage;
+    }
+
+    validateForm(form) {
+        let isValid = true;
+
+        form.querySelectorAll(this.selector).forEach((field) => {
+            if (field.disabled) {
+                this.clearError(field);
+                return;
+            }
+            if (!this.validateField(field)) {
+                isValid = false;
+            }
+        });
+
+        return isValid;
+    }
+
+    updateFormSubmitState(element) {
+        const form = element instanceof HTMLFormElement ? element : element.closest("form");
+
+        if (!form) {
+            return;
+        }
+
+        const submitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"], .call-demo[type="button"]');
+
+        if (!submitButtons.length) {
+            return;
+        }
+
+        const hasInvalidField = Array.from(form.querySelectorAll(this.selector)).some((field) =>
+            !field.disabled && field.classList.contains("is-invalid")
+        );
+
+        submitButtons.forEach((button) => {
+            button.disabled = hasInvalidField;
+        });
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    window.linkValidator = new LinkValidator();
+});
+
+class ProductVideoManager {
+    constructor(selector = ".product-video-section") {
+        this.selector = selector;
+        this.modalElement = document.getElementById("videoPreviewModal");
+        this.modalVideo = document.getElementById("modalVideoPlayer");
+        this.modalEmbed = document.getElementById("modalVideoEmbed");
+        this.modalTitle = document.getElementById("modal-video-title");
+        this.modalWrapper = this.modalElement ? this.modalElement.querySelector(".js-video-modal-player") : null;
+        this.modalEmbedWrapper = this.modalElement ? this.modalElement.querySelector(".js-video-modal-embed") : null;
+        this.modalUnavailableWrapper = this.modalElement ? this.modalElement.querySelector(".js-video-modal-unavailable") : null;
+        this.previewModal = this.modalElement && typeof bootstrap !== "undefined" && bootstrap.Modal
+            ? new bootstrap.Modal(this.modalElement)
+            : null;
+        this.bindEvents();
+        this.initExistingSections();
+        this.initModal();
+    }
+
+    bindEvents() {
+        $(document).on("change", `${this.selector} .js-video-type-switch`, (event) => {
+            this.syncMode($(event.currentTarget).closest(this.selector));
+        });
+
+        $(document).on("change", `${this.selector} .video-input`, (event) => {
+            this.handleFileChange($(event.currentTarget).closest(this.selector), event.currentTarget);
+        });
+
+        $(document).on("click", `${this.selector} .remove-video-btn`, (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.removeVideo($(event.currentTarget).closest(this.selector));
+        });
+
+        $(document).on("click", `${this.selector} .open-preview-btn`, (event) => {
+            event.preventDefault();
+            this.openPreview($(event.currentTarget).closest(this.selector));
+        });
+
+        $(document).on("click", ".js-product-video-preview-trigger", (event) => {
+            event.preventDefault();
+            this.openTriggeredPreview(event.currentTarget);
+        });
+
+        $(document).on("loadedmetadata", ".js-product-video-thumb", (event) => {
+            this.prepareVideoPreview(event.currentTarget);
+        });
+
+        $(document).on("seeked", ".js-product-video-thumb", (event) => {
+            this.finalizeVideoPreview(event.currentTarget);
+        });
+
+        $(document).on("loadeddata", ".js-product-video-thumb", (event) => {
+            this.finalizeVideoPreview(event.currentTarget);
+        });
+
+        // Hardening: Handle media load errors for thumbnails and modal players
+        $(document).on("error", ".js-product-video-thumb, .video-thumbnail-element, #modalVideoPlayer", (event) => {
+            this.handleMediaError(event.currentTarget);
+        });
+
+    }
+
+    initExistingSections() {
+        $(this.selector).each((_, element) => {
+            const $section = $(element);
+            this.syncMode($section, false);
+
+            const initialUrl = $section.data("initial-video-url");
+            const currentMode = $section.find(".js-video-type-switch:checked").val() || "file";
+            if (initialUrl && currentMode === "file") {
+                $section.data("video-preview-url", initialUrl);
+                $section.data("video-preview-type", "video");
+            }
+
+            const videoElement = element.querySelector(".video-thumbnail-element");
+            if (videoElement) {
+                videoElement.load();
+            }
+        });
+
+        document.querySelectorAll(".js-product-video-thumb").forEach((videoElement) => {
+            if (videoElement.readyState >= 1) {
+                this.prepareVideoPreview(videoElement);
+                return;
+            }
+
+            videoElement.load();
+        });
+    }
+
+    initModal() {
+        if (!this.modalElement || !this.previewModal) {
+            return;
+        }
+
+        this.modalElement.addEventListener("hidden.bs.modal", () => {
+            this.resetModal();
+        });
+
+        this.modalElement.addEventListener("shown.bs.modal", () => {
+            this.playModalVideo();
+        });
+
+        if (this.modalVideo) {
+            this.modalVideo.addEventListener("error", (e) => this.handleMediaError(e.target));
+        }
+
+        if (this.modalEmbed) {
+            this.modalEmbed.addEventListener("error", () => this.showUnavailableModal());
+        }
+    }
+
+    prepareVideoPreview(videoElement) {
+        const surface = videoElement.closest("[data-video-preview-surface]");
+
+        if (!surface || surface.dataset.previewReady === "true") {
+            return;
+        }
+
+        try {
+            const duration = Number.isFinite(videoElement.duration) ? videoElement.duration : 0;
+            const targetTime = duration > 0 ? Math.min(Math.max(duration * 0.15, 0.1), 1) : 0.1;
+
+            if (Math.abs(videoElement.currentTime - targetTime) < 0.05 || duration === 0) {
+                this.finalizeVideoPreview(videoElement);
+                return;
+            }
+
+            videoElement.currentTime = targetTime;
+        } catch (error) {
+            this.finalizeVideoPreview(videoElement);
+        }
+    }
+
+    finalizeVideoPreview(videoElement) {
+        const surface = videoElement.closest("[data-video-preview-surface]");
+
+        if (!surface) {
+            return;
+        }
+
+        surface.dataset.previewReady = "true";
+        surface.classList.add("is-video-ready");
+        videoElement.pause();
+        this.clearUnavailableSurface(surface);
+    }
+
+    syncMode($section, clearInactive = true) {
+        if (!$section.length) {
+            return;
+        }
+
+        const selectedMode = $section.find(".js-video-type-switch:checked").val() || "file";
+        const isFileMode = selectedMode === "file";
+        const $fileContainer = $section.find(".upload-video-file-container");
+        const $linkContainer = $section.find(".upload-video-link-container");
+        const $linkInput = $section.find(".js-product-video-link");
+
+        $fileContainer.toggle(isFileMode);
+        $linkContainer.toggle(!isFileMode);
+        $linkInput.prop("disabled", isFileMode);
+
+        if (!isFileMode && clearInactive) {
+            $section.find(".video-input").val("");
+            this.restoreInitialPreview($section);
+            this.resetModal();
+        }
+
+        if (window.linkValidator && $linkInput.length) {
+            window.linkValidator.validateField($linkInput[0]);
+            window.linkValidator.updateFormSubmitState($section.closest("form")[0]);
+        }
+    }
+
+    handleFileChange($section, input) {
+        const file = input.files && input.files[0] ? input.files[0] : null;
+        if (!file) {
+            this.restoreInitialPreview($section);
+            return;
+        }
+
+        const maxSize = Number($(input).data("max-size")) || 0;
+        if (maxSize && file.size > maxSize * 1024 * 1024) {
+            toastr.error(`Video size should not exceed ${maxSize}MB`, {
+                CloseButton: true,
+                ProgressBar: true,
+            });
+            input.value = "";
+            this.restoreInitialPreview($section);
+            return;
+        }
+
+        $section.find(".js-remove-video-input").val("0");
+        this.renderPreview($section, URL.createObjectURL(file), file.name, file.size);
+    }
+
+    removeVideo($section) {
+        this.revokeObjectUrl($section);
+        $section.find(".video-input").val("");
+        $section.find(".js-remove-video-input").val("1");
+        $section.find(".video-upload-filled").removeClass("d-flex").addClass("d-none");
+        $section.find(".video-upload-initial").removeClass("d-none");
+
+        const videoElement = $section.find(".video-thumbnail-element")[0];
+        if (videoElement) {
+            $(videoElement).find("source").attr("src", "");
+            videoElement.load();
+        }
+
+        $section.data("video-preview-url", "");
+        $section.data("video-preview-type", "");
+        $section.find(".file-name-display").text("");
+        $section.find(".file-size-display").text("");
+        this.resetModal();
+    }
+
+    restoreInitialPreview($section) {
+        if ($section.find(".js-remove-video-input").val() === "1") {
+            $section.find(".video-upload-filled").removeClass("d-flex").addClass("d-none");
+            $section.find(".video-upload-initial").removeClass("d-none");
+            $section.data("video-preview-url", "");
+            $section.data("video-preview-type", "");
+            return;
+        }
+
+        const initialUrl = $section.data("initial-video-url");
+        const initialName = $section.data("initial-video-name");
+        const initialSize = Number($section.data("initial-video-size")) || 0;
+
+        if (initialUrl) {
+            this.renderPreview($section, initialUrl, initialName, initialSize);
+            return;
+        }
+
+        this.revokeObjectUrl($section);
+        $section.find(".video-upload-filled").removeClass("d-flex").addClass("d-none");
+        $section.find(".video-upload-initial").removeClass("d-none");
+        $section.data("video-preview-url", "");
+        $section.data("video-preview-type", "");
+    }
+
+    renderPreview($section, sourceUrl, fileName, fileSize) {
+        const videoElement = $section.find(".video-thumbnail-element")[0];
+        const extension = (fileName.split(".").pop() || "video").toUpperCase();
+        const isObjectUrl = typeof sourceUrl === "string" && sourceUrl.startsWith("blob:");
+
+        this.revokeObjectUrl($section);
+
+        if (videoElement) {
+            $(videoElement).find("source").attr("src", sourceUrl);
+            videoElement.load();
+        }
+
+        $section.find(".file-name-display").text(fileName || "Video");
+        $section.find(".file-size-display").text(fileSize ? `${extension} ${this.formatFileSize(fileSize)}` : extension);
+        $section.find(".video-upload-initial").addClass("d-none");
+        $section.find(".video-upload-filled").removeClass("d-none").addClass("d-flex");
+        $section.data("video-preview-url", sourceUrl);
+        $section.data("video-preview-type", "video");
+        $section.data("video-object-url", isObjectUrl ? sourceUrl : "");
+    }
+
+    formatFileSize(sizeInBytes) {
+        return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
+    }
+
+    openPreview($section) {
+        if (!this.previewModal || !$section.length) {
+            return;
+        }
+
+        const selectedMode = $section.find(".js-video-type-switch:checked").val() || "file";
+        const sourceUrl = $section.data("video-preview-url");
+
+        if (selectedMode !== "file" || !sourceUrl) {
+            return;
+        }
+
+        const title = ($section.find(".file-name-display").text() || "Product video").trim();
+        this.showVideoModal(sourceUrl, title);
+    }
+
+    openTriggeredPreview(trigger) {
+        if (!this.previewModal) {
+            return;
+        }
+
+        const previewType = trigger.dataset.previewType || "";
+        const previewUrl = trigger.dataset.previewUrl || "";
+        const previewTitle = trigger.dataset.previewTitle || "Product video";
+
+        if (!previewType || !previewUrl) {
+            return;
+        }
+
+        if (previewType === "embed") {
+            this.showEmbedModal(previewUrl, previewTitle);
+            return;
+        }
+
+        this.showVideoModal(previewUrl, previewTitle);
+    }
+
+    showVideoModal(sourceUrl, title) {
+        if (!this.previewModal || !this.modalVideo) {
+            return;
+        }
+
+        this.resetModal();
+
+        if (this.modalTitle) {
+            this.modalTitle.textContent = title || "Product video";
+        }
+
+        if (this.modalWrapper) {
+            this.modalWrapper.classList.remove("d-none");
+        }
+        if (this.modalEmbedWrapper) {
+            this.modalEmbedWrapper.classList.add("d-none");
+        }
+        if (this.modalUnavailableWrapper) {
+            this.modalUnavailableWrapper.classList.add("d-none");
+        }
+
+        if (this.isMixedContentSource(sourceUrl)) {
+            this.showUnavailableModal();
+            this.previewModal.show();
+            return;
+        }
+
+        this.modalElement.dataset.previewType = "video";
+        const sourceElement = this.modalVideo.querySelector("source");
+        if (sourceElement) {
+            sourceElement.setAttribute("src", sourceUrl);
+        } else {
+            this.modalVideo.src = sourceUrl;
+        }
+        this.modalVideo.autoplay = true;
+        this.modalVideo.setAttribute("autoplay", "autoplay");
+        this.modalVideo.controls = true;
+        this.modalVideo.muted = false;
+        this.modalVideo.defaultMuted = false;
+        this.modalVideo.load();
+        this.previewModal.show();
+    }
+
+    showEmbedModal(sourceUrl, title) {
+        if (!this.previewModal || !this.modalEmbed) {
+            return;
+        }
+
+        this.resetModal();
+
+        if (this.modalTitle) {
+            this.modalTitle.textContent = title || "Product video";
+        }
+
+        if (this.modalWrapper) {
+            this.modalWrapper.classList.add("d-none");
+        }
+        if (this.modalEmbedWrapper) {
+            this.modalEmbedWrapper.classList.remove("d-none");
+        }
+        if (this.modalUnavailableWrapper) {
+            this.modalUnavailableWrapper.classList.add("d-none");
+        }
+
+        if (this.isMixedContentSource(sourceUrl)) {
+            this.showUnavailableModal();
+            this.previewModal.show();
+            return;
+        }
+
+        this.modalElement.dataset.previewType = "embed";
+        this.modalEmbed.setAttribute("src", sourceUrl);
+        this.previewModal.show();
+    }
+
+    resetModal() {
+        if (!this.modalElement) {
+            return;
+        }
+
+        if (this.modalVideo) {
+            this.modalVideo.pause();
+            this.modalVideo.autoplay = false;
+            this.modalVideo.removeAttribute("autoplay");
+            this.modalVideo.controls = true;
+            this.modalVideo.muted = false;
+            this.modalVideo.defaultMuted = false;
+            this.modalVideo.currentTime = 0;
+            const sourceElement = this.modalVideo.querySelector("source");
+            if (sourceElement) {
+                sourceElement.setAttribute("src", "");
+            }
+            this.modalVideo.removeAttribute("src");
+            this.modalVideo.load();
+        }
+
+        if (this.modalEmbed) {
+            this.modalEmbed.setAttribute("src", "");
+        }
+
+        if (this.modalTitle) {
+            this.modalTitle.textContent = "";
+        }
+
+        delete this.modalElement.dataset.previewType;
+
+        if (this.modalWrapper) {
+            this.modalWrapper.classList.remove("d-none");
+        }
+        if (this.modalEmbedWrapper) {
+            this.modalEmbedWrapper.classList.add("d-none");
+        }
+        if (this.modalUnavailableWrapper) {
+            this.modalUnavailableWrapper.classList.add("d-none");
+        }
+    }
+
+    playModalVideo() {
+        if (!this.modalVideo || this.modalElement?.dataset.previewType !== "video" || !this.getModalVideoSource()) {
+            return;
+        }
+
+        const playPromise = this.modalVideo.play();
+        if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(() => { });
+        }
+    }
+
+    getModalVideoSource() {
+        if (!this.modalVideo) {
+            return "";
+        }
+
+        const sourceElement = this.modalVideo.querySelector("source");
+        return sourceElement ? sourceElement.getAttribute("src") || "" : this.modalVideo.getAttribute("src") || "";
+    }
+
+    revokeObjectUrl($section) {
+        const objectUrl = $section.data("video-object-url");
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            $section.data("video-object-url", "");
+        }
+    }
+
+    clearUnavailableSurface(surface) {
+        surface.classList.remove("is-video-unavailable");
+
+        // Hide fallback, show original preview elements
+        Array.from(surface.children).forEach(child => {
+            if (child.hasAttribute('data-video-fallback')) {
+                child.classList.add('d-none');
+            } else {
+                child.classList.remove('d-none');
+            }
+        });
+
+        // Trigger load/replay for elements if needed
+        surface.querySelectorAll("video").forEach(v => {
+            if (v.src || v.querySelector('source')?.src) v.load();
+        });
+    }
+
+    isMixedContentSource(sourceUrl) {
+        if (!sourceUrl || !window.location || window.location.protocol !== "https:") {
+            return false;
+        }
+
+        return /^http:\/\//i.test(sourceUrl);
+    }
+
+    handleMediaError(element) {
+        if (!element) return;
+
+        // Modal video error
+        if (element.id === "modalVideoPlayer" || element.closest(".modal")) {
+            this.showUnavailableModal();
+            return;
+        }
+
+        // Thumb/Surface video error
+        const surface = element.closest("[data-video-preview-surface]");
+        if (surface) {
+            this.showUnavailableSurface(surface);
+        }
+    }
+
+    showUnavailableModal() {
+        if (this.modalWrapper) this.modalWrapper.classList.add("d-none");
+        if (this.modalEmbedWrapper) this.modalEmbedWrapper.classList.add("d-none");
+        if (this.modalUnavailableWrapper) this.modalUnavailableWrapper.classList.remove("d-none");
+    }
+
+    showUnavailableSurface(surface) {
+        surface.classList.add("is-video-unavailable");
+        surface.dataset.previewReady = "true";
+
+        // Hide all children except the fallback container
+        Array.from(surface.children).forEach(child => {
+            if (!child.hasAttribute('data-video-fallback')) {
+                child.classList.add('d-none');
+            } else {
+                child.classList.remove('d-none');
+            }
+        });
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    window.productVideoManager = new ProductVideoManager();
+});

@@ -1,25 +1,20 @@
-@extends('payment-views.layouts.master')
-
-@push('script')
-
-@endpush
-
-@section('content')
-    <div class="text-center"> <h1>Please do not refresh this page...</h1></div>
-    <form method="post" action="<?php echo \Illuminate\Support\Facades\Config::get('paytm_config.PAYTM_TXN_URL') ?>" id="form">
-        <table border="1">
+<html>
+   <head>
+      <title>Show Payment Page</title>
+   </head>
+   <body>
+      <center>
+         <h1>Please do not refresh this page...</h1>
+      </center>
+      <form method="post" action="{{ Config::get('paytm_config.PAYTM_STATUS_QUERY_NEW_URL') }}?mid={{ Config::get('paytm_config.PAYTM_MERCHANT_MID') }}&orderId={{ $ORDER_ID }}" name="paytm">
+         <table border="1">
             <tbody>
-            @foreach($paramList as $name => $value)
-                <input type="hidden" name="{{$name}}" value="{{$value}}">
-            @endforeach
-            <input type="hidden" name="CHECKSUMHASH" value="{{$checkSum}}">
+               <input type="hidden" name="mid" value="{{ Config::get('paytm_config.PAYTM_MERCHANT_MID') }}">
+               <input type="hidden" name="orderId" value="{{ $ORDER_ID }}">
+               <input type="hidden" name="txnToken" value="{{ $txnToken }}">
             </tbody>
-        </table>
-    </form>
-
-    <script type="text/javascript">
-        document.addEventListener("DOMContentLoaded", function () {
-            document.getElementById("form").submit();
-        });
-    </script>
-@endsection
+         </table>
+         <script type="text/javascript"> document.paytm.submit(); </script>
+      </form>
+   </body>
+</html>

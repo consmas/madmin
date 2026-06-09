@@ -22,21 +22,22 @@ trait VatTaxConfiguration
     public static function getPorjectWiseSystemData($key = null)
     {
         $allProjects = [
-            'ConsMas' => [
+            '6ammart' => [
                 'tax_calculate_from' => ['Calculate_Tax_on_Billing_Address_Location'],
 
                 'tax_calculate_on' => ['order_wise', 'product_wise', 'category_wise'],
                 'tax_calculate_on_rental_provider' => ['trip_wise'],
+                'tax_calculate_on_ride_module' => ['ride_wise'],
                 'tax_calculate_on_parcel' => ['order_wise','category_wise'],
                 'tax_calculate_on_prescription' => ['order_wise'],
 
                 'additional_tax' => [ 'tax_on_packaging_charge'],
                 'additional_tax_rental_provider' => [],
+                'additional_tax_ride_module' => [],
                 'additional_tax_parcel' => [],
                 'additional_tax_prescription' => ['tax_on_packaging_charge'],
 
-                'payer_types'=> [ 'vendor','rental_provider','parcel', 'prescription'],
-
+                'payer_types'=> [ 'vendor','rental_provider','ride_module', 'parcel', 'prescription'],
             ],
             'stackfood' => [
                 'tax_calculate_from' => ['Calculate_Tax_on_Billing_Address_Location'],
@@ -57,7 +58,7 @@ trait VatTaxConfiguration
     public static function getProjectWiseViewPath($name)
     {
         $allProjects = [
-            'ConsMas' => [
+            '6ammart' => [
                 'tax_list_export' =>  'taxmodule::file-exports.tax_list_export',
                 'tax_list' =>  'taxmodule::tax.tax_list',
                 'system_tax_setup' =>  'taxmodule::tax.system_tax_setup',
@@ -80,7 +81,7 @@ trait VatTaxConfiguration
     public static function getClassNames($model)
     {
         $allProjects = [
-            'ConsMas' => [
+            '6ammart' => [
                 'product' => 'App\Models\Item',
                 'category' =>  'App\Models\Category',
                 'addon' =>  'App\Models\AddOn',
@@ -88,6 +89,7 @@ trait VatTaxConfiguration
                 'store' =>  'App\Models\Store',
                 'order' =>  'App\Models\Order',
                 'trip' =>  'Modules\Rental\Entities\Trips',
+                'ride' =>  'Modules\RideShare\Entities\TripManagement\RideRequest',
                 'parcel_category' =>  'App\Models\ParcelCategory',
                 'campaign_product' =>  'App\Models\ItemCampaign',
             ],

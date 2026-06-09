@@ -28,7 +28,7 @@ class ConfigServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $mode = env('APP_MODE');
+        $mode = getEnvMode();
         try {
             Translator::get(config('app.locale'))->setTranslations([
                 'first_day_of_week' => CarbonImmutable::MONDAY,
@@ -75,12 +75,11 @@ class ConfigServiceProvider extends ServiceProvider
             }
 
             if (isset($data['roho_credit'])) {
-                $config = [
-                    'api_key' => data_get($data, 'roho_credit.api_key', null),
-                    'webhook_signing_secret' => data_get($data, 'roho_credit.webhook_signing_secret', null),
-                    'institution_id' => data_get($data, 'roho_credit.institution_id', null),
-                ];
-                Config::set('roho_credit', $config);
+                Config::set('roho_credit', [
+                    'api_key' => data_get($data, 'roho_credit.api_key'),
+                    'webhook_signing_secret' => data_get($data, 'roho_credit.webhook_signing_secret'),
+                    'institution_id' => data_get($data, 'roho_credit.institution_id'),
+                ]);
             }
 
             if (data_get($data, 'ssl_commerz', null)) {

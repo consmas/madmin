@@ -70,11 +70,24 @@
 
                                     </div>
                                 </div>
+
+                                @if (!is_writable(base_path('config/system-addons.php')))
+                                <div class="d-flex gap-3 align-items-center mt-4">
+                                    <img
+                                        src="{{asset('public/assets/installation')}}/assets/img/svg-icons/php-version.svg"
+                                        alt="">
+                                    <div
+                                        class="d-flex align-items-center gap-2 text-danger justify-content-between flex-grow-1">
+                                        config/system-addons.php File Write Permission required
+
+                                    </div>
+                                </div>
+                                @endif
                             </div>
                         </div>
 
                         <div class="text-center">
-                            <button type="submit" class="btn btn-dark px-sm-5" {{ $phpVersion >= 8.2?'':'disabled' }}>Update</button>
+                            <button type="submit" class="btn btn-dark px-sm-5" {{ $phpVersion >= 8.2 && is_writable(base_path('config/system-addons.php'))?'':'disabled' }}>Update</button>
                         </div>
                     </form>
                 </div>

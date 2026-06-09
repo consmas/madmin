@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Class Module
@@ -143,6 +144,15 @@ class Module extends Model
     {
         return $query->where('module_type', '!=' ,'rental');
     }
+    public function scopeWithoutAdditionalModules($query): mixed
+    {
+        return $query->whereNotIn('module_type',  ['rental','ride-share','service']);
+    }
+
+    public function scopeNotServiceAndRideShare($query)
+    {
+        return $query->whereNotIn('module_type', ['service', 'ride-share']);
+    }
 
     /**
      * @param $query
@@ -182,6 +192,24 @@ class Module extends Model
     {
         return $this->morphMany(Storage::class, 'data');
     }
+
+    private function generateSlug($name)
+    {
+        $slug = Str::slug($name);
+        if ($max_slug = static::where('slug', 'like', "{$slug}%")->latest('id')->value('slug')) {
+
+            if ($max_slug == $slug) return "{$slug}-2";
+
+            $max_slug = explode('-', $max_slug);
+            $count = array_pop($max_slug);
+            if (isset($count) && is_numeric($count)) {
+                $max_slug[] = ++$count;
+                return implode('-', $max_slug);
+            }
+        }
+        return $slug;
+    }
+
     protected static function booted()
     {
         static::addGlobalScope('storage', function ($builder) {
@@ -199,12 +227,25 @@ class Module extends Model
      */
     public function zones(): BelongsToMany
     {
-        return $this->belongsToMany(Zone::class);
+        return $this->belongsToMany(Zone::class)
+            ->withPivot([
+                'per_km_shipping_charge',
+                'minimum_shipping_charge',
+                'maximum_shipping_charge',
+                'maximum_cod_order_amount',
+                'delivery_charge_type',
+                'fixed_shipping_charge'
+            ])
+            ->using(ModuleZone::class);
     }
 
     protected static function boot()
     {
         parent::boot();
+        static::created(function ($item) {
+            $item->slug = $item->generateSlug($item->module_name);
+            $item->save();
+        });
         static::saved(function ($model) {
             if($model->isDirty('icon')){
                 $value = Helpers::getDisk();
@@ -234,5 +275,20 @@ class Module extends Model
             }
         });
 
+    }
+
+    public static function regenerateSlugs($force = false)
+    {
+        static::chunkById(100, function ($modules) use ($force) {
+            foreach ($modules as $module) {
+                // Skip if slug already exists (unless forced)
+                if (!$force && !empty($module->slug)) {
+                    continue;
+                }
+
+                $module->slug = $module->generateSlug($module->module_name);
+                $module->save();
+            }
+        });
     }
 }

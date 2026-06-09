@@ -13,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Log;
 
 
 class PaystackController extends Controller
@@ -68,12 +67,10 @@ class PaystackController extends Controller
 
         $url = "https://api.paystack.co/transaction/initialize";
 
-        $currency = $data['currency_code'] ?? $data['currency'] ?? 'GHS';
-
         $fields = [
             'email' => $payer['email'] ?? "customer@email.com",
             'amount' => ($data['payment_amount'] ?? 0) * 100,
-            'currency' => $currency,
+            'currency' => $data['currency_code'] ?? 'XOF',
             'reference' => (string)('REF' . time() . 'RANDOM'),
             'callback_url' => route('paystack.callback', ['payment_id' => $data['id']]),
             'metadata' => [
@@ -94,19 +91,9 @@ class PaystackController extends Controller
         ));
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response_raw = curl_exec($ch);
-        $curl_error = curl_error($ch);
-        $response = json_decode($response_raw, true);
+        $response = json_decode(curl_exec($ch), true);
 
-        Log::info('paystack.init', [
-            'payment_id' => $data['id'],
-            'fields' => $fields,
-            'curl_error' => $curl_error,
-            'response_raw' => $response_raw,
-            'response' => $response,
-        ]);
-
-        if (($response['status'] ?? false) && isset($response['data']['authorization_url'])) {
+        if ($response['status'] && isset($response['data']['authorization_url'])) {
             return redirect($response['data']['authorization_url']);
         }
 
@@ -117,7 +104,7 @@ class PaystackController extends Controller
     {
         $paymentDetails = self::getPayStackPaymentData(request: $request);
 
-        if (($paymentDetails['status'] ?? false) && isset($paymentDetails['data']['metadata']['payment_id'])) {
+        if ($paymentDetails['status'] == true) {
             $this->payment::where(['id' => $paymentDetails['data']['metadata']['payment_id']])->update([
                 'payment_method' => 'paystack',
                 'is_paid' => 1,
@@ -130,10 +117,7 @@ class PaystackController extends Controller
             return $this->payment_response($data, 'success');
         }
 
-        $payment_data = null;
-        if (isset($paymentDetails['data']['metadata']['payment_id'])) {
-            $payment_data = $this->payment::where(['id' => $paymentDetails['data']['metadata']['payment_id']])->first();
-        }
+        $payment_data = $this->payment::where(['id' => $paymentDetails['data']['metadata']['payment_id']])->first();
         if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
             call_user_func($payment_data->failure_hook, $payment_data);
         }

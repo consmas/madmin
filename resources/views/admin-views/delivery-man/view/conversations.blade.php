@@ -6,12 +6,8 @@
     <div class="content container-fluid">
         <!-- Page Header -->
         <div class="page-header">
-            <h1 class="page-header-title text-break">
-                <span class="page-header-icon">
-                    <img src="{{asset('public/assets/admin/img/delivery-man.png')}}" class="w--26" alt="">
-                </span>
-                <span>{{$deliveryMan['f_name'].' '.$deliveryMan['l_name']}}</span>
-            </h1>
+                        @include('admin-views.delivery-man.partials._page_header')
+
             <div class="">
                 @include('admin-views.delivery-man.partials._tab_menu')
             </div>
@@ -40,7 +36,7 @@
                         </div>
                         <!-- Body -->
                         <div class="card-body p-0 initial-19"  id="dm-conversation-list">
-                            <div class="d-flex justify-content-center gap-4 mb-3 tab-button-group">
+                            <div class="d-flex justify-content-start px-3 gap-4 mb-3 tab-button-group">
                                 <button id="customer_conversations" data-url="{{route('admin.users.delivery-man.preview', ['id'=>$deliveryMan->id, 'tab'=> 'conversation','conversation_with' =>'customer'])}}" class="{{ request()?->conversation_with != 'store' ? 'active' : 'redirect-url' }}">{{ translate('Customer') }}</button>
                                 <button id="store_conversations" data-url="{{route('admin.users.delivery-man.preview', ['id'=>$deliveryMan->id, 'tab'=> 'conversation','conversation_with' =>'store'])}}" class="{{ request()?->conversation_with == 'store' ? 'active' : 'redirect-url' }}">{{ translate('Store')}}</button>
                             </div>
@@ -53,10 +49,10 @@
                     <!-- End Card -->
                 </div>
                 <div class="col-lg-8 col-nd-6" id="dm-view-conversation">
-                    <div class="h-100 d-flex align-items-center justify-content-center">
+                    <div class="h-100 card d-flex align-items-center justify-content-center">
                         <div class="text-center">
-                            <div class="empty-conversation-content d-flex flex-column align-items-center gap-3">
-                                <img width="128" height="128" src="{{asset('/public/assets/admin/img/icons/empty-conversation.png')}}" alt="public">
+                            <div class="empty-conversation-content d-flex flex-column align-items-center gap-2">
+                                <img width="120" height="120" src="{{asset('/public/assets/admin/img/icons/empty-conversation.png')}}" alt="public">
                                 <h5 class="text-muted">
                                     {{translate('no_conversation_found')}}
                                 </h5>

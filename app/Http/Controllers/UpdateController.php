@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ReactPromotionalBanner;
+
 use App\Models\Store;
 use App\Models\Setting;
 use App\Models\DataSetting;
@@ -16,6 +16,7 @@ use App\CentralLogics\Helpers;
 use App\Models\BusinessSetting;
 use App\Models\Coupon;
 use App\Models\DeliveryHistory;
+use App\Models\Module;
 use App\Traits\ActivationClass;
 use Illuminate\Support\Facades\DB;
 use App\Models\NotificationSetting;
@@ -43,9 +44,9 @@ class UpdateController extends Controller
         Helpers::setEnvironmentValue('BUYER_USERNAME', $request['username']);
         Helpers::setEnvironmentValue('PURCHASE_CODE', $request['purchase_key']);
         Helpers::setEnvironmentValue('APP_MODE', 'live');
-        Helpers::setEnvironmentValue('SOFTWARE_VERSION', '3.5');
+        Helpers::setEnvironmentValue('SOFTWARE_VERSION', '3.9');
         Helpers::setEnvironmentValue('REACT_APP_KEY', '45370351');
-        Helpers::setEnvironmentValue('APP_NAME', 'ConsMas' . time());
+        Helpers::setEnvironmentValue('APP_NAME', '6amMart' . time());
 
 
         // version_2.11.1
@@ -67,7 +68,7 @@ class UpdateController extends Controller
             "app_url_ios_status" => "0",
             "app_url_ios" => "https://www.apple.com/app-store",
             "web_app_url_status" => "0",
-            "web_app_url" => "https://ConsMas-web.6amtech.com/"
+            "web_app_url" => "https://6ammart-web.6amtech.com/"
         ]));
 
         //version 1.5.0
@@ -193,6 +194,7 @@ class UpdateController extends Controller
         }
         Helpers::updateAdminNotificationSetupDataSetup();
         Helpers::addNewAdminNotificationSetupDataSetup();
+        Helpers::addPreviousParcelReturnFees();
 
         Helpers::insert_business_settings_key('country_picker_status', '1');
         Helpers::insert_business_settings_key('manual_login_status', '1');
@@ -236,6 +238,9 @@ class UpdateController extends Controller
                 'value' => 'free_delivery_by_order_amount'
             ]);
         }
+
+        // version 3.7
+        Module::regenerateSlugs();
 
         $data = DataSetting::where('type', 'login_admin')->pluck('value')->first();
         return redirect('/login/' . $data);
@@ -332,6 +337,7 @@ class UpdateController extends Controller
                         'status' => $decoded_value['status'],
                         'access_token' => $decoded_value['access_token'],
                         'public_key' => $decoded_value['public_key'],
+                        'supported_country'=>''
                     ];
                 } elseif ($gateway == 'liqpay') {
                     $additional_data = [

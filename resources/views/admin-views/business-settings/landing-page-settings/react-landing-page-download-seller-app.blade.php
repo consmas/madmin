@@ -82,7 +82,7 @@
         </div>
 
         <div class="card mb-20">
-            <form class="custom-validation" action="{{ route('admin.business-settings.react-landing-page-settings', 'download-seller-app-section') }}"
+            <form class="custom-validation" action="{{ route('admin.business-settings.react-landing-page-settings-update', 'download-seller-app-section') }}"
                   method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="card-body">
@@ -364,7 +364,7 @@
                 @php($download_seller_app_main_button_sub_title = \App\Models\DataSetting::withoutGlobalScope('translate')->where('type', 'react_landing_page')->where('key', 'download_seller_app_main_button_sub_title')->first())
                 @php($download_seller_app_links = \App\Models\DataSetting::where(['key'=>'download_seller_app_links','type'=>'react_landing_page'])->first())
                 @php($download_seller_app_links_data = isset($download_seller_app_links->value) ? json_decode($download_seller_app_links->value, true) : [])
-                <form action="{{ route('admin.business-settings.react-landing-page-settings', 'download-seller-app-button-section') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('admin.business-settings.react-landing-page-settings-update', 'download-seller-app-button-section') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="card">
                         <div class="card-body">
@@ -520,13 +520,9 @@
                                                         </span>
                                                         </label>
                                                     </div>
-                                                    <input type="url"
-                                                           {{(isset($download_seller_app_links_data['playstore_url_status']) && $download_seller_app_links_data['playstore_url_status'])?'required':''}}
-                                                           id="playstore_url"
-                                                           placeholder="{{translate('Ex: https://play.google.com/store/apps')}}"
-                                                           class="form-control h--45px"
-                                                           name="seller_playstore_url"
-                                                           value="{{ $download_seller_app_links_data['playstore_url'] ?? ''}}">
+                                                            @include('admin-views.business-settings.landing-page-settings.partials._app-download-link-status', [
+                                                                    'isConfigured' => \App\CentralLogics\Helpers::get_business_settings('app_url_android_store'),
+                                                                ])
                                                 </div>
                                             </div>
                                         </div>
@@ -565,13 +561,10 @@
                                                         </span>
                                                         </label>
                                                     </div>
-                                                    <input type="url"
-                                                           id="apple_store_url"
-                                                           {{(isset($download_seller_app_links_data['apple_store_url_status']) && $download_seller_app_links_data['apple_store_url_status'])?'required':''}}
-                                                           placeholder="{{translate('Ex: https://www.apple.com/app-store/')}}"
-                                                           class="form-control h--45px"
-                                                           name="seller_apple_store_url"
-                                                           value="{{ $download_seller_app_links_data['apple_store_url'] ?? ''}}">
+
+                                                            @include('admin-views.business-settings.landing-page-settings.partials._app-download-link-status', [
+                                                                    'isConfigured' => \App\CentralLogics\Helpers::get_business_settings('app_url_ios_store'),
+                                                                ])
                                                 </div>
                                             </div>
                                         </div>
@@ -606,8 +599,8 @@
                 </div>
                 <div class="custom-offcanvas-body custom-offcanvas-body-100  p-20">
                     <section class="common-section-view bg-white border rounded-10 my-xl-2 mx-xl-2">
-                        <div class="common-section-inner d-flex flex-xxl-nowrap justify-content-lg-between justify-content-center flex-wrap align-items-center gap-x-xl-20">
-                            <div class="d-flex align-items-center flex-md-nowrap flex-wrap gap-x-xl-20 max-w-490 mb-xxl-0 mb-3 text-md-start text-center">
+                        <div class="common-section-inner d-flex flex-xxl-nowrap justify-content-lg-between justify-content-center flex-wrap align-items-center gap-xxl-20">
+                            <div class="d-flex align-items-center flex-md-nowrap flex-wrap gap-xxl-20 max-w-490 mb-xxl-0 mb-3 text-md-start text-center">
                                 <div class="selling-thumb min-w-150 max-w-165 mr-xl-0 mr-md-3 mx-auto">
                                     <img width="160" src="{{ $download_seller_app_image?->value
     ? \App\CentralLogics\Helpers::get_full_url('download_seller_app_section', $download_seller_app_image->value, $download_seller_app_image->storage[0]?->value ?? 'public', 'aspect_1')
@@ -615,7 +608,7 @@
                                 </div>
                                 <div class="mt-xl-0 mt-2">
                                     <h2 class="mb-xxl-2 mb-1 fs-20">
-                                        {!! \App\CentralLogics\Helpers::highlightWords($download_seller_app_title?->value ?? 'Start Selling with $ConsMas$') !!}
+                                        {!! \App\CentralLogics\Helpers::highlightWords($download_seller_app_title?->value ?? 'Start Selling with $6amMart$') !!}
                                     </h2>
                                     <p class="text-title fs-12 mb-xl-3 mb-3">
                                         {{$download_seller_app_sub_title?->value ?? 'Turn your local shop into an online business and grow your sales with our powerful platform'}}
@@ -626,7 +619,7 @@
                                 </div>
                             </div>
                             <div>
-                                <div class="__bg-FAFAFA rounded-10 px-xl-3 px-1 py-3 d-flex flex-xl-nowrap flex-wrap justify-content-xl-start justify-content-center align-items-center gap-x-xl-20">
+                                <div class="__bg-FAFAFA rounded-10 px-xl-3 px-1 py-3 d-flex flex-xl-nowrap flex-wrap justify-content-xl-start justify-content-center align-items-center gap-xxl-20">
                                     <div class="scan-wrap bg-white max-w-138 rounded px-xl-2 px-1 py-3 mb-xl-0 mb-3 w-xl-auto w-100">
                                         <div class="scan d-center border w-80px h-80px mx-auto rounded p-1">
                                             <img src="{{ asset('/public/assets/admin/img/400x400/app-scan.png') }}" alt="Google Play" class="object-cover w-100 h-100">

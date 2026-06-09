@@ -773,6 +773,33 @@ trait NotificationDataSetUpTrait
             'sub_title' => 'Sent_notification_on_deliveryman_withdraw_rejaction',
         ];
         $data []=[
+            'title' => 'deliveryman_loyalty_point_transaction',
+            'key' => 'deliveryman_loyalty_point_transaction',
+            'type' => 'deliveryman',
+            'mail_status' => 'disable',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_deliveryman_loyalty_point_transaction',
+        ];
+        $data []=[
+            'title' => 'deliveryman_referral_notification',
+            'key' => 'deliveryman_referral_notification',
+            'type' => 'deliveryman',
+            'mail_status' => 'disable',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_deliveryman_referral_notification',
+        ];
+        $data []=[
+            'title' => 'deliveryman_referral_bonus',
+            'key' => 'deliveryman_referral_bonus',
+            'type' => 'deliveryman',
+            'mail_status' => 'disable',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_deliveryman_referral_bonus',
+        ];
+        $data []=[
             'title' => 'deliveryman_withdraw_request',
             'key' => 'dm_withdraw_request',
             'type' => 'admin',

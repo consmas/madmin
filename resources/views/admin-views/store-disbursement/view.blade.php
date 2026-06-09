@@ -45,7 +45,7 @@
                             title="{{ translate('messages.select_modules') }}">
                         <option value="" {{ !request('module_id') ? 'selected' : '' }}>
                             {{ translate('messages.all_modules') }}</option>
-                        @foreach (\App\Models\Module::notParcel()->get() as $module)
+                        @foreach (\App\Models\Module::notParcel()->WithoutAdditionalModules()->get(['id', 'module_name']) as $module)
                             <option value="{{ $module->id }}"
                                 {{ request('module_id') == $module->id ? 'selected' : '' }}>
                                 {{ $module['module_name'] }}
@@ -501,7 +501,7 @@
 
             $('.js-data-example-ajax').select2({
                 ajax: {
-                    url: '{{ url('/') }}/admin/store/get-stores',
+                    url: '{{ route('admin.store.get-stores') }}',
                     data: function(params) {
                         return {
                             q: params.term, // search term

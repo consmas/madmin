@@ -454,5 +454,109 @@
         "bladePath": "rental::provider/report/tax-report/vendor-tax-detail-report",
         "moduleType": "rental",
         "isModified": false
+    },
+    {
+        "routeName": "Order List",
+        "URI": "vendor-panel/order/list/all",
+        "keywords": "Order List Orders Ex Search Order Id Search Export Download Options Excel Csv Order Date Customer Total Amount Order Status Actions # Order Id Order Date Customer Information Invalid Customer Data Paid Partially Paid Unpaid Pending Confirmed Processing Out For Delivery Delivered Payment Failed Take Away Home Delivery No Data Found",
+        "bladePath": "vendor-views.order.list",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Pending Order List",
+        "URI": "vendor-panel/order/list/pending",
+        "keywords": "Order List Orders Ex Search Order Id Search Export Download Options Excel Csv Order Date Customer Total Amount Order Status Actions # Order Id Order Date Customer Information Invalid Customer Data Paid Partially Paid Unpaid Pending Confirmed Processing Out For Delivery Delivered Payment Failed Take Away Home Delivery No Data Found",
+        "bladePath": "vendor-views.order.list",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Confirmed Order List",
+        "URI": "vendor-panel/order/list/confirmed",
+        "keywords": "Order List Orders Ex Search Order Id Search Export Download Options Excel Csv Order Date Customer Total Amount Order Status Actions # Order Id Order Date Customer Information Invalid Customer Data Paid Partially Paid Unpaid Pending Confirmed Processing Out For Delivery Delivered Payment Failed Take Away Home Delivery No Data Found",
+        "bladePath": "vendor-views.order.list",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Cooking Order List",
+        "URI": "vendor-panel/order/list/cooking",
+        "keywords": "Cooking Order List Orders Ex Search Order Id Search Export Download Options Excel Csv Order Date Customer Total Amount Order Status Actions # Order Id Order Date Customer Information Invalid Customer Data Paid Partially Paid Unpaid Pending Confirmed Processing Out For Delivery Delivered Payment Failed Take Away Home Delivery No Data Found",
+        "bladePath": "vendor-views.order.list",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Ready For Delivery Order List",
+        "URI": "vendor-panel/order/list/ready_for_delivery",
+        "keywords": "Ready For Delivery Order List Orders Ex Search Order Id Search Export Download Options Excel Csv Order Date Customer Total Amount Order Status Actions # Order Id Order Date Customer Information Invalid Customer Data Paid Partially Paid Unpaid Pending Confirmed Processing Out For Delivery Delivered Payment Failed Take Away Home Delivery No Data Found",
+        "bladePath": "vendor-views.order.list",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Item on the way Order List",
+        "URI": "vendor-panel/order/list/item_on_the_way",
+        "keywords": "Item on the way Order List Orders Ex Search Order Id Search Export Download Options Excel Csv Order Date Customer Total Amount Order Status Actions # Order Id Order Date Customer Information Invalid Customer Data Paid Partially Paid Unpaid Pending Confirmed Processing Out For Delivery Delivered Payment Failed Take Away Home Delivery No Data Found",
+        "bladePath": "vendor-views.order.list",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Delivered Order List",
+        "URI": "vendor-panel/order/list/delivered",
+        "keywords": "Delivered Order List Orders Ex Search Order Id Search Export Download Options Excel Csv Order Date Customer Total Amount Order Status Actions # Order Id Order Date Customer Information Invalid Customer Data Paid Partially Paid Unpaid Pending Confirmed Processing Out For Delivery Delivered Payment Failed Take Away Home Delivery No Data Found",
+        "bladePath": "vendor-views.order.list",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Refunded Order List",
+        "URI": "vendor-panel/order/list/refunded",
+        "keywords": " Refunded Order List Orders Ex Search Order Id Search Export Download Options Excel Csv Order Date Customer Total Amount Order Status Actions # Order Id Order Date Customer Information Invalid Customer Data Paid Partially Paid Unpaid Pending Confirmed Processing Out For Delivery Delivered Payment Failed Take Away Home Delivery No Data Found",
+        "bladePath": "vendor-views.order.list",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Scheduled Order List",
+        "URI": "vendor-panel/order/list/scheduled",
+        "keywords": "Scheduled Order List Orders Ex Search Order Id Search Export Download Options Excel Csv Order Date Customer Total Amount Order Status Actions # Order Id Order Date Customer Information Invalid Customer Data Paid Partially Paid Unpaid Pending Confirmed Processing Out For Delivery Delivered Payment Failed Take Away Home Delivery No Data Found",
+        "bladePath": "vendor-views.order.list",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Reels List",
+        "URI": "vendor-panel/reels",
+        "keywords": "Reels List Information Deleted Reels List Manage Your Stores Video Content Filter Data All Time This Year Previous Year This Month This Week Custom Start Date End Date Filter Reels Overview Total Reels Total Views Total Likes Store Visits Search Here Sl Reel Id Reel Information Total Store Visit Reel Duration Reels Status Status Action Always Visible Want To Turn On The Reel Want To Turn Off The Reel If You Turn On The Reel It Will Be Visible To Customers If You Turn Off The Reel It Will No Longer Be Visible To Customers View Edit Delete Want To Delete This Reel This Reel Will No Longer Be Visible After Deletion Yes Delete Cancel No Data Found Reels Details Your Browser Does Not Support The Video Tag Short Description Reel Validity Upload Date Expired Date Vendor Information Views Likes",
+        "bladePath": "reelsmodule::vendor/reels/index",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Reels Create",
+        "URI": "vendor-panel/reels/create",
+        "keywords": "Create Reels Something Went Wrong",
+        "bladePath": "reelsmodule::vendor/reels/create",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Earning Report",
+        "URI": "vendor-panel/report/earning-report",
+        "keywords": "Earning Report Comprehensive Financial Overview And Analytics",
+        "bladePath": "rental::provider/report/earning-report/index",
+        "moduleType": "rental",
+        "isModified": false
+    },
+    {
+        "routeName": "Store Earning Report",
+        "URI": "vendor-panel/report/store-earning-report",
+        "keywords": "Store Earning Report Comprehensive Financial Overview And Analytics",
+        "bladePath": "vendor-views/report/store-earning-report",
+        "moduleType": null,
+        "isModified": false
     }
 ]

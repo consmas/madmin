@@ -13,7 +13,7 @@ class OtherBannerController extends Controller
 {
     public function get_banners(Request $request)
     {
-        $module_id= $request->header('moduleId');
+        $module_id= getModuleId($request->header('moduleId'));
 
         $module = Module::find($module_id);
 
@@ -49,7 +49,7 @@ class OtherBannerController extends Controller
 
     public function get_video_content(Request $request)
     {
-        $module_id= $request->header('moduleId');
+        $module_id= getModuleId($request->header('moduleId'));
 
         $banners=ModuleWiseBanner::Active()->where('module_id', $module_id)->where('type','video_banner_content')->whereIn('key', ['section_title','banner_type','banner_video','banner_image','banner_video_content'])->get();
 
@@ -84,7 +84,7 @@ class OtherBannerController extends Controller
 
     public function get_why_choose(Request $request)
     {
-        $module_id= $request->header('moduleId');
+        $module_id= getModuleId($request->header('moduleId'));
 
         $banners=ModuleWiseWhyChoose::Active()->where('module_id', $module_id)->get();
 //        $awsUrl = config('filesystems.disks.s3.url');

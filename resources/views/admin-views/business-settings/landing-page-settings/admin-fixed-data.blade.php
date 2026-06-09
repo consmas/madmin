@@ -60,7 +60,7 @@
 
     <div class="tab-content">
         <div class="tab-pane fade show active">
-            <form action="{{ route('admin.business-settings.admin-landing-page-settings', 'fixed-data') }}" method="POST">
+            <form action="{{ route('admin.business-settings.admin-landing-page-settings-update', 'fixed-data') }}" method="POST">
                 @csrf
                 @if ($language)
                 <div class="lang_form"  id="default-form">
@@ -121,18 +121,18 @@
                         <div class="card-body">
 
                             <div class="row g-3">
-                                <div class="col-sm-6">
+                                <div class="col-12">
                                     <label for="fixed_referal_title" class="form-label">{{translate('Title')}}<span class="form-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('Write_the_title_within_40_characters') }}">
                                                 <img src="{{asset('public/assets/admin/img/info-circle.svg')}}" alt="">
                                             </span></label>
                                     <input id="fixed_referal_title" type="text"  maxlength="40" name="fixed_referal_title[]" value="{{$fixed_referal_title?->getRawOriginal('value')}}" class="form-control" placeholder="{{translate('Ex_:_Earn_Point')}}">
                                 </div>
-                                <div class="col-sm-6">
+                                {{-- <div class="col-sm-6">
                                     <label for="fixed_referal_sub_title" class="form-label">{{translate('Sub Title')}}<span class="form-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('Write_the_sub_title_within_80_characters') }}">
                                                 <img src="{{asset('public/assets/admin/img/info-circle.svg')}}" alt="">
                                             </span></label>
                                     <input  id="fixed_referal_sub_title" type="text"  maxlength="80" name="fixed_referal_sub_title[]" value="{{$fixed_referal_sub_title?->getRawOriginal('value')}}" class="form-control" placeholder="{{translate('Ex_:_By_referring_your_friend')}}">
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                     </div>
@@ -167,7 +167,7 @@
                                     <label for="fixed_footer_article_title" class="form-label">{{translate('Title')}}<span class="form-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('Write_the_title_within_180_characters') }}">
                                                 <img src="{{asset('public/assets/admin/img/info-circle.svg')}}" alt="">
                                             </span></label>
-                                    <input id="fixed_footer_article_title" type="text"  maxlength="180" name="fixed_footer_article_title[]" value="{{$fixed_footer_article_title?->getRawOriginal('value')}}" class="form-control" placeholder="{{translate('Ex_:_ConsMas_is_a_complete_package!__It`s_time_to_empower_your_multivendor_online_business_with__powerful_features!')}}">
+                                    <input id="fixed_footer_article_title" type="text"  maxlength="180" name="fixed_footer_article_title[]" value="{{$fixed_footer_article_title?->getRawOriginal('value')}}" class="form-control" placeholder="{{translate('Ex_:_6amMart_is_a_complete_package!__It`s_time_to_empower_your_multivendor_online_business_with__powerful_features!')}}">
                                 </div>
                             </div>
                         </div>
@@ -325,18 +325,18 @@
                                 <div class="card-body">
 
                                     <div class="row g-3">
-                                        <div class="col-sm-6">
+                                        <div class="col-12">
                                             <label for="fixed_referal_title{{$lang}}"  class="form-label">{{translate('Title')}}<span class="form-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('Write_the_title_within_40_characters') }}">
                                                 <img src="{{asset('public/assets/admin/img/info-circle.svg')}}" alt="">
                                             </span></label>
                                             <input id="fixed_referal_title{{$lang}}"  type="text"  maxlength="40" name="fixed_referal_title[]" value="{{$fixed_referal_title_translate[$lang]['value']??''}}" class="form-control" placeholder="{{translate('Ex_:_Earn_Point')}}">
                                         </div>
-                                        <div class="col-sm-6">
+                                        {{-- <div class="col-sm-6">
                                             <label for="fixed_referal_sub_title{{$lang}}"  class="form-label">{{translate('Sub Title')}}<span class="form-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('Write_the_sub_title_within_80_characters') }}">
                                                 <img src="{{asset('public/assets/admin/img/info-circle.svg')}}" alt="">
                                             </span></label>
                                             <input id="fixed_referal_sub_title{{$lang}}"  type="text"  maxlength="80" name="fixed_referal_sub_title[]" value="{{$fixed_referal_sub_title_translate[$lang]['value']??''}}" class="form-control" placeholder="{{translate('Ex_:_By_referring_your_friend')}}">
-                                        </div>
+                                        </div> --}}
                                     </div>
                                 </div>
                             </div>
@@ -371,7 +371,7 @@
                                             <label for="fixed_footer_article_title{{$lang}}" class="form-label">{{translate('Title')}}<span class="form-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('Write_the_title_within_180_characters') }}">
                                                         <img src="{{asset('public/assets/admin/img/info-circle.svg')}}" alt="">
                                                     </span></label>
-                                            <input id="fixed_footer_article_title{{$lang}}" type="text"  maxlength="180" name="fixed_footer_article_title[]" value="{{$fixed_footer_article_title_translate[$lang]['value']??''}}" class="form-control" placeholder="{{translate('Ex_:_ConsMas_is_a_complete_package!__It`s_time_to_empower_your_multivendor_online_business_with__powerful_features!')}}">
+                                            <input id="fixed_footer_article_title{{$lang}}" type="text"  maxlength="180" name="fixed_footer_article_title[]" value="{{$fixed_footer_article_title_translate[$lang]['value']??''}}" class="form-control" placeholder="{{translate('Ex_:_6amMart_is_a_complete_package!__It`s_time_to_empower_your_multivendor_online_business_with__powerful_features!')}}">
                                         </div>
                                     </div>
                                 </div>
@@ -485,7 +485,7 @@
                                         <label for="fixed_footer_article_title" class="form-label">{{translate('Title')}}<span class="form-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('Write_the_title_within_50_characters') }}">
                                                     <img src="{{asset('public/assets/admin/img/info-circle.svg')}}" alt="">
                                                 </span></label>
-                                        <input id="fixed_footer_article_title" type="text"  maxlength="50" name="fixed_footer_article_title[]"  class="form-control" placeholder="{{translate('Ex_:_ConsMas_is_a_complete_package!__It`s_time_to_empower_your_multivendor_online_business_with__powerful_features!')}}">
+                                        <input id="fixed_footer_article_title" type="text"  maxlength="50" name="fixed_footer_article_title[]"  class="form-control" placeholder="{{translate('Ex_:_6amMart_is_a_complete_package!__It`s_time_to_empower_your_multivendor_online_business_with__powerful_features!')}}">
                                     </div>
                                 </div>
                             </div>
@@ -524,7 +524,7 @@
                                     </span>
                                 </label>
                             </div>
-                            <input id="web_app_url" type="text" placeholder="{{translate('Ex: https://ConsMas-web.6amtech.com/')}}" class="form-control h--45px" name="web_app_url" value="{{ $fixed_link['web_app_url'] ?? ''}}">
+                            <input id="web_app_url" type="text" placeholder="{{translate('Ex: https://6ammart-web.6amtech.com/')}}" class="form-control h--45px" name="web_app_url" value="{{ $fixed_link['web_app_url'] ?? ''}}">
                         </div>
                     </div>
                 </div>

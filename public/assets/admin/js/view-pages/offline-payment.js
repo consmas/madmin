@@ -1,4 +1,23 @@
 "use strict";
+
+function extractCustomerData() {
+    let data = [];
+
+    $('.field-row-customer').each(function () {
+        let fieldInput = $(this).find('input[name^="customer_input"]');
+        let placeholderInput = $(this).find('input[name^="customer_placeholder"]');
+        let requiredInput = $(this).find('input[name^="is_required"]');
+
+        let fieldName = fieldInput.val() || '';
+        let placeholder = placeholderInput.val() || '';
+        let isRequired = requiredInput.prop('checked');
+
+        data.push({ fieldName, placeholder, isRequired });
+    });
+
+    return data;
+}
+
 function openModal(contentArgument) {
     if (contentArgument === "bkashInfo") {
         $("#sectionViewModal #offline_payment_top_part").addClass("active");
@@ -32,20 +51,20 @@ function openModal(contentArgument) {
             methodNameDisplay.empty();
             displayDiv.empty();
 
-            let paymentElement = $('<span>').text('Payment Method');
-            let payementDataElement = $('<span>').html(methodName);
+            let paymentElement = $('<span class="flex-shrink-0">').text('Payment Method');
+            let payementDataElement = $('<span class="font-medium text-title">').html(methodName);
 
-            let dataRow = $('<div>').addClass('d-flex gap-3 align-items-center mb-2');
+            let dataRow = $('<div>').addClass('d-flex gap-3 align-items-center mb-2 fs-12');
             dataRow.append(paymentElement).append($('<span>').text(':')).append(payementDataElement);
 
 
             methodNameDisplay.append(dataRow);
 
             extractedData.forEach(function(item) {
-                let titleElement = $('<span>').text(item.title);
-                let dataElement = $('<span>').html(item.data);
+                let titleElement = $('<span class="flex-shrink-0">').text(item.title);
+                let dataElement = $('<span class="font-medium text-title">').html(item.data);
 
-                let dataRow = $('<div>').addClass('d-flex gap-3 align-items-center');
+                let dataRow = $('<div>').addClass('d-flex gap-3 align-items-center fs-12');
 
                 if (item.title !== '') {
                     dataRow.append(titleElement).append($('<span>').text(':')).append(dataElement);
@@ -56,28 +75,17 @@ function openModal(contentArgument) {
         }
         displayPaymentData();
 
-        //customer info
-        function extractCustomerData() {
-            let data = [];
-
-            $('.field-row-customer').each(function(index) {
-                let fieldName = $(this).find('input[name="customer_input[' + index + ']"]').val();
-                let placeholder = $(this).find('input[name="customer_placeholder[' + index + ']"]').val();
-                let isRequired = $(this).find('input[name="is_required[' + index + ']"]').prop('checked');
-                data.push({ fieldName: fieldName, placeholder: placeholder, isRequired: isRequired });
-            });
-
-            return data;
-        }
-
+        displayPaymentData(methodName);
         let extractedCustomerData = extractCustomerData();
         $('#customer-info-display-div').empty();
 
         // Loop through the extracted data and populate the display div
-        $.each(extractedCustomerData, function(index, item) {
+        $.each(extractedCustomerData, function (index, item) {
             let isRequiredAttribute = item.isRequired ? 'required' : '';
+            let requiredStar = item.isRequired ? '<span class="text-danger">*</span>' : '';
             let displayHtml = `
-                        <input type="text" class="form-control mb-2" name="payment_by" readonly
+                        <label class="form-label">${item.fieldName} ${requiredStar}</label>
+                        <input type="text" class="form-control bg-white" name="payment_by" readonly
                         id="payment_by" placeholder="${item.placeholder}"  ${isRequiredAttribute}>
                     `;
             $('#customer-info-display-div').append(displayHtml);
@@ -117,10 +125,10 @@ function openModal(contentArgument) {
             methodNameDisplay.empty();
             displayDiv.empty();
 
-            let paymentElement = $('<span>').text('Payment Method');
-            let payementDataElement = $('<span>').html(methodName);
+            let paymentElement = $('<span class="flex-shrink-0">').text('Payment Method');
+            let payementDataElement = $('<span class="font-medium text-title">').html(methodName);
 
-            let dataRow = $('<div>').addClass('d-flex gap-3 align-items-center mb-2');
+            let dataRow = $('<div>').addClass('d-flex gap-3 align-items-center mb-2 fs-12');
             dataRow.append(paymentElement).append($('<span>').text(':')).append(payementDataElement);
 
 
@@ -141,19 +149,7 @@ function openModal(contentArgument) {
         }
         displayPaymentData();
 
-        //customer info
-        function extractCustomerData() {
-            let data = [];
-
-            $('.field-row-customer').each(function(index) {
-                let fieldName = $(this).find('input[name="customer_input[' + index + ']"]').val();
-                let placeholder = $(this).find('input[name="customer_placeholder[' + index + ']"]').val();
-                let isRequired = $(this).find('input[name="is_required[' + index + ']"]').prop('checked');
-                data.push({ fieldName: fieldName, placeholder: placeholder, isRequired: isRequired });
-            });
-
-            return data;
-        }
+        displayPaymentData(methodName);
 
         let extractedCustomerData = extractCustomerData();
         $('#customer-info-display-div').empty();
@@ -162,7 +158,7 @@ function openModal(contentArgument) {
         $.each(extractedCustomerData, function(index, item) {
             let isRequiredAttribute = item.isRequired ? 'required' : '';
             let displayHtml = `
-                        <input type="text" class="form-control mb-2" name="payment_by" readonly
+                        <input type="text" class="form-control bg-white" name="payment_by" readonly
                             id="payment_by" placeholder="${item.placeholder}"  ${isRequiredAttribute}>
                     `;
             $('#customer-info-display-div').append(displayHtml);
@@ -170,7 +166,9 @@ function openModal(contentArgument) {
     }
 
     // Open the modal
-    $("#sectionViewModal").modal("show");
+    // $("#sectionViewModal").modal("show");
+    $("#sectionViewModal").addClass("open");
+    $('#offcanvasOverlay').addClass('show');
 }
 $(document).ready(function() {
     $("#bkashInfoModalButton").on('click', function() {

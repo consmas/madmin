@@ -27,9 +27,11 @@
                             data-onerror-image="{{ asset('public/assets/admin/img/100x100/1.png') }}"
                             src="{{ $item->store['logo_full_url'] ?? asset('public/assets/admin/img/100x100/1.png') }}"
                             alt="{{ translate('store') }}" title="{{ $item?->store?->name }}">
-                        <span class="ml-2" title="{{ $item?->store?->name }}">
-                            {{ Str::limit($item->store->name ?? translate('messages.store deleted!'), 20, '...') }}
-                        </span>
+                        <a href="{{ route('admin.store.view', $item->store_id) }}">
+                            <span class="text-hover--primary ml-2" title="{{ $item?->store?->name }}">
+                                {{ Str::limit($item->store->name ?? translate('messages.store deleted!'), 20, '...') }}
+                            </span>
+                        </a>
                     </div>
                     <div>
                         <span class="text-FF6D6D">{{ $item['count'] }} <i class="tio-heart"></i></span>
@@ -54,4 +56,3 @@
 
 
 </div>
-<script src="{{ asset('public/assets/admin') }}/js/view-pages/common.js"></script>

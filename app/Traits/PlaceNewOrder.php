@@ -24,12 +24,14 @@ use App\Mail\OrderVerificationMail;
 use App\CentralLogics\CustomerLogic;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use App\Mail\CustomerRegistration;
 use App\Mail\PlaceOrder;
 use App\Models\AddOn;
 use App\Models\SurgePrice;
+use App\Models\UserFile;
 use Carbon\Carbon;
 
 trait PlaceNewOrder
@@ -55,7 +57,7 @@ trait PlaceNewOrder
             'contact_person_number' => $request->user ? 'nullable' : 'required',
             'contact_person_email' => $request->user ? 'nullable' : 'required',
             'password' => $request->create_new_user ? ['required', Password::min(8)] : 'nullable',
-            'order_attachment' => $is_prescription ? ['required'] : 'nullable',
+            // 'order_attachment' => $is_prescription ? ['required'] : 'nullable',
         ]);
 
         if ($validator->fails()) {
@@ -137,9 +139,9 @@ trait PlaceNewOrder
                 }
             }
 
-            $module_wise_delivery_charge = $zone->modules()->where('modules.id', $request->header('moduleId'))->first();
+            $module_wise_delivery_charge = $zone->modules()->where('modules.id', getModuleId($request->header('moduleId')))->first();
 
-            $deliveryChargeData = $this->getDeliveryCharge($request, $zone, $store, $module_wise_delivery_charge, $delivery_charge, $request->header('moduleId'));
+            $deliveryChargeData = $this->getDeliveryCharge($request, $zone, $store, $module_wise_delivery_charge, $delivery_charge, getModuleId($request->header('moduleId')));
 
             $delivery_charge = data_get($deliveryChargeData, 'delivery_charge', 0);
             $original_delivery_charge = data_get($deliveryChargeData, 'original_delivery_charge', 0);
@@ -178,6 +180,9 @@ trait PlaceNewOrder
             if (($request->partial_payment && $request->payment_method != 'offline_payment') || $request->payment_method == 'wallet') {
                 $order_status = 'confirmed';
             }
+            if (in_array($request->payment_method, ['digital_payment', 'offline_payment'])) {
+                $order_status = 'failed';
+            }
 
             $order->bring_change_amount = $request['bring_change_amount'] ?? 0 ;
 
@@ -202,7 +207,7 @@ trait PlaceNewOrder
             $order->is_guest = $request->user ? 0 : 1;
             $order->otp = rand(1000, 9999);
             $order->zone_id = isset($zone) ? $zone->id : end(json_decode($request->header('zoneId'), true));
-            $order->module_id = $request->header('moduleId');
+            $order->module_id = getModuleId($request->header('moduleId'));
             $order->parcel_category_id = $request->parcel_category_id;
             $order->receiver_details = json_decode($request->receiver_details);
 
@@ -229,6 +234,45 @@ trait PlaceNewOrder
                     array_push($img_names, ['img' => $image_name, 'storage' => Helpers::getDisk()]);
 
                     $images = $img_names;
+                }
+            }
+            if ($request->saved_images && is_array($request->saved_images) && count($request->saved_images) > 0) {
+                $saved_image_names = [];
+                foreach ($request->saved_images as $saved_image) {
+                    if (!is_string($saved_image) || $saved_image === '') {
+                        continue;
+                    }
+
+                    $savedFile = UserFile::where('user_id', $request->user?->id)
+                        ->where('file_name', $saved_image)
+                        ->first();
+
+                    if ($savedFile) {
+                        $disk = $savedFile->storage ?? Helpers::getDisk();
+                        $sourcePath = 'order/saved_files/' . $savedFile->file_name;
+                        $extension = pathinfo($savedFile->file_name, PATHINFO_EXTENSION);
+                        $newFileName = Carbon::now()->toDateString() . '-' . uniqid() . '.' . $extension;
+                        $destinationPath = 'order/' . $newFileName;
+
+                        if (Storage::disk($disk)->exists($sourcePath)) {
+                            if (!Storage::disk($disk)->exists('order')) {
+                                Storage::disk($disk)->makeDirectory('order');
+                            }
+
+                            Storage::disk($disk)->copy($sourcePath, $destinationPath);
+                            $saved_image_names[] = ['img' => $newFileName, 'storage' => $disk];
+                        }
+                    }
+                }
+
+                if (!empty($saved_image_names)) {
+                    if (!isset($images)) {
+                        $images = [];
+                    }
+
+                    foreach ($saved_image_names as $saved_image_name) {
+                        $images[] = $saved_image_name;
+                    }
                 }
             }
             if (isset($images)) {
@@ -284,7 +328,7 @@ trait PlaceNewOrder
             if ($request->order_type !== 'parcel') {
                 if ($is_prescription === false) {
 
-                    $carts = Cart::where('user_id', $order->user_id)->where('is_guest', $order->is_guest)->where('module_id', $request->header('moduleId'))
+                    $carts = Cart::where('user_id', $order->user_id)->where('is_guest', $order->is_guest)->where('module_id', getModuleId($request->header('moduleId')))
                         ->when(isset($request->is_buy_now) && $request->is_buy_now == 1 && $request->cart_id, function ($query) use ($request) {
                             return $query->where('id', $request->cart_id);
                         })
@@ -511,7 +555,8 @@ trait PlaceNewOrder
 
                 if (count($product_data) > 0) {
                     foreach ($product_data as $item) {
-                        ProductLogic::update_stock($item['item'], $item['quantity'], $item['variant'])->save();
+                        $data= Item::find($item['item']['id']);
+                        ProductLogic::update_stock($data, $item['quantity'], $item['variant'])->save();
                         ProductLogic::update_flash_stock($item['item'], $item['quantity'])?->save();
                     }
                 }
@@ -570,7 +615,7 @@ trait PlaceNewOrder
             ], 200);
         } catch (\Exception $exception) {
 
-            info([$exception->getFile(), $exception->getLine(), $exception->getMessage()]);
+            info('PlaceNewOrder' ,[$exception->getFile(), $exception->getLine(), $exception->getMessage()]);
             DB::rollBack();
             return response()->json([$exception], 403);
         }
@@ -627,7 +672,7 @@ trait PlaceNewOrder
                 Mail::to($request->contact_person_email)->send(new CustomerRegistration($request->contact_person_name));
             }
         } catch (\Exception $exception) {
-            info([$exception->getFile(), $exception->getLine(), $exception->getMessage()]);
+            info('createNewUser' ,[$exception->getFile(), $exception->getLine(), $exception->getMessage()]);
         }
         if ($request->guest_id  && isset($user->id)) {
 
@@ -719,14 +764,16 @@ trait PlaceNewOrder
         if ($request->latitude && $request->longitude) {
             if ($request->order_type == 'parcel') {
                 $zone_ids = $request->header('zoneId') ? json_decode($request->header('zoneId'), true) : [];
-                $zone = Zone::whereIn('id', $zone_ids)->whereContains('coordinates', new Point($request->latitude, $request->longitude, POINT_SRID))->wherehas('modules', function ($q) {
-                    $q->where('module_type', 'parcel');
-                })->first();
+                $zone = Zone::whereIn('id', $zone_ids)->whereContains('coordinates', new Point($request->latitude, $request->longitude, POINT_SRID))
+                        ->selectRaw('zones.*, ABS(ST_Area(coordinates)) as area')->orderBy('area', 'asc')
+                        ->wherehas('modules', function ($q) {
+                            $q->where('module_type', 'parcel');
+                        })->first();
 
 
                 $receiver_zone_id =  json_decode($request->receiver_details, true)['zone_id'];
                 $receiverZone = Zone::where('id', $receiver_zone_id)->whereContains('coordinates', new Point(json_decode($request->receiver_details, true)['latitude'], json_decode($request->receiver_details, true)['longitude'], POINT_SRID))->first();
-                if (!$receiverZone) {
+                if (!$receiverZone || !$zone) {
                     return [
                         'status_code' => 403,
                         'code' => 'receiverZone',
@@ -987,7 +1034,7 @@ trait PlaceNewOrder
                 }
             }
         } catch (\Exception $exception) {
-            info([$exception->getFile(), $exception->getLine(), $exception->getMessage()]);
+            info( 'place order notification error', [ $exception->getFile(), $exception->getLine(), $exception->getMessage()]);
         }
         return true;
     }
@@ -1351,6 +1398,13 @@ trait PlaceNewOrder
         $product_data = [];
         $order_details = [];
         $discount_on_product_by = 'vendor';
+        if($carts->isEmpty()){
+            return [
+                'status_code' => 403,
+                'code' => 'not_found',
+                'message' => translate('Cart is empty'),
+            ];
+        }
         foreach ($carts as $c) {
             $variations = [];
 
@@ -1626,7 +1680,7 @@ trait PlaceNewOrder
                     $additionalCharges['tax_on_packaging_charge'] =  $extra_packaging_amount;
                 }
 
-                $carts = Cart::where('user_id', $order->user_id)->where('is_guest', $order->is_guest)->where('module_id', $request->header('moduleId'))
+                $carts = Cart::where('user_id', $order->user_id)->where('is_guest', $order->is_guest)->where('module_id', getModuleId($request->header('moduleId')))
                     ->when(isset($request->is_buy_now) && $request->is_buy_now == 1 && $request->cart_id, function ($query) use ($request) {
                         return $query->where('id', $request->cart_id);
                     })
@@ -1747,7 +1801,14 @@ trait PlaceNewOrder
         $flash_sale_vendor_discount_amount = $order_details['flash_sale_vendor_discount_amount'];
         $order_details = $order_details['order_details'];
 
-        $totalDiscount = $store_discount_amount + $flash_sale_admin_discount_amount + $flash_sale_vendor_discount_amount;
+
+        if(session()->get('extra_discount_type')){
+            $this->updateExtraDiscount(session()->get('extra_discount_type'),session()->get('extra_discount'));
+        }
+
+        $extra_discount_amount=session()->get('extra_discount_amount') ?? 0;
+
+        $totalDiscount = $store_discount_amount + $flash_sale_admin_discount_amount + $flash_sale_vendor_discount_amount + $extra_discount_amount;
 
         $price = $product_price + $total_addon_price - $totalDiscount ?? 0;
         $finalCalculatedTax =  Helpers::getFinalCalculatedTax(
@@ -1849,7 +1910,7 @@ trait PlaceNewOrder
         return response()->json($data, 200);
     }
 
-    private function getSurgePriceValue($zoneId, $moduleId, $datetime)
+    public function getSurgePriceValue($zoneId, $moduleId, $datetime)
     {
         $carbon = Carbon::parse($datetime);
         $dateStr = $carbon->format('Y-m-d');
@@ -1921,4 +1982,93 @@ trait PlaceNewOrder
             'price_type' => 'amount',
         ];
     }
+
+    private function calculatePosDeliveryFee($storeId,$distance=1){
+
+
+            $store = Store::with(['zone'])->find($storeId);
+            if(!$store){
+                return 0;
+            }
+            $extra_charges = 0;
+              $module_wise_delivery_charge = $store->zone->modules()->where('modules.id', $store->module_id)->first();
+            if ($store->sub_self_delivery) {
+                $per_km_shipping_charge = $store?->per_km_shipping_charge ?? 0;
+                $minimum_shipping_charge = $store?->minimum_shipping_charge ?? 0;
+                $maximum_shipping_charge = $store?->maximum_shipping_charge ?? 0;
+            } else {
+                    $data=  DMVehicle::where(function($query)use($distance) {
+                    $query->where('starting_coverage_area','<=' , $distance )->where('maximum_coverage_area','>=', $distance);
+                })
+                ->orWhere(function ($query) use ($distance) {
+                    $query->where('starting_coverage_area', '>=', $distance);
+                })
+                ->active()
+                ->orderBy('starting_coverage_area')->first();
+
+                $extra_charges = (float) (isset($data) ? $data->extra_charges  : 0);
+
+
+                if ($module_wise_delivery_charge) {
+                    $per_km_shipping_charge = $module_wise_delivery_charge->pivot->delivery_charge_type == 'distance' ? $module_wise_delivery_charge->pivot->per_km_shipping_charge ?? 0 : $module_wise_delivery_charge->pivot->fixed_shipping_charge ?? 0;
+                    $minimum_shipping_charge = $module_wise_delivery_charge->pivot->delivery_charge_type == 'distance' ? $module_wise_delivery_charge->pivot->minimum_shipping_charge ?? 0 : $module_wise_delivery_charge->pivot->fixed_shipping_charge ?? 0;
+                    $maximum_shipping_charge = $module_wise_delivery_charge->pivot->delivery_charge_type == 'distance' ? $module_wise_delivery_charge->pivot->maximum_shipping_charge ?? 0 : $module_wise_delivery_charge->pivot->fixed_shipping_charge ?? 0;
+
+                } else {
+                    $per_km_shipping_charge = 0;
+                    $minimum_shipping_charge = 0;
+                    $maximum_shipping_charge = 0;
+                }
+            }
+
+            $original_delivery_charge = (($distance * $per_km_shipping_charge) > $minimum_shipping_charge) ? $distance * $per_km_shipping_charge  : $minimum_shipping_charge;
+            if ($maximum_shipping_charge  >= $minimum_shipping_charge  && $original_delivery_charge >  $maximum_shipping_charge) {
+                $original_delivery_charge = $maximum_shipping_charge;
+            } else {
+                $original_delivery_charge = $original_delivery_charge;
+            }
+
+            $original_delivery_charge = $original_delivery_charge + $extra_charges;
+
+        return  round($original_delivery_charge, config('round_up_to_digit'));
+
+
+    }
+
+    private function updateExtraDiscount($type,$discount){
+
+        $subtotal = 0;
+        $addon_price = 0;
+        $discount_on_product = 0;
+
+        $cart = session()->get('cart', []);
+
+        foreach ($cart as $cartItem) {
+
+            if (is_array($cartItem)) {
+                $subtotal += $cartItem['price'] * $cartItem['quantity'];
+                $addon_price += $cartItem['addon_price'] ?? 0;
+                $discount_on_product += ($cartItem['discount'] ?? 0) * $cartItem['quantity'];
+            }
+        }
+
+        $total = ($subtotal + $addon_price) - $discount_on_product;
+
+        $base_total = $total;
+
+
+        session()->put('extra_discount_amount',0 );
+        session()->put('extra_discount_type',$type);
+
+        if($type == 'amount'){
+            session()->put('extra_discount_amount', $discount);
+        } else{
+            session()->put('extra_discount_amount', $base_total * $discount / 100);
+        }
+            session()->put('extra_discount', $discount );
+
+        return true;
+    }
+
+
 }

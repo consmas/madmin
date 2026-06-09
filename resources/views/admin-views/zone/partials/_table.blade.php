@@ -13,6 +13,7 @@
                       <th class="border-0">{{ translate('messages.business_Zone_name') }}</th>
                       <th class="border-0">{{ translate('messages.vendors') }}</th>
                       <th class="border-0">{{ translate('messages.deliverymen') }}</th>
+                        <th class="border-0 text-center">{{ translate('Default_Status') }}</th>
                       <th class="border-0">{{ translate('messages.status') }}</th>
                       <th class="border-0 text-center">{{ translate('messages.action') }}</th>
                   </tr>
@@ -36,6 +37,31 @@
                                   })->count() }}
                           </td>
                           <td>{{ $zone->deliverymen_count }}</td>
+                        <td class="text-center">
+                            @if ($zone->is_default)
+                                <button
+                                    class="btn btn-sm btn-ghost-success">{{ translate('messages.default_zone') }}
+                                    <span data-toggle="tooltip" data-placement="right"
+                                        data-original-title="{{ translate('This zone is set as the default for customers who visit the app or website without choosing a location.') }}"
+                                        class="input-label-secondary text-success"><i class="tio-info text-success"></i></span>
+
+                                </button>
+                            @else
+
+                              <form
+                                  action="{{ route('admin.business-settings.zone.default-status',[$zone['id']]) }}"
+                                  method="get" id="default-status-{{ $zone['id'] }}_form">
+                              </form>
+
+                                <button data-id="default-status-{{ $zone['id'] }}" data-type="status"
+                                      data-image-off='{{ asset('/public/assets/admin/img/modal') }}/zone-status-on.png'
+                                      data-title-off="{{ translate('Want_to_make_this_as_default_zone?') }}"
+                                      data-text-off="<p>{{ translate('When enabled, customers who visit the app or website without choosing a location will be assigned to this zone.') }}</p>"
+                                    id="default-status-{{ $zone['id'] }}"
+                                class="btn border btn-soft-secondary dynamic-checkbox rounded py-2 px-3">{{ translate('messages.make_default') }}</button>
+                            @endif
+                        </td>
+
                           <td>
                               <label class="toggle-switch toggle-switch-sm" for="status-{{ $zone['id'] }}">
                                   <input type="checkbox" class="toggle-switch-input dynamic-checkbox"
@@ -97,7 +123,7 @@
                                   </div>
 
                                   <a href="{{ route('admin.business-settings.zone.surge-price.list', [$zone['id']]) }}"
-                                      class="btn action-btn btn-outline-theme-light" data-toggle="tooltip"
+                                      class="btn hoverActive action-btn btn-outline-theme-light" data-toggle="tooltip"
                                       data-placement="bottom"
                                       data-original-title="{{ translate('messages.surge_price') }}">
                                       <svg width="18" height="16" viewBox="0 0 18 16" fill="none"

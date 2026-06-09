@@ -41,12 +41,14 @@ class NotificationController extends BaseController
 
     private function getAddView($request): View
     {
+        $target = $request->input('target');
         $notifications = $this->notificationRepo->getListWhere(
             searchValue: $request['search'],
+            filters: $target && $target != 'all' ? ['tergat' => $target] : [],
             dataLimit: config('default_pagination'),
         );
         $zones = $this->zoneRepo->getList();
-        return view(NotificationViewPath::INDEX[VIEW], compact('notifications','zones'));
+        return view(NotificationViewPath::INDEX[VIEW], compact('notifications','zones','target'));
     }
 
     public function add(NotificationAddRequest $request): JsonResponse

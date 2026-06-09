@@ -30,7 +30,7 @@
 
 
         <form
-            action="{{env('APP_MODE')!='demo'?route('admin.business-settings.third-party.firebase_otp_update',['recaptcha']):'javascript:'}}"
+            action="{{getEnvMode()!='demo'?route('admin.business-settings.third-party.firebase_otp_update',['recaptcha']):'javascript:'}}"
             method="post">
             @csrf
             <div class="row g-3">
@@ -99,7 +99,7 @@
                             </div>
                             <div class="btn--container justify-content-end mt-20">
                                 <button type="reset" class="btn btn--reset">{{ translate('messages.reset') }}</button>
-                                <button type="{{ env('APP_MODE') != 'demo' ? 'submit' : 'button' }}"
+                                <button type="{{ getEnvMode() != 'demo' ? 'submit' : 'button' }}"
                                         class="btn btn--primary call-demo">{{ translate('save_information') }}</button>
                             </div>
                         </div>

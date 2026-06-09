@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DeliveryMan;
+use DB;
 use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\Models\Admin;
@@ -42,6 +43,17 @@ class DeliveryManController extends Controller
             return back();
         }
 
+
+        if($request->referral_code){
+            $referal_user = DeliveryMan::where('ref_code',$request->referral_code)->first();
+            if (!$referal_user || !$referal_user->status) {
+                    Toastr::error(translate('referer_code_not_found'));
+                    return back()->withInput();
+            }
+            Helpers::deliverymanReferralNotification($referal_user);
+        }
+
+
         $recaptcha = Helpers::get_business_settings('recaptcha');
         if (isset($recaptcha) && $recaptcha['status'] == 1) {
             $request->validate([
@@ -62,8 +74,8 @@ class DeliveryManController extends Controller
             ]);
         } else if(session('six_captcha') != $request->custome_recaptcha)
         {
-            Toastr::error(trans('messages.ReCAPTCHA Failed'));
-            return back();
+            Toastr::error(translate('messages.ReCAPTCHA Failed'));
+            return back()->withInput();
         }
 
         $request->validate([
@@ -115,24 +127,23 @@ class DeliveryManController extends Controller
         $dm->earning = $request->earning;
         $dm->password = bcrypt($request->password);
         $dm->application_status= 'pending';
+        $dm->ref_by= $request->earning ? $referal_user?->id ?? null : null;
+        $dm->ref_code = Helpers::generate_referer_code('deliveryman');
         $dm->save();
-
-
-
 
         try{
             $admin= Admin::where('role_id', 1)->first();
 
             if(config('mail.status') &&  Helpers::get_mail_status('registration_mail_status_dm') == '1' && Helpers::getNotificationStatusData('deliveryman','deliveryman_registration','mail_status')  ){
-                Mail::to($request->email)->send(new \App\Mail\DmSelfRegistration('pending', $dm->f_name.' '.$dm->l_name));
+                Mail::to($request->email)->send(new \App\Mail\DmSelfRegistration('pending', $dm));
             }
             if(config('mail.status') && Helpers::get_mail_status('dm_registration_mail_status_admin') == '1' && Helpers::getNotificationStatusData('admin','deliveryman_self_registration','mail_status')) {
-                Mail::to($admin['email'])->send(new \App\Mail\DmRegistration('pending', $dm->f_name.' '.$dm->l_name));
+                Mail::to($admin?->getRawOriginal('email'))->send(new \App\Mail\DmRegistration('pending', $dm));
             }
         }catch(\Exception $ex){
             info($ex->getMessage());
         }
         Toastr::success(translate('messages.application_placed_successfully'));
-        return back();
+        return redirect()->route('home');
     }
 }

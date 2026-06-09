@@ -225,6 +225,25 @@ if(copyText){
     });
 }
 
+//Just toggle 
+$(".view_toggle_btn").on("click", function () {
+    var container = $(this).closest(".card-container");
+    var details = container.find(".card-details-body");
+    var icon = $(this).find("i");
+
+    $(this).toggleClass("active");
+
+    if (details.hasClass("d-none")) {
+        details.removeClass("d-none").hide().slideDown(300);
+    } else {
+        details.slideUp(300, function () {
+            details.addClass("d-none");
+        });
+    }
+    icon.toggleClass("rotate-180deg");
+});
+
+
 
 
 $(document).on("ready", function () {
@@ -553,7 +572,7 @@ $.fn.select2DynamicDisplay = function () {
         }
 
         // Attach event listener with debouncing
-        $(".select2-search input").on(
+        $rendered.find(".select2-search input").off("input").on(
             "input",
             debounce(function () {
                 const inputValue = $(this).val().toLowerCase();
@@ -567,7 +586,7 @@ $.fn.select2DynamicDisplay = function () {
             }, 100)
         );
 
-        $(".select2-search input").on("keydown", function (e) {
+        $rendered.find(".select2-search input").off("keydown").on("keydown", function (e) {
             if (e.which === 13) {
                 e.preventDefault();
 

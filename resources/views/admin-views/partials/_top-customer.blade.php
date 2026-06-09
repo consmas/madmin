@@ -17,7 +17,7 @@
                         data-onerror-image="{{ asset('public/assets/admin/img/160x160/img1.jpg') }}"
                         src="{{ $item->image_full_url ?? asset('public/assets/admin/img/160x160/img1.jpg') }}">
                     <div class="cont pt-2">
-                        <h6 class="mb-1">{{ $item['f_name'] ?? translate('Not exist') }}</h6>
+                        <h6 class="mb-1 text-hover--primary">{{ $item['f_name'] ?? translate('Not exist') }}</h6>
                         <span>{{ $item['phone'] ?? '' }}</span>
                     </div>
                     <div class="ml-auto">
@@ -44,5 +44,3 @@
     @endif
 
 </div>
-
-<script src="{{ asset('public/assets/admin') }}/js/view-pages/common.js"></script>

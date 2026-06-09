@@ -203,7 +203,7 @@
         });
 </script>
 
-@if(env('APP_MODE')=='demo')
+@if(getEnvMode()=='demo')
     <script>
         "use strict";
         $('.copy_cred').on('click', function () {

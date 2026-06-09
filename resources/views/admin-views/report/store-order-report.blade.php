@@ -1,7 +1,9 @@
 @extends('layouts.admin.app')
 
 @section('title', translate('Store Report'))
-
+@section('store_summary_report')
+    active
+@endsection
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
 @endpush
@@ -323,7 +325,7 @@
                                 <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
                                     alt="Image Description">
-                                .{{ translate('messages.csv') }}
+                                {{ translate('messages.csv') }}
                             </a>
                         </div>
                     </div>
@@ -528,7 +530,7 @@
 
         $('.js-data-example-ajax').select2({
             ajax: {
-                url: '{{ url('/') }}/admin/store/get-stores',
+                url: '{{ route('admin.store.get-stores') }}',
                 data: function(params) {
                     return {
                         q: params.term, // search term

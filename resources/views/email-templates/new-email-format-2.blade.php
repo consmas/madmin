@@ -194,7 +194,7 @@ width: 24px;
                         @endif
                     </span>
                     <span class="copyright" id="mail-copyright">
-                        {{ $copyright_text ?? translate('Copyright 2023 ConsMas. All right reserved') }}
+                        {{ $copyright_text ?? translate('Copyright 2023 6ammart. All right reserved') }}
                     </span>
                 </td>
             </tr>

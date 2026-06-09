@@ -18,6 +18,10 @@ class ParcelCancellation extends Model
         'set_return_date' => 'integer',
     ];
 
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 
     public function getReasonAttribute($value)
     {

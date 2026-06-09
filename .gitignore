@@ -16,3 +16,6 @@ error_log
 .DS_Store
 docker-local/
 /public/.well-known
+.idea/
+.vscode/
+.ddev/

@@ -20,7 +20,7 @@
   block-size: 100px;
   min-inline-size: 100px;
   max-inline-size: 100%;
-  border-radius: 5px;
+  border-radius: 10px;
   background: var(--bs-white);
   border: 1px dashed #BDBDBE;
   display: flex;
@@ -52,7 +52,7 @@
   inline-size: 100%;
   block-size: 100%;
   opacity: 0;
-  border-radius: 5px;
+  border-radius: 10px;
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.4) 100%);
   transition: opacity 0.3s ease-in-out;
   z-index: 2;
@@ -87,6 +87,13 @@
 .upload-file_custom .remove_btn:hover i {
   color: var(--bs-white) !important;
 }
+.upload-file_custom .remove_btn.remove_btn_outside {
+  position: absolute;
+  inset-block-start: -5px;
+  inset-inline-end: -5px;
+  z-index: 11;
+}
+
 .upload-file_custom.input-disabled .single_file_input {
   pointer-events: none;
   opacity: 0;
@@ -102,6 +109,7 @@
 }
 .imageModal {
   background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1040;
 }
 .imageModal .modal-dialog,
 .imageModal .modal-content {

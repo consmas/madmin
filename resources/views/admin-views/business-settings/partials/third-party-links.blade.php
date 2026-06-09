@@ -3,9 +3,6 @@
         <!-- Nav -->
         <ul class="nav nav-tabs border-0 nav--tabs nav--pills">
             <li class="nav-item">
-                <a class="nav-link   {{ Request::is('admin/business-settings/third-party/payment-method') ? 'active' : '' }}" href="{{ route('admin.business-settings.third-party.payment-method') }}"   aria-disabled="true">{{translate('Payment Methods')}}</a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link {{ Request::is('admin/business-settings/third-party/sms-module') ? 'active' : '' }}" href="{{ route('admin.business-settings.third-party.sms-module') }}"  aria-disabled="true">{{translate('SMS Module')}}</a>
             </li>
             <li class="nav-item">

@@ -28,7 +28,7 @@ class CurrentModule
 
         $module_id = Config::get('module.current_module_id');
         $module_id = is_array($module_id)?null:$module_id;
-        $module = isset($module_id)?Module::with('translations')->find($module_id):Module::with('translations')->active()->get()->first();
+        $module = isset($module_id)?Module::with('translations')->find($module_id):Module::with('translations')->active()->first();
 
         if ($module) {
             Config::set('module.current_module_id', $module->id);

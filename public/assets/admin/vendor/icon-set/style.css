@@ -3443,3 +3443,11 @@
 .tio-users-switch:before {
   content: "\ed6c";
 }
+
+
+.cus-border-in{
+    background-color: #2223241A;
+    width: 1px;
+    height: 10px;
+}
+

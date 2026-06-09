@@ -76,7 +76,7 @@ class SubscriptionController extends Controller
                     ]);
                 }
                 if (config('mail.status') && Helpers::get_mail_status('rental_subscription_cancel_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_subscription_cancel','mail_status' ,$store?->id)) {
-                    Mail::to($store->email)->send(new ProviderSubscriptionCancel($store->name));
+                    Mail::to($store?->getRawOriginal('email'))->send(new ProviderSubscriptionCancel($store->name));
                 }
             } else{
             if( Helpers::getNotificationStatusData('store','store_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
@@ -97,7 +97,7 @@ class SubscriptionController extends Controller
                 ]);
             }
             if (config('mail.status') && Helpers::get_mail_status('subscription_cancel_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_subscription_cancel','mail_status' ,$store?->id)) {
-                Mail::to($store->email)->send(new SubscriptionCancel($store->name));
+                Mail::to($store?->getRawOriginal('email'))->send(new SubscriptionCancel($store->name));
             }
         }
         } catch (\Exception $ex) {

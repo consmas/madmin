@@ -4071,3 +4071,10 @@ input[type=text] ~ .show-password .icon-1 {
 .min-w-30px{
     min-width: 30px;
 }
+
+.mx-mobile-auto{
+    @media screen and (max-width: 575px) {
+        margin: 0 auto !important;
+    }
+}
+

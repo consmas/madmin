@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\CentralLogics\Helpers;
+use App\Traits\DemoMaskable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -30,7 +31,7 @@ use Illuminate\Support\Str;
 
 class Admin extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable,DemoMaskable;
 
     /**
      * The attributes that are mass assignable.
@@ -102,6 +103,11 @@ class Admin extends Authenticatable
         }
         return $maskedEmail ?? $this->email;
     }
+
+    // public function account()
+    // {
+    //     return $this->hasOne(UserAccount::class, 'user_id', 'id')->where('user_type', 'admin');
+    // }
 
     /**
      * @param $query

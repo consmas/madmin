@@ -246,8 +246,10 @@ class CategoryLogic
         $paginator = Store::
         WithOpenWithDeliveryTime($longitude??0,$latitude??0)
             ->withCount(['items','campaigns'])
-            ->whereHas('items.category',function($q)use($category_ids){
-                return $q->whereIn('id',$category_ids)->orWhereIn('parent_id', $category_ids);
+            ->when(isset($category_ids) && (count($category_ids)>0), function($query)use($category_ids){
+                return $query->whereHas('items.category',function($q)use($category_ids){
+                    return $q->whereIn('id',$category_ids)->orWhereIn('parent_id', $category_ids);
+                });
             })
             ->when(config('module.current_module_data'), function($query)use($zone_id){
                 return  $query->whereHas('zone.modules', function($query){

@@ -41,9 +41,10 @@ class BusinessSettingsController extends Controller
         $store->logo = $request->has('logo') ? Helpers::update(dir:'store/', old_image:$store->logo, format:'png', image:$request->file('logo')) : $store->logo;
         $store->cover_photo = $request->has('cover_photo') ? Helpers::update(dir:'store/cover/', old_image:$store->cover_photo,format: 'png', image:$request->file('cover_photo')) : $store->cover_photo;
 
-        $store->meta_title = $data_trans[2]['value'];
-        $store->meta_description = $data_trans[3]['value'];
+        $store->meta_title = $request->meta_title;
+        $store->meta_description = $request->meta_description;
         $store->meta_image = $request->has('meta_image') ? Helpers::update(dir:'store/', old_image: $store->meta_image, format: 'png', image: $request->file('meta_image')) : $store->meta_image;
+        $store->meta_data = Helpers::formatMetaData($request->all(), $store->meta_data);
 
         $store->save();
 
@@ -143,7 +144,8 @@ class BusinessSettingsController extends Controller
         $conf->halal_tag_status = $request->halal_tag_status ?? 0;
         $conf->extra_packaging_status = $request->extra_packaging_status ?? 0;
         $conf->extra_packaging_amount = $request->extra_packaging_amount;
-        $conf->minimum_stock_for_warning = $request->minimum_stock_for_warning ?? 0;
+        $conf->minimum_stock_for_warning = $request->minimum_stock_for_warning ?? ($conf->minimum_stock_for_warning ?? 0);
+        $conf->show_low_stock_count = $request->show_low_stock_count ?? ($conf->show_low_stock_count ?? 1);
         $conf->save();
 
         return response()->json(['message'=>translate('messages.store_settings_updated')], 200);

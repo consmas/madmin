@@ -98,7 +98,7 @@
 
             <div class="card-body">
                 <div class="card p-xxl-4 p-3 mb-20 border-0">
-                    <form action="{{ route('admin.business-settings.react-landing-page-settings', 'faq-section') }}"
+                    <form action="{{ route('admin.business-settings.react-landing-page-settings-update', 'faq-section') }}"
                           method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="row g-3">
@@ -217,7 +217,7 @@
                                 {{ translate('Add and manage individual questions and answers for each user type.') }}
                             </p>
                         </div>
-                        <form action="{{ route('admin.business-settings.react-landing-page-settings', 'faq-store') }}"
+                        <form action="{{ route('admin.business-settings.react-landing-page-settings-update', 'faq-store') }}"
                               method="POST">
                             @csrf
                             <div class="row g-3">
@@ -722,14 +722,14 @@
                                                             data-toggle="collapse" data-target="#collapseOne01"
                                                             aria-expanded="true"
                                                             aria-controls="collapseOne01">
-                                                        How do I place an order on ConsMas from start to finish?
+                                                        How do I place an order on 6amMart from start to finish?
                                                     </button>
                                                 </div>
 
                                                 <div id="collapseOne01" class="collapse show" aria-labelledby="headingOne01"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search for the products you need, and add them to your cart. At checkout, enter your delivery address and payment details, then confirm your order to complete the process.
+                                                        To place an order, open the 6amMart app or website, browse or search for the products you need, and add them to your cart. At checkout, enter your delivery address and payment details, then confirm your order to complete the process.
                                                     </div>
                                                 </div>
                                             </div>
@@ -745,7 +745,7 @@
                                                 <div id="collapseTwo02" class="collapse" aria-labelledby="headingTwo02"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -766,7 +766,7 @@
                                                 <div id="collapseThree03" class="collapse" aria-labelledby="headingThree03"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -787,7 +787,7 @@
                                                 <div id="collapseFour04" class="collapse" aria-labelledby="headingFour04"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -808,7 +808,7 @@
                                                 <div id="collapseFive05" class="collapse" aria-labelledby="headingFive05"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -822,7 +822,7 @@
                                             <div
                                                 class="d-flex align-items-center gap-3 flex-wrap justify-content-xl-between justify-content-center text-xl-start text-center flex-xl-nowrap">
                                                 <div
-                                                    class="d-xl-flex gap-x-xl-20 align-items-center flex-xl-nowrap flex-wrap">
+                                                    class="d-xl-flex gap-xxl-20 align-items-center flex-xl-nowrap flex-wrap">
                                                     <div
                                                         class="w-50px bg-white h-50px min-h-50 rounded-circle d-center mx-auto mb-xl-0 mb-2">
                                                         <img
@@ -886,14 +886,14 @@
                                                             data-toggle="collapse" data-target="#collapseOne01"
                                                             aria-expanded="true"
                                                             aria-controls="collapseOne01">
-                                                        How do I place an order on ConsMas from start to finish?
+                                                        How do I place an order on 6amMart from start to finish?
                                                     </button>
                                                 </div>
 
                                                 <div id="collapseOne01" class="collapse show" aria-labelledby="headingOne01"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search for the products you need, and add them to your cart. At checkout, enter your delivery address and payment details, then confirm your order to complete the process.
+                                                        To place an order, open the 6amMart app or website, browse or search for the products you need, and add them to your cart. At checkout, enter your delivery address and payment details, then confirm your order to complete the process.
                                                     </div>
                                                 </div>
                                             </div>
@@ -909,7 +909,7 @@
                                                 <div id="collapseTwo02" class="collapse" aria-labelledby="headingTwo02"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -930,7 +930,7 @@
                                                 <div id="collapseThree03" class="collapse" aria-labelledby="headingThree03"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -951,7 +951,7 @@
                                                 <div id="collapseFour04" class="collapse" aria-labelledby="headingFour04"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -972,7 +972,7 @@
                                                 <div id="collapseFive05" class="collapse" aria-labelledby="headingFive05"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -986,7 +986,7 @@
                                             <div
                                                 class="d-flex align-items-center gap-3 flex-wrap justify-content-xl-between justify-content-center text-xl-start text-center flex-xl-nowrap">
                                                 <div
-                                                    class="d-xl-flex gap-x-xl-20 align-items-center flex-xl-nowrap flex-wrap">
+                                                    class="d-xl-flex gap-xxl-20 align-items-center flex-xl-nowrap flex-wrap">
                                                     <div
                                                         class="w-50px bg-white h-50px min-h-50 rounded-circle d-center mx-auto mb-xl-0 mb-2">
                                                         <img
@@ -1050,14 +1050,14 @@
                                                             data-toggle="collapse" data-target="#collapseOne01"
                                                             aria-expanded="true"
                                                             aria-controls="collapseOne01">
-                                                        How do I place an order on ConsMas from start to finish?
+                                                        How do I place an order on 6amMart from start to finish?
                                                     </button>
                                                 </div>
 
                                                 <div id="collapseOne01" class="collapse show" aria-labelledby="headingOne01"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search for the products you need, and add them to your cart. At checkout, enter your delivery address and payment details, then confirm your order to complete the process.
+                                                        To place an order, open the 6amMart app or website, browse or search for the products you need, and add them to your cart. At checkout, enter your delivery address and payment details, then confirm your order to complete the process.
                                                     </div>
                                                 </div>
                                             </div>
@@ -1073,7 +1073,7 @@
                                                 <div id="collapseTwo02" class="collapse" aria-labelledby="headingTwo02"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -1094,7 +1094,7 @@
                                                 <div id="collapseThree03" class="collapse" aria-labelledby="headingThree03"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -1115,7 +1115,7 @@
                                                 <div id="collapseFour04" class="collapse" aria-labelledby="headingFour04"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -1136,7 +1136,7 @@
                                                 <div id="collapseFive05" class="collapse" aria-labelledby="headingFive05"
                                                      data-parent="#faqAccordion2">
                                                     <div class="card-body max-w-700 pt-0">
-                                                        To place an order, open the ConsMas app or website, browse or search
+                                                        To place an order, open the 6amMart app or website, browse or search
                                                         for
                                                         the products you need, and add them to your cart. At checkout, enter
                                                         your delivery address and payment details, then confirm your order
@@ -1150,7 +1150,7 @@
                                             <div
                                                 class="d-flex align-items-center gap-3 flex-wrap justify-content-xl-between justify-content-center text-xl-start text-center flex-xl-nowrap">
                                                 <div
-                                                    class="d-xl-flex gap-x-xl-20 align-items-center flex-xl-nowrap flex-wrap">
+                                                    class="d-xl-flex gap-xxl-20 align-items-center flex-xl-nowrap flex-wrap">
                                                     <div
                                                         class="w-50px bg-white h-50px min-h-50 rounded-circle d-center mx-auto mb-xl-0 mb-2">
                                                         <img

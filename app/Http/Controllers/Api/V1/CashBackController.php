@@ -22,13 +22,13 @@ class CashBackController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
         $customer_id=Auth::user()?->id ?? $request->customer_id ?? 'all';
-        return  Helpers::getCalculatedCashBackAmount(amount:$request->amount, customer_id:$customer_id, type:Module::whereId($request->header('moduleId'))->first()?->module_type == 'rental' ? 1 : null);
+        return  Helpers::getCalculatedCashBackAmount(amount:$request->amount, customer_id:$customer_id, type:Module::whereId(getModuleId($request->header('moduleId')))->first()?->module_type == 'rental' ? 1 : null);
     }
     
     public function list(Request $request){
         $customer_id=Auth::user()?->id ?? request()?->customer_id ?? 'all';
         $data =CashBack::active()
-        ->when(Module::whereId($request->header('moduleId'))->first()?->module_type == 'rental', function($query){
+        ->when(Module::whereId(getModuleId($request->header('moduleId')))->first()?->module_type == 'rental', function($query){
             $query->rental();
         })
         ->Running()

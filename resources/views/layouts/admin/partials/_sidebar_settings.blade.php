@@ -92,7 +92,7 @@
                                     </a>
                                 </li>
                                 <li
-                                    class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/module') ? 'active' : '' }}">
+                                    class="navbar-vertical-aside-has-menu @yield('edit_module')  {{ Request::is('admin/business-settings/module') ? 'active' : '' }}">
                                     <a class="js-navbar-vertical-aside-menu-link nav-link"
                                         href="{{ route('admin.business-settings.module.index') }}"
                                         title="{{ translate('messages.modules') }}">
@@ -107,7 +107,7 @@
                     @endif
                     @if (\App\CentralLogics\Helpers::module_permission_check('settings'))
                         <li
-                            class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/business-setup*') || Request::is('admin/business-settings/language*') ? 'active' : '' }}">
+                            class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/business-setup*') ? 'active' : '' }}">
                             <a class="nav-link " href="{{ route('admin.business-settings.business-setup') }}"
                                 title="{{ translate('messages.business_setup') }}">
                                 <span class="tio-settings nav-icon"></span>
@@ -226,7 +226,7 @@
                                 <li
                                     class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/pages/admin-landing-page-settings*') ? 'active' : '' }}">
                                     <a class="nav-link "
-                                        href="{{ route('admin.business-settings.admin-landing-page-settings', 'fixed-data') }}"
+                                        href="{{ route('admin.business-settings.admin-landing-page-settings', 'setup') }}"
                                         title="{{ translate('messages.admin_landing_page_settings') }}">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span
@@ -338,6 +338,29 @@
                                 <span class="text-truncate text-capitalize">{{ translate('messages.gallery') }}</span>
                             </a>
                         </li>
+
+                        @if (addon_published_status('RideShare'))
+                            <li class="nav-item">
+                                <small class="nav-subtitle"
+                                    title="{{ translate('messages.ride_share_settings') }}">{{ translate('messages.ride_share_settings') }}</small>
+                                <small class="tio-more-horizontal nav-subtitle-replacer"></small>
+                            </li>
+                            <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/ride-share*') || Request::is('admin/business-settings/ride-fare*') || Request::is('admin/business-settings/rider') ? 'active' : '' }}">
+                                <a class="nav-link " href="{{ route('admin.business-settings.ride-fare.penalty') }}"
+                                title="{{ translate('messages.additional_settings') }}">
+                                    <span class="tio-settings nav-icon"></span>
+                                    <span class="text-truncate">{{ translate('messages.additional_settings') }}</span>
+                                </a>
+                            </li>
+                            <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/safety-precaution/*') ? 'active' : '' }}">
+                                <a class="nav-link " href="{{ route('admin.business-settings.safety-precaution.index', SAFETY_ALERT) }}"
+                                title="{{ translate('messages.Safety_&_Precaution') }}">
+                                    <span class="tio-settings nav-icon"></span>
+                                    <span class="text-truncate">{{ translate('messages.Safety_&_Precaution') }}</span>
+                                </a>
+                            </li>
+                        @endif
+
                         <li class="nav-item">
                             <small class="nav-subtitle"
                                 title="{{ translate('messages.business_settings') }}">{{ translate('messages.system_management') }}</small>
@@ -354,9 +377,9 @@
                             <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
                                 style="display:{{ Request::is('admin/business-settings/third-party*') || Request::is('admin/business-settings/fcm*') || Request::is('admin/business-settings/login-url-setup*') || Request::is('admin/business-settings/offline-payment*')|| Request::is('admin/business-settings/marketing/*') || Request::is('admin/business-settings/open-ai') || Request::is('admin/business-settings/open-ai-settings') ? 'block' : 'none' }}">
                                 <li
-                                    class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/third-party*') ? 'active' : '' }}">
+                                    class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/third-party*') && !Request::is('admin/business-settings/third-party/payment-method*') ? 'active' : '' }}">
                                     <a class="nav-link "
-                                        href="{{ route('admin.business-settings.third-party.payment-method') }}"
+                                        href="{{ route('admin.business-settings.third-party.sms-module') }}"
                                         title="{{ translate('messages.3rd_party') }}">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span class="text-truncate">{{ translate('messages.3rd_party') }}</span>
@@ -372,17 +395,16 @@
                                     </a>
                                 </li>
 
-                                @if (\App\CentralLogics\Helpers::get_mail_status('offline_payment_status'))
-                                    <li
-                                        class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/offline*') ? 'active' : '' }}">
-                                        <a class="nav-link " href="{{ route('admin.business-settings.offline') }}"
-                                            title="{{ translate('messages.Offline_Payment_Setup') }}">
+                                <li
+                                        class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/third-party/payment-method') || Request::is('admin/business-settings/offline-payment') ? 'active' : '' }}">
+                                        <a class="nav-link " href="{{ route('admin.business-settings.third-party.payment-method') }}"
+                                            title="{{ translate('Payment Setup') }}">
                                             <span class="tio-circle nav-indicator-icon"></span>
                                             <span
-                                                class="text-truncate">{{ translate('messages.Offline_Payment_Setup') }}</span>
+                                                class="text-truncate">{{ translate('Payment Setup') }}</span>
                                         </a>
-                                    </li>
-                                @endif
+                                </li>
+
 
                                 <li class="nav-item @yield('analytics_Script')">
                                     <a class="nav-link " href="{{ route('admin.business-settings.marketing.analytic') }}"
@@ -404,6 +426,14 @@
                             </ul>
                         </li>
                         <li
+                            class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/language*') ?'active':'' }}">
+                            <a class="nav-link " href="{{route('admin.business-settings.language.index')}}"
+                                title="{{ translate('Language Setup') }}">
+                                <span class="tio-keyboard nav-icon"></span>
+                                <span class="text-truncate">{{ translate('Language Setup') }}</span>
+                            </a>
+                        </li>
+                        <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/login-settings*') || Request::is('admin/business-settings/login-url-setup*') ? 'active' : '' }}">
                             <a class="nav-link " href="{{ route('admin.business-settings.login-settings.index') }}"
                                 title="{{ translate('messages.login_setup') }}">
@@ -412,6 +442,7 @@
                                     class="text-truncate text-capitalize">{{ translate('messages.login_setup') }}</span>
                             </a>
                         </li>
+
 
                         @if (addon_published_status('Rental'))
                             <li
@@ -461,11 +492,30 @@
                         @endif
 
                         <li
+                            class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/page-meta-data*') || Request::is('admin/business-settings/login-url-setup*') ? 'active' : '' }}">
+                            <a class="nav-link " href="{{ route('admin.business-settings.seo-settings.pageMetaData') }}"
+                                title="{{ translate('messages.page_meta_data') }}">
+                                <span class="tio-share-message nav-icon"></span>
+                                <span
+                                    class="text-truncate text-capitalize">{{ translate('messages.page_meta_data') }}</span>
+                            </a>
+                        </li>
+
+                        <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/app-settings*') ? 'active' : '' }}">
                             <a class="nav-link " href="{{ route('admin.business-settings.app-settings') }}"
                                 title="{{ translate('messages.app_settings') }}">
                                 <span class="tio-android nav-icon"></span>
                                 <span class="text-truncate">{{ translate('messages.app_settings') }}</span>
+                            </a>
+                        </li>
+
+                        <li
+                            class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/websocket') ? 'active' : '' }}">
+                            <a class="nav-link " href="{{ route('admin.business-settings.websocket') }}"
+                                title="{{ translate('messages.websocket') }}">
+                                <span class="tio-link nav-icon"></span>
+                                <span class="text-truncate">{{ translate('messages.websocket') }}</span>
                             </a>
                         </li>
 
@@ -606,90 +656,8 @@
 
 
 @push('script_2')
-    <script>
-        $(window).on('load', function() {
-            if ($(".navbar-vertical-content li.active").length) {
-                $('.navbar-vertical-content').animate({
-                    scrollTop: $(".navbar-vertical-content li.active").offset().top - 150
-                }, 10);
-            }
-        });
 
-        var $rows = $('#navbar-vertical-content li');
-        $('#search-sidebar-menu').keyup(function() {
-            var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
-
-            $rows.show().filter(function() {
-                var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
-                return !~text.indexOf(val);
-            }).hide();
-        });
+<script src="{{ asset('Modules/Rental/public/assets/js/admin/view-pages/rental-sidebar.js') }}"></script>
 
 
-        $(document).ready(function() {
-            const $searchInput = $('#search');
-            const $suggestionsList = $('#search-suggestions');
-            const $rows = $('#navbar-vertical-content li');
-            const $subrows = $('#navbar-vertical-content li ul li');
-            {{-- const suggestions = ['{{strtolower(translate('messages.zone'))  }}', '{{ strtolower(translate('messages.setting'))  }}', '{{ strtolower(translate('messages.pages')) }}', '{{ strtolower(translate('messages.3rd_party')) }}','{{ strtolower(translate('messages.system')) }}' ]; --}}
-            const focusInput = () => updateSuggestions($searchInput.val());
-            const hideSuggestions = () => $suggestionsList.slideUp(700);
-            const showSuggestions = () => $suggestionsList.slideDown(700);
-            let clickSuggestion = function() {
-                let suggestionText = $(this).text();
-                $searchInput.val(suggestionText);
-                hideSuggestions();
-                filterItems(suggestionText.toLowerCase());
-                updateSuggestions(suggestionText);
-            };
-            let filterItems = (val) => {
-                let unmatchedItems = $rows.show().filter((index, element) => !~$(element).text().replace(
-                    /\s+/g, ' ').toLowerCase().indexOf(val));
-                let matchedItems = $rows.show().filter((index, element) => ~$(element).text().replace(/\s+/g,
-                    ' ').toLowerCase().indexOf(val));
-                unmatchedItems.hide();
-                matchedItems.each(function() {
-                    let $submenu = $(this).find($subrows);
-                    let keywordCountInRows = 0;
-                    $rows.each(function() {
-                        let rowText = $(this).text().toLowerCase();
-                        let valLower = val.toLowerCase();
-                        let keywordCountRow = rowText.split(valLower).length - 1;
-                        keywordCountInRows += keywordCountRow;
-                    });
-                    if ($submenu.length > 0) {
-                        $subrows.show();
-                        $submenu.each(function() {
-                            let $submenu2 = !~$(this).text().replace(/\s+/g, ' ')
-                                .toLowerCase().indexOf(val);
-                            if ($submenu2 && keywordCountInRows <= 2) {
-                                $(this).hide();
-                            }
-                        });
-                    }
-                });
-            };
-            let updateSuggestions = (val) => {
-                $suggestionsList.empty();
-                suggestions.forEach(suggestion => {
-                    if (suggestion.toLowerCase().includes(val.toLowerCase())) {
-                        $suggestionsList.append(
-                            `<span class="search-suggestion badge badge-soft-light m-1 fs-14">${suggestion}</span>`
-                        );
-                    }
-                });
-                // showSuggestions();
-            };
-            $searchInput.focus(focusInput);
-            $searchInput.on('input', function() {
-                updateSuggestions($(this).val());
-            });
-            $suggestionsList.on('click', '.search-suggestion', clickSuggestion);
-            $searchInput.keyup(function() {
-                filterItems($(this).val().toLowerCase());
-            });
-            $searchInput.on('focusout', hideSuggestions);
-            $searchInput.on('focus', showSuggestions);
-        });
-    </script>
 @endpush

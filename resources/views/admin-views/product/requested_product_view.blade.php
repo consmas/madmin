@@ -26,17 +26,15 @@
             <div class="card-body">
                 <div class="d-flex flex-wrap gap-4">
                     <div>
-                        <div class="d-flex flex-wrap align-items-center food--media position-relative mr-4 mt-4">
-                            <img class="avatar avatar-xxl avatar-4by3 onerror-image aspect-ratio-1 h-unset"
-                            src="{{ $product['image_full_url'] ?? asset('public/assets/admin/img/160x160/img2.jpg') }}"
-                                data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
-                                alt="Image Description">
+                        <div class="d-flex flex-wrap align-items-start gap-3 food--media position-relative mr-4 mt-4">
+                            <div class="position-relative">
+                                @include('partials._product-media-slider', ['product' => $product])
                                 @if ($product['is_rejected'] == 1 )
-
-                                <div class="reject-info"> {{ translate('Your_Item_Has_Been_Rejected') }}</div>
+                                    <div class="reject-info"> {{ translate('Your_Item_Has_Been_Rejected') }}</div>
                                 @endif
 
                                 <div class="review-info"> {{ translate('This item is under review') }}</div>
+                            </div>
                         </div>
                     </div>
                     <div class="w-70 flex-grow">
@@ -165,12 +163,14 @@
                                     <strong>{{ Str::limit(($product?->category?->parent ? $product?->category?->parent?->name : $product?->category?->name )  ?? translate('messages.uncategorize')
                                         , 20, '...') }}</strong>
                                 </span>
+                                @if($product?->category?->parent?->name)
                                 <span class="d-block mb-1">
                                     <span>{{ translate('messages.Sub_Category') }}</span>
                                     <span>:</span>
                                     <strong>{{ Str::limit(( $product?->category?->parent?->name ? $product?->category?->name : '---' )
                                         , 20, '...') }}</strong>
                                 </span>
+                                @endif
                                 @if ($product->module->module_type == 'grocery')
                                 <span class="d-block mb-1">
                                     <span>{{ translate('messages.Is_Organic') }}</span>

@@ -5,14 +5,16 @@ namespace App\Models;
 use App\CentralLogics\Helpers;
 use Carbon\Carbon;
 use App\Scopes\ZoneScope;
+use App\Traits\DemoMaskable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\ReportFilter;
 use Modules\TaxModule\Entities\OrderTax;
 
+
 class Order extends Model
 {
-    use HasFactory , ReportFilter;
+    use HasFactory , ReportFilter, DemoMaskable;
 
     protected $casts = [
         'order_amount' => 'float',
@@ -52,15 +54,20 @@ class Order extends Model
 
     public function getOrderAttachmentFullUrlAttribute(){
         $images = [];
-        $value = is_array($this->order_attachment)
-            ? $this->order_attachment
-            : ($this->order_attachment && is_string($this->order_attachment) && $this->isValidJson($this->order_attachment)
-                ? json_decode($this->order_attachment, true)
+        $attachment = $this->order_attachment;
+
+        $value = is_array($attachment)
+            ? $attachment
+            : ($attachment && is_string($attachment) && $this->isValidJson($attachment)
+                ? json_decode($attachment, true)
                 : []);
-        if ($value){
-            foreach ($value as $item){
-                $item = is_array($item)?$item:(is_object($item) && get_class($item) == 'stdClass' ? json_decode(json_encode($item), true):['img' => $item, 'storage' => 'public']);
-                $images[] = Helpers::get_full_url('order',$item['img'],$item['storage']);
+
+
+
+        if ($value) {
+            foreach ($value as $item) {
+                $item = is_array($item) ? $item : (is_object($item) && get_class($item) == 'stdClass' ? json_decode(json_encode($item), true) : ['img' => $item, 'storage' => 'public']);
+                $images[] = Helpers::get_full_url('order', $item['img'], $item['storage'] ?? 'public');
             }
         }
 
@@ -77,16 +84,56 @@ class Order extends Model
         if ($value){
             foreach ($value as $item){
                 $item = is_array($item)?$item:(is_object($item) && get_class($item) == 'stdClass' ? json_decode(json_encode($item), true):['img' => $item, 'storage' => 'public']);
-                $images[] = Helpers::get_full_url('order',$item['img'],$item['storage']);
+                $images[] = Helpers::get_full_url('order',$item['img'],$item['storage'] ?? 'public');
             }
         }
 
         return $images;
     }
 
-    private function isValidJson($string)
+    public function getDeliveryAddressAttribute($value)
     {
-        json_decode($string);
+        if ($this->shouldMask()) {
+            if (is_array($value)) {
+                $address = $value;
+            } elseif ($value instanceof \stdClass) {
+                $address = (array) $value;
+            } elseif (is_string($value)) {
+                $address = json_decode($value, true);
+            } else {
+                $address = [];
+            }
+
+            if (!empty($address['contact_person_email'])) {
+                $address['contact_person_email'] = $this->maskEmail($address['contact_person_email']);
+            }
+
+            if (!empty($address['contact_person_number'])) {
+                $address['contact_person_number'] = $this->maskPhone($address['contact_person_number']);
+            }
+            return json_encode($address);
+        }
+        return $value;
+    }
+
+    public function getReceiverDetailsAttribute($value)
+    {
+        $address = is_array($value) ? $value : json_decode($value, true);
+        if ($this->shouldMask()) {
+            if (!empty($address['contact_person_email'])) {
+                $address['contact_person_email'] = $this->maskEmail($address['contact_person_email']);
+            }
+            if (!empty($address['contact_person_number'])) {
+                $address['contact_person_number'] = $this->maskPhone($address['contact_person_number']);
+            }
+        }
+
+        return $address;
+    }
+
+    private function isValidJson($value)
+    {
+        json_decode($value);
         return (json_last_error() === JSON_ERROR_NONE);
     }
 
@@ -226,7 +273,7 @@ class Order extends Model
 
     public function scopeFailed($query)
     {
-        return $query->where('order_status', 'failed');
+        return $query->where('order_status', 'failed')->whereDoesntHave('offline_payments');
     }
 
     public function scopeCanceled($query)

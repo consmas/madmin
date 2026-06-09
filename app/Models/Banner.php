@@ -48,6 +48,9 @@ class Banner extends Model
         'featured',
         'default_link',
         'created_by',
+        'time_period',
+        'start_date',
+        'end_date',
     ];
 
     /**
@@ -59,6 +62,9 @@ class Banner extends Model
         'zone_id' => 'integer',
         'module_id' => 'integer',
         'featured' => 'boolean',
+        'time_period' => 'string',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     protected $appends = ['image_full_url'];
@@ -129,9 +135,7 @@ class Banner extends Model
      */
     public function scopeActive($query): mixed
     {
-        return $query->where('status', '=', 1)->whereHas('store', function ($query) {
-            $query->active();
-        });
+        return $query->where('status', '=', 1);
     }
 
     /**

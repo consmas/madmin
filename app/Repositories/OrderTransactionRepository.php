@@ -35,14 +35,26 @@ class OrderTransactionRepository implements OrderTransactionRepositoryInterface
         return $this->transaction->paginate($dataLimit);
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null, array $orderBy = [], string $date = null): Collection|LengthAwarePaginator
     {
         $key = explode(' ', $searchValue);
-        return $this->transaction->where(function ($query) use ($key) {
-            foreach ($key as $value) {
-                $query->orWhere('name', 'like', "%{$value}%");
-            }
-        })->limit($dataLimit)->get();
+        return $this->transaction->where($filters)
+            ->where(function ($query) use ($key) {
+                foreach ($key as $value) {
+                    $query->orWhere('order_id', 'like', "%{$value}%");
+                }
+            })
+            ->when($date, function($query) use($date){
+                if(strpos($date, ' - ') !== false) {
+                    $dates = explode(' - ', $date);
+                    $start = \Carbon\Carbon::parse($dates[0])->startOfDay();
+                    $end = \Carbon\Carbon::parse($dates[1])->endOfDay();
+                    return $query->whereBetween('created_at', [$start, $end]);
+                } else {
+                    return $query->whereDate('created_at', $date);
+                }
+            })
+            ->orderBy($orderBy['col'], $orderBy['type'])->paginate($dataLimit);
     }
 
     public function update(string $id, array $data): bool|string|object

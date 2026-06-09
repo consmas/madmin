@@ -197,7 +197,7 @@
             @php($download_user_app_sub_title=\App\Models\DataSetting::withoutGlobalScope('translate')->where('type','react_landing_page')->where('key','download_user_app_sub_title')->first())
             @php($download_user_app_links = \App\Models\DataSetting::where(['key'=>'download_user_app_links','type'=>'react_landing_page'])->first())
             @php($download_user_app_links = isset($download_user_app_links->value)?json_decode($download_user_app_links->value, true):null)
-            <form action="{{ route('admin.business-settings.react-landing-page-settings', 'download-app-section') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.business-settings.react-landing-page-settings-update', 'download-app-section') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="card">
                     <div class="card-body">
@@ -428,14 +428,14 @@
             </div>
             <div class="custom-offcanvas-body custom-offcanvas-body-100  p-20">
                <section class="common-section-view bg-white border rounded-10 my-xl-2 mx-xl-2">
-                    <div class="common-section-inner d-flex flex-xxl-nowrap justify-content-lg-between justify-content-center flex-wrap align-items-center gap-x-xl-20">                        
-                        <div class="d-flex align-items-center flex-md-nowrap flex-wrap gap-x-xl-20 max-w-490 mb-xxl-0 mb-3 text-md-start text-center">
+                    <div class="common-section-inner d-flex flex-xxl-nowrap justify-content-lg-between justify-content-center flex-wrap align-items-center gap-xxl-20">                        
+                        <div class="d-flex align-items-center flex-md-nowrap flex-wrap gap-xxl-20 max-w-490 mb-xxl-0 mb-3 text-md-start text-center">
                             <div class="selling-thumb min-w-150 max-w-165 mr-xl-0 mr-md-3 mx-auto">
                                 <img width="160" src="{{ asset('/public/assets/admin/img/400x400/selling-thumb.png') }}" alt="Google Play" class="object-contain h-100">
                             </div>
                            <div class="mt-xl-0 mt-2">
                                 <h2 class="mb-xxl-2 mb-1 fs-20">
-                                    Start Selling with <span class="text-base-clr">ConsMas</span>
+                                    Start Selling with <span class="text-base-clr">6amMart</span>
                                 </h2>
                                 <p class="text-title fs-12 mb-xl-3 mb-3">
                                     Turn your local shop into an online business and grow your sales with our powerful platform
@@ -446,7 +446,7 @@
                            </div>
                         </div>
                         <div>
-                            <div class="__bg-FAFAFA rounded-10 px-xl-3 px-1 py-3 d-flex flex-xl-nowrap flex-wrap justify-content-xl-start justify-content-center align-items-center gap-x-xl-20">
+                            <div class="__bg-FAFAFA rounded-10 px-xl-3 px-1 py-3 d-flex flex-xl-nowrap flex-wrap justify-content-xl-start justify-content-center align-items-center gap-xxl-20">
                                 <div class="scan-wrap bg-white max-w-138 rounded px-xl-2 px-1 py-3 mb-xl-0 mb-3 w-xl-auto w-100">
                                     <div class="scan d-center border w-80px h-80px mx-auto rounded p-1">
                                         <img src="{{ asset('/public/assets/admin/img/400x400/app-scan.png') }}" alt="Google Play" class="object-cover w-100 h-100">
@@ -490,4 +490,3 @@
     <!-- How it Works -->
     @include('admin-views.business-settings.landing-page-settings.partial.how-it-work-react')
 @endsection
-

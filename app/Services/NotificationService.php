@@ -8,7 +8,7 @@ class NotificationService
 {
     use FileManagerTrait;
 
-    public function getAddData(Object $request): array
+    public function getAddData(object $request): array
     {
         if ($request->has('image')) {
             $imageName = $this->upload('notification/', 'png', $request->file('image'));
@@ -24,10 +24,12 @@ class NotificationService
             'zone_id' => $request->zone=='all'?null:$request->zone,
         ];
     }
-    public function getUpdateData(Object $request, object $notification): array
+    public function getUpdateData(object $request, object $notification): array
     {
         if ($request->has('image')) {
             $imageName = $this->updateAndUpload('notification/', $notification->image, 'png', $request->file('image'));
+        } elseif ($request->image_deleted == 1) {
+            $imageName = null;
         } else {
             $imageName = $notification['image'];
         }
@@ -37,22 +39,24 @@ class NotificationService
             'image' => $imageName,
             'tergat' => $request->tergat,
             'status' => 1,
-            'zone_id' => $request->zone=='all'?null:$request->zone,
+            'zone_id' => $request->zone == 'all' ? null : $request->zone,
             'updated_at' => now(),
         ];
     }
 
-    public function getTopic(Object $request): string
+    public function getTopic(object $request): string
     {
         $topicAllZone =[
             'customer'=>'all_zone_customer',
             'deliveryman'=>'all_zone_delivery_man',
+            'rider'=>'all_zone_rider',
             'store'=>'all_zone_store',
         ];
 
         $topicZoneWise=[
             'customer'=>'zone_'.$request->zone.'_customer',
             'deliveryman'=>'zone_'.$request->zone.'_delivery_man_push',
+            'rider'=>'zone_'.$request->zone.'_rider',
             'store'=>'zone_'.$request->zone.'_store',
         ];
 

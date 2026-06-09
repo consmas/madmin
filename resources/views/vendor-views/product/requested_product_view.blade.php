@@ -26,16 +26,15 @@
             <div class="card-body">
                 <div class="row flex-wrap">
                     <div>
-                        <div class="d-flex flex-wrap align-items-center food--media position-relative mr-4">
-                            <img class="avatar avatar-xxl avatar-4by3 onerror-image"
-                            src="{{ $product['image_full_url'] }}"
-                                 data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
-                                alt="Image Description">
+                        <div class="d-flex flex-wrap align-items-start gap-3 food--media position-relative mr-4">
+                            <div class="position-relative">
+                                @include('partials._product-media-slider', ['product' => $product])
                                 @if ($product['is_rejected'] == 1 )
-                                <div class="reject-info"> {{ translate('Your_Item_Has_Been_Rejected') }}</div>
+                                    <div class="reject-info"> {{ translate('Your_Item_Has_Been_Rejected') }}</div>
                                 @else
-                                <div class="pending-info"> {{ translate('This_Item_Is_Under_Review') }}</div>
+                                    <div class="pending-info"> {{ translate('This_Item_Is_Under_Review') }}</div>
                                 @endif
+                            </div>
                         </div>
                     </div>
                     <div class="w-70 flex-grow">

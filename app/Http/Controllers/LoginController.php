@@ -298,7 +298,7 @@ class LoginController extends Controller
             $url = url('/') . '/password-reset?token=' . $token;
             try {
                 if (config('mail.status') && $admin['email'] && Helpers::get_mail_status('forget_password_mail_status_admin') == '1' && Helpers::getNotificationStatusData('admin', 'forget_password', 'mail_status')) {
-                    Mail::to($admin['email'])->send(new AdminPasswordResetMail($url, $admin['f_name']));
+                    Mail::to($admin?->getRawOriginal('email'))->send(new AdminPasswordResetMail($url, $admin['f_name']));
                     session()->put('log_email_succ', 1);
                 } else {
                     Toastr::error(translate('messages.Failed_to_send_mail'));
@@ -332,7 +332,7 @@ class LoginController extends Controller
 
             try {
                 if (config('mail.status') && $vendor['email']) {
-                    Mail::to($vendor['email'])->send(new PasswordResetRequestMail($url, $vendor['f_name']));
+                    Mail::to($vendor?->getRawOriginal('email'))->send(new PasswordResetRequestMail($url, $vendor['f_name']));
                     session()->put('log_email_succ', 1);
                 } else {
                     Toastr::error(translate('messages.Failed_to_send_mail'));

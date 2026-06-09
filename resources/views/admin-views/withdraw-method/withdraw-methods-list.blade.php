@@ -30,7 +30,7 @@
 
                             <form class="search-form theme-style">
                             <div class="input-group input--group">
-                                <input id="datatableSearch" name="search" type="search" class="form-control h--40px" placeholder="{{translate('Ex:_Referance,_Name')}}" value="{{ request()?->search ?? null}}" aria-label="{{translate('messages.search_here')}}">
+                                <input id="datatableSearch" name="search" type="search" class="form-control h--40px" placeholder="{{translate('Ex:_reference,_Name')}}" value="{{ request()?->search ?? null}}" aria-label="{{translate('messages.search_here')}}">
                                 <button type="submit" class="btn bbtn btn--primary h--40px"><i class="tio-search"></i></button>
                             </div>
                         </form>

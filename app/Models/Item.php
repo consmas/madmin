@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Scopes\ZoneScope;
 use App\Scopes\StoreScope;
 use Illuminate\Support\Str;
+use App\Traits\HasProductVideoPreview;
 use App\Traits\ReportFilter;
 use App\CentralLogics\Helpers;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ use Modules\TaxModule\Entities\Taxable;
 
 class Item extends Model
 {
-    use HasFactory, ReportFilter;
+    use HasFactory, ReportFilter, HasProductVideoPreview;
     protected $guarded = ['id'];
     protected $with = ['translations','storage'];
     protected $casts = [
@@ -46,7 +47,7 @@ class Item extends Model
         'is_halal' => 'integer',
     ];
 
-    protected $appends = ['unit_type', 'image_full_url', 'images_full_url'];
+    protected $appends = ['unit_type', 'image_full_url', 'images_full_url', 'video_full_url', 'video_size', 'video_preview_type', 'video_embed_url', 'video_preview_url', 'video_thumbnail_url', 'video_preview_modal_type', 'video_preview_modal_url', 'has_video_preview', 'has_video_source'];
 
     public function scopeRecommended($query)
     {
@@ -97,10 +98,11 @@ class Item extends Model
     }
 
 
-    public function scopeActive($query)
+    public function scopeActive($query , $zone_ids = null ,$module_id = null)
     {
-        return $query->where('status', 1)->where('is_approved', 1)
-            ->whereHas('store', function ($query) {
+        return $query
+        ->where('status', 1)->where('is_approved', 1)
+            ->whereHas('store', function ($query) use ($zone_ids) {
                 $query->where('status', 1)
                     ->where(function ($query) {
                         $query->where('store_business_model', 'commission')
@@ -109,7 +111,26 @@ class Item extends Model
                                     $query->where('max_order', 'unlimited')->orWhere('max_order', '>', 0);
                                 });
                             });
+                    })->when($zone_ids && is_array($zone_ids) , function ($query) use ($zone_ids) {
+                        $query->whereIn('zone_id', $zone_ids);
+                    }) ;
+            })
+            ->whereHas('module', function ($query) use ($module_id){
+                $query->where('status', 1)->when($module_id && is_numeric($module_id), function ($query) use ($module_id) {
+                    $query->where('id', $module_id);
+                });
+            })
+            ->whereHas('category', function ($q) {
+                $q->where(function ($q) {
+                    $q->where([
+                            ['parent_id', '=', 0],
+                            ['status', '=', 1],
+                        ])
+                    ->orWhere(function ($q) {
+                        $q->where('parent_id', '!=', 0)
+                            ->whereHas('parent', fn ($p) => $p->where('status', 1));
                     });
+                });
             });
     }
     public function scopePopular($query)
@@ -149,6 +170,18 @@ class Item extends Model
     //         });
     //     });
     // }
+
+        public function rating()
+    {
+        return $this->hasMany(Review::class, 'item_id')
+            ->select(
+                'item_id',
+                DB::raw('AVG(rating) as average'),
+                DB::raw('COUNT(*) as rating_count'),
+                DB::raw('COUNT(CASE WHEN comment IS NOT NULL THEN 1 END) as review_count')
+            )
+            ->groupBy('item_id');
+    }
 
     public function flashSaleItems()
     {
@@ -191,7 +224,7 @@ class Item extends Model
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'image') {
-                    return Helpers::get_full_url('product', $value, $storage['value']);
+                    return Helpers::get_full_url('product', $value, $storage['value'],'default');
                 }
             }
         }
@@ -209,7 +242,7 @@ class Item extends Model
         if ($value) {
             foreach ($value as $item) {
                 $item = is_array($item) ? $item : (is_object($item) && get_class($item) == 'stdClass' ? json_decode(json_encode($item), true) : ['img' => $item, 'storage' => 'public']);
-                $images[] = Helpers::get_full_url('product', $item['img'], $item['storage']);
+                $images[] = Helpers::get_full_url('product', $item['img'], $item['storage'],'default');
             }
         }
 
@@ -343,6 +376,19 @@ class Item extends Model
                     'updated_at' => now(),
                 ]);
             }
+            if ($model->isDirty('video')) {
+                $value = Helpers::getDisk();
+
+                DB::table('storages')->updateOrInsert([
+                    'data_type' => get_class($model),
+                    'data_id' => $model->id,
+                    'key' => 'video',
+                ], [
+                    'value' => $value,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         });
     }
     private function generateSlug($name)
@@ -365,5 +411,15 @@ class Item extends Model
     public function taxVats()
     {
         return $this->morphMany(Taxable::class, 'taxable');
+    }
+
+    public function seoData(){
+        return $this->hasOne(ItemSeoData::class,'item_id');
+    }
+
+
+    public function users()
+    {
+        return $this->morphToMany(User::class ,'visitor_log');
     }
 }

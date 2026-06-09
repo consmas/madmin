@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\CentralLogics\Helpers;
 use Exception;
 use App\Models\Setting;
 use App\Models\PaymentRequest;
@@ -71,17 +72,7 @@ trait  Processor
     }
     public function file_uploader(string $dir, string $format, $image = null, $old_image = null)
     {
-        if ($image == null) return $old_image ?? 'def.png';
-
-        if (isset($old_image)) Storage::disk(self::getDisk())->delete($dir . $old_image);
-
-        $imageName = \Carbon\Carbon::now()->toDateString() . "-" . uniqid() . "." . $format;
-        if (!Storage::disk(self::getDisk())->exists($dir)) {
-            Storage::disk(self::getDisk())->makeDirectory($dir);
-        }
-        Storage::disk(self::getDisk())->put($dir . $imageName, file_get_contents($image));
-
-        return $imageName;
+        return Helpers::update($dir,$old_image, $format,$image);
     }
 
     public function payment_response($payment_info, $payment_flag): Application|JsonResponse|Redirector|RedirectResponse|\Illuminate\Contracts\Foundation\Application

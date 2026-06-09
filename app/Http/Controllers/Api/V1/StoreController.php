@@ -8,7 +8,6 @@ use App\CentralLogics\CategoryLogic;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Item;
-use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Review;
@@ -18,13 +17,7 @@ class StoreController extends Controller
 {
     public function get_stores(Request $request, $filter_data="all")
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
 
         $type = $request->query('type', 'all');
         $store_type = $request->query('store_type', 'all');
@@ -39,13 +32,7 @@ class StoreController extends Controller
 
     public function get_latest_stores(Request $request, $filter_data="all")
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
 
         $type = $request->query('type', 'all');
 
@@ -60,13 +47,7 @@ class StoreController extends Controller
 
     public function get_popular_stores(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $type = $request->query('type', 'all');
         $zone_id= $request->header('zoneId');
         $longitude= $request->header('longitude');
@@ -79,13 +60,7 @@ class StoreController extends Controller
 
     public function get_discounted_stores(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $type = $request->query('type', 'all');
         $zone_id= $request->header('zoneId');
         $longitude= $request->header('longitude');
@@ -98,13 +73,7 @@ class StoreController extends Controller
 
     public function get_top_rated_stores(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $type = $request->query('type', 'all');
         $zone_id= $request->header('zoneId');
         $longitude= $request->header('longitude');
@@ -164,13 +133,7 @@ class StoreController extends Controller
 
     public function get_searched_stores(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'name' => 'required',
         ]);
@@ -243,13 +206,7 @@ class StoreController extends Controller
     public function get_recommended_stores(Request $request){
 
 
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $type = $request->query('type', 'all');
         $zone_id= $request->header('zoneId');
         $longitude= $request->header('longitude') ?? 0;
@@ -262,11 +219,7 @@ class StoreController extends Controller
 
     public function get_combined_data(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]];
-            return response()->json(['errors' => $errors], 403);
-        }
-
+        Helpers::setZoneIds($request);
         $zone_id = $request->header('zoneId');
         $data_type = $request->query('data_type', 'all');
         $type = $request->query('type', 'all');
@@ -323,13 +276,7 @@ class StoreController extends Controller
 
     public function get_top_offer_near_me(Request $request)
     {
-        if (!$request->hasHeader('zoneId')) {
-            $errors = [];
-            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
-            return response()->json([
-                'errors' => $errors
-            ], 403);
-        }
+        Helpers::setZoneIds($request);
         $type = $request->query('type', 'all');
         $zone_id= $request->header('zoneId');
         $longitude= $request->header('longitude');

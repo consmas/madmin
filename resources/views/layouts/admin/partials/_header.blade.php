@@ -94,7 +94,7 @@
 
                                     @if (\App\CentralLogics\Helpers::module_permission_check('settings'))
                                         <li>
-                                            <a href="{{ route('admin.business-settings.third-party.payment-method') }}"
+                                            <a href="{{ route('admin.business-settings.third-party.sms-module') }}"
                                                class="next-tour">
                                                 <img
                                                     src="{{asset('/public/assets/admin/img/navbar-setting-icon/third-party.svg')}}"
@@ -145,7 +145,7 @@
                     </li>
 
                     <li class="nav-item max-sm-m-0  mr-lg-3">
-                        <a class="btn btn-icon rounded-circle nav-msg-icon"
+                        <a class="btn btn-icon rounded-circle nav-msg-icon p-0 h-100 w-100 d-flex justify-content-center"
                            href="{{route('admin.message.list')}}">
                             <img src="{{asset('/public/assets/admin/img/new-img/message-icon.svg')}}" alt="public/img">
                             @php($message=\App\Models\Conversation::whereUserType('admin')->whereHas('last_message', function($query) {
@@ -156,6 +156,21 @@
                             @endif
                         </a>
                     </li>
+                    @if(addon_published_status('RideShare'))
+                        <li class="nav-item max-sm-m-0  mr-lg-3">
+                            @php($safetyAlert=\Modules\RideShare\Entities\TripManagement\RideSafetyAlert::where('status', 'pending'))
+                            @php($safety=$safetyAlert->count())
+                            @php($latestSafetyAlert=$safetyAlert->latest()->first())
+                            <a class="btn btn-icon rounded-circle nav-msg-icon p-0 h-100 w-100 d-flex justify-content-center @if($latestSafetyAlert) safety-alert-header-icon @endif"
+                            @if($latestSafetyAlert) data-user-id="{{ $latestSafetyAlert->sent_by }}" @endif
+                            href="{{route('admin.ride-share.safety-alerts',['module_id'=>\App\Models\Module::where('module_type','ride-share')->first()->id ?? 0])}}">
+                                <img src="{{asset('/public/assets/admin/img/new-img/shield-check.svg')}}" class="d-block" alt="public/img">
+                                @if($safety!=0)
+                                    <span class="btn-status btn-status-danger">{{ $safety }}</span>
+                                @endif
+                            </a>
+                        </li>
+                    @endif
                     <li class="nav-item max-sm-m-0">
                         <div class="hs-unfold">
                             <div>
@@ -197,11 +212,11 @@
                         <a href="javascript:void(0)" class="__nav-link module--nav-icon" id="tourb-0">
                             @if ($mod)
                                 <img src="{{ $mod->icon_full_url }}"
-                                     class="onerror-image"
+                                     class="onerror-image flex-shrink-0"
                                      data-onerror-image="{{asset('/public/assets/admin/img/new-img/module-icon.svg')}}"
                                      width="20px" alt="public/img">
                             @else
-                                <img src="{{asset('/public/assets/admin/img/new-img/module-icon.svg')}}"
+                                <img src="{{asset('/public/assets/admin/img/new-img/module-icon.svg')}}" class="flex-shrink-0"
                                      alt="public/img">
                             @endif
                             <span class="text-white">{{ $mod ? $mod->module_name : translate('modules') }}</span>
@@ -313,9 +328,19 @@
         <span class="w-32 h-32px  min-w-32 d-flex align-items-center justify-content-center  bg-primary rounded-8"><img src="{{ asset('public/assets/admin/img/solar_multiple-forward-right-line-duotone.svg') }}" alt=""></span>
     </button>
     <div class="d-flex flex-column">
+ 
+        @if (Request::isAny([
+            'taxvat*',
+            'admin/business-settings/seo-settings/page-meta-data*',
+            'admin/business-settings/pages/react-landing-page-settings/meta-data*',
+            'admin/business-settings/pages/admin-landing-page-settings/meta-data*',
+            'admin/business-settings/business-setup*',
+            'admin/store/view/*/meta-data'
+        ]))
 
-    @if (Request::is('taxvat*'))
-        <div class="tour-guide-items offcanvas-trigger text-capitalize fs-14 text-title cursor-pointer" data-target="#global_guideline_offcanvas">{{ translate('Guideline') }}</div>
+
+            <div class="tour-guide-items offcanvas-trigger text-capitalize fs-14 text-title cursor-pointer"
+                data-target="#global_guideline_offcanvas">{{ translate('Guideline') }}</div>
     @endif
 
         <div class="tour-guide-items">

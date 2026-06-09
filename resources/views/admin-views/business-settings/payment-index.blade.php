@@ -16,16 +16,32 @@
 
     @endphp
 
+    <!-- Page Title -->
+        <div class="mb-3">
+            <h2 class="h1 mb-0 text-capitalize d-flex align-items-center gap-2">
+                {{translate('Payment_Methods_Setup')}}
+            </h2>
+        </div>
+        <!-- End Page Title -->
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+            <div class="js-nav-scroller hs-nav-scroller-horizontal mt-2">
+                <!-- Nav -->
+                <ul class="nav nav-tabs border-0 nav--tabs nav--pills">
+                    <li class="nav-item">
+                        <a class="nav-link   {{ Request::is('admin/business-settings/third-party/payment-method') ? 'active' : '' }}" href="{{ route('admin.business-settings.third-party.payment-method') }}"   aria-disabled="true">{{translate('Digital Payment')}}</a>
+                    </li>
+                    @if (\App\CentralLogics\Helpers::get_mail_status('offline_payment_status'))
+                    <li class="nav-item">
+                        <a class="nav-link {{ Request::is('admin/business-settings/offline-payment') ? 'active' : '' }}" href="{{route('admin.business-settings.offline')}}">{{ translate('Offline_Payment') }}</a>
+                    </li>
+                    @endif
+                </ul>
+                <!-- End Nav -->
+            </div>
+        </div>
+
         <div class="page-header">
-            <h1 class="page-header-title">
-                <span class="page-header-icon">
-                    <img src="{{asset('/public/assets/admin/img/payment.png')}}" class="w--22" alt="">
-                </span>
-                <span>
-                    {{translate('messages.payment_gateway_setup')}}
-                </span>
-            </h1>
-            @include('admin-views.business-settings.partials.third-party-links')
             <div class="d-flex flex-wrap justify-content-end align-items-center flex-grow-1">
                 <div class="blinkings trx_top active">
                     <i class="tio-info-outined"></i>
@@ -39,7 +55,54 @@
             </div>
         </div>
         <!-- End Page Header -->
-        <div class="card border-0">
+
+        <div class="fs-12 px-3 py-12px rounded bg-warning-10 mb-3">
+            <div class="d-flex gap-2 mb-1">
+                <span class="text-warning lh-1 fs-14">
+                    <i class="tio-info"></i>
+                </span>
+                <span class="text-dark">
+                    {{ translate('Here you can configure payment gateways by obtaining the necessary credentials (e.g., API keys) from each respective payment gateway platform.') }}
+                </span>
+            </div>
+            <ul class="mb-0 gap-1 d-flex flex-column">
+                <li class="color-656565">
+                    {{ translate('To use digital payments, you need to set up at least one payment method') }}
+                </li>
+                <li class="color-656565">
+                    {{ translate('To make available these payment options, you must enable the Digital payment option from') }} <strong class="font-semibold text-primary"><a style="color: #245BD1;" href="{{route('admin.business-settings.business-setup')}}" target="_blank" rel="noopener noreferrer">{{ translate('Business Information') }}</a></strong> {{ translate('page') }}
+                </li>
+            </ul>
+        </div>
+        @php($digital_payment=\App\CentralLogics\Helpers::get_business_settings('digital_payment'))
+        @if($digital_payment && $digital_payment['status'] ==1 && $checkCurrency !== true )
+        <div class="fs-12 color-656565 px-3 py-2 rounded bg-danger-10 mt-20 mb-20">
+            <div class="d-flex gap-2 ">
+                <span class="text-danger lh-1 fs-14">
+                    <i class="tio-warning text-danger"></i>
+                </span>
+                <span>
+                    {{ translate($checkCurrency).' '. translate('Does_not_support_your_current') }}   {{ $currency }}({{$currency_symbol  }}). {{ translate('To change currency setup visit') }} <strong ><a class="text-primary" href="{{route('admin.business-settings.business-setup')}}#currency-setup" target="_blank" rel="noopener noreferrer">{{ translate('Currency') }}</a></strong> {{ translate('page') }}
+                </span>
+            </div>
+        </div>
+        @elseif ($digital_payment && $digital_payment['status'] ==1 && $data_values->where('is_active',1  )->count()  == 0)
+        <br>
+        <div>
+            <div class="card">
+                <div class="bg--3 px-5 pb-2 card-body d-flex flex-wrap justify-content-around">
+                    <p class="w-50 fs-15 text-danger flex-grow-1 ">
+                        <i class="tio-info-outined"></i>
+                    {{ translate('Currently,_there_is_no_digital_payment_method_is_set_up_that_supports_') }}   {{ $currency }}({{$currency_symbol  }}),{{ translate('_thus_users_cannot_view_digital_payment_options_in_their_websites_and_apps_._You_must_activate_at_least_one_digital_payment_method_that_supports_') }}   {{ $currency }}({{$currency_symbol  }}) {{ translate('_otherwise,_all_users_will_be_unable_to_pay_via_digital_payments.') }}</p>
+
+                </div>
+            </div>
+        </div>
+        @endif 
+
+
+
+        <!-- <div class="card border-0">
             <div class="card-header card-header-shadow">
                 <h5 class="card-title align-items-center">
                     <img src="{{asset('/public/assets/admin/img/payment-method.png')}}" class="mr-1" alt="">
@@ -80,7 +143,6 @@
                         </form>
                     </div>
                     <div class="col-md-4">
-                        @php($digital_payment=\App\CentralLogics\Helpers::get_business_settings('digital_payment'))
                         <form action="{{route('admin.business-settings.third-party.payment-method-update',['digital_payment'])}}"
                               method="post" id="digital_payment_status_form">
                             @csrf
@@ -142,8 +204,9 @@
                     </div>
                 </div>
             </div>
-        </div>
-        @if($published_status == 1)
+        </div> -->
+
+         @if($published_status == 1)
             <br>
             <div>
                 <div class="card">
@@ -159,136 +222,233 @@
             </div>
         @endif
 
-        @if($digital_payment && $digital_payment['status'] ==1 && $checkCurrency !== true )
-        <br>
-        <div>
-            <div class="card">
-                <div class="bg--3 px-5 pb-2 card-body d-flex flex-wrap justify-content-around">
-                    <p class="w-50 fs-15 text-danger flex-grow-1 ">
-                        <i class="tio-info-outined"></i>
-                    {{ translate($checkCurrency).' '. translate('Does_not_support_your_current') }}   {{ $currency }}({{$currency_symbol  }}) {{ translate('Currency,_thus_users_cannot_use_this_digital_payment_options_as_payment_in_the_websites_and_apps.') }}</p>
+        
 
-                </div>
-            </div>
-        </div>
-        @elseif ($digital_payment && $digital_payment['status'] ==1 && $data_values->where('is_active',1  )->count()  == 0)
-        <br>
-        <div>
-            <div class="card">
-                <div class="bg--3 px-5 pb-2 card-body d-flex flex-wrap justify-content-around">
-                    <p class="w-50 fs-15 text-danger flex-grow-1 ">
-                        <i class="tio-info-outined"></i>
-                    {{ translate('Currently,_there_is_no_digital_payment_method_is_set_up_that_supports_') }}   {{ $currency }}({{$currency_symbol  }}),{{ translate('_thus_users_cannot_view_digital_payment_options_in_their_websites_and_apps_._You_must_activate_at_least_one_digital_payment_method_that_supports_') }}   {{ $currency }}({{$currency_symbol  }}) {{ translate('_otherwise,_all_users_will_be_unable_to_pay_via_digital_payments.') }}</p>
-
-                </div>
-            </div>
-        </div>
-
-        @endif
-        @php($is_published = $published_status == 1 ? 'inactive' : '')
-        <!-- Tab Content -->
-        <div class="row digital_payment_methods  {{ $is_published }} mt-3 g-3">
-            @foreach($data_values->sortByDesc('is_active') as $payment_key => $payment)
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <form action="{{env('APP_MODE')!='demo'?route('admin.business-settings.third-party.payment-method-update'):'javascript:'}}" method="POST"
-                              id="{{$payment->key_name}}-form" enctype="multipart/form-data">
-                            @csrf
-                            <div class="card-header d-flex flex-wrap align-content-around">
-                                <h5>
-                                    <span class="text-uppercase">{{str_replace('_',' ',$payment->key_name)}}</span>
-                                </h5>
-                                <label  id="span_on_{{ $payment->key_name }}" class="switch--custom-label toggle-switch toggle-switch-sm d-inline-flex">
-                                    <span
-                                        class="mr-2 switch--custom-label-text text-primary on text-uppercase">{{ translate('on') }}</span>
-                                    <span class="mr-2 switch--custom-label-text off text-uppercase">{{ translate('off') }}</span>
-                                    <input id="add_check_{{ $payment->key_name }}"  type="checkbox" name="status" value="1" data-gateway="{{ $payment->key_name }}" data-status="{{ $payment['is_active'] }}"
-                                           class="toggle-switch-input  {{ \App\CentralLogics\Helpers::checkCurrency($payment->key_name , 'payment_gateway') === true && $payment['is_active']  ? 'open-warning-modal' : ''}} " {{$payment['is_active']==1?'checked':''}}>
-                                    <span class="toggle-switch-label text">
-                                            <span class="toggle-switch-indicator"></span>
-                                        </span>
-                                </label>
-                            </div>
-
-                            @php($additional_data = $payment['additional_data'] != null ? json_decode($payment['additional_data']) : [])
-                            <div class="card-body">
-                                <div class="payment--gateway-img">
-                                    <img  id="{{$payment->key_name}}-image-preview" class="__height-80 onerror-image"
-                                          data-onerror-image="{{asset('/public/assets/admin/img/payment/placeholder.png')}}"
-
-                                          @if ($additional_data != null)
-                                              src="{{ \App\CentralLogics\Helpers::get_full_url('payment_modules/gateway_image',$additional_data?->gateway_image,$additional_data?->storage ?? 'public') }}"
-
-                                          @else
-                                              src="{{asset('/public/assets/admin/img/payment/placeholder.png')}}"
-                                          @endif
-
-
-
-                                          alt="public">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-20">
+                    <h4 class="mb-0 flex-grow-1">{{ translate('Digital Payment Methods List') }}</h4>
+                    <div class="d-flex align-items-stretch flex-wrap gap-3">
+                        <div class="flex-grow-1">
+                            <form action="{{ url()->current() }}" method="GET">
+                                <!-- Search -->
+                                <div class="input--group input-group input-group-merge input-group-flush w-340">
+                                    <input id="datatableSearch_" type="search" name="search" class="form-control" placeholder="{{ translate('Search by payment method name') }}" aria-label="Search by payment method name" value="{{ request('search') }}" required="">
+                                    <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                                 </div>
-
-                                <input name="gateway" value="{{$payment->key_name}}" class="d-none">
-
-                                @php($mode=$data_values->where('key_name',$payment->key_name)->first()->live_values['mode'])
-                                <div class="form-floating mb-2" >
-                                    <select class="js-select form-control theme-input-style w-100" name="mode">
-                                        <option value="live" {{$mode=='live'?'selected':''}}>{{ translate('Live') }}</option>
-                                        <option value="test" {{$mode=='test'?'selected':''}}>{{ translate('Test') }}</option>
-                                    </select>
-                                </div>
-
-                                @php($skip=['gateway','mode','status'])
-                                @foreach($data_values->where('key_name',$payment->key_name)->first()->live_values as $key=>$value)
-                                    @if(!in_array($key,$skip))
-                                        <div class="form-floating mb-2" >
-                                            <label for="{{$payment_key}}-{{$key}}"
-                                                   class="form-label">{{ucwords(str_replace('_',' ',$key))}}
-                                                *</label>
-                                            <input id="{{$payment_key}}-{{$key}}" type="text" class="form-control"
-                                                   name="{{$key}}"
-                                                   placeholder="{{ucwords(str_replace('_',' ',$key))}} *"
-                                                   value="{{env('APP_ENV')=='demo'?'':$value}}">
-                                        </div>
-                                    @endif
-                                @endforeach
-
-                                @if($payment['key_name'] == 'paystack')
-                                    <div class="form-floating mb-2" >
-                                        <label for="Callback_Url" class="form-label">{{translate('Callback Url')}}</label>
-                                        <input id="Callback_Url" type="text"
-                                               class="form-control"
-                                               placeholder="{{translate('Callback Url')}} *"
-                                               readonly
-                                               value="{{env('APP_ENV')=='demo'?'': route('paystack.callback')}}" {{$is_published}}>
-                                    </div>
-                                @endif
-
-                                <div class="form-floating mb-2" >
-                                    <label for="payment_gateway_title-{{$payment_key}}"
-                                           class="form-label">{{translate('payment_gateway_title')}}</label>
-                                    <input type="text" class="form-control"
-                                           name="gateway_title" id="payment_gateway_title-{{$payment_key}}"
-                                           placeholder="{{translate('payment_gateway_title')}}"
-                                           value="{{$additional_data != null ? $additional_data->gateway_title : ''}}">
-                                </div>
-
-                                <div class="form-floating mb-2" >
-                                    <label for="exampleFormControlInput1"
-                                           class="form-label">{{translate('logo')}}</label>
-                                    <input type="file" class="form-control logo" name="gateway_image" data-id="{{$payment->key_name}}" id="{{$payment->key_name}}-image" accept=".webp, .jpg, .png, .jpeg|image/*">
-                                </div>
-
-                                <div class="text-right mt-2 "  >
-                                    <button type="submit" class="btn btn-primary px-5">{{translate('save')}}</button>
-                                </div>
-                            </div>
-                        </form>
+                                <!-- End Search -->
+                            </form>
+                        </div>
                     </div>
                 </div>
-            @endforeach
+                @php($is_published = $published_status == 1 ? 'inactive' : '')
+                <!-- Tab Content -->
+                <div class="row digital_payment_methods  {{ $is_published }} g-3">
+                    @foreach($data_values->sortByDesc('is_active') as $payment_key => $payment)
+                        <div class="col-md-6 payment-card">
+                            <div class="card">
+                                <form action="{{getEnvMode()!='demo'?route('admin.business-settings.third-party.payment-method-update',['payment_method_status' => $payment->key_name]):'javascript:'}}" method="POST"
+                                      id="{{$payment->key_name}}_form" enctype="multipart/form-data">
+                                    @csrf
+                                    @php($mode=$data_values->where('key_name',$payment->key_name)->first()->live_values['mode'])
+                                    <input type="hidden" name="gateway" value="{{$payment->key_name}}">
+                                    <input type="hidden" name="mode" value="{{$mode}}">
+                                    <div class="d-flex p-20 w-100 flex-wrap align-content-around justify-content-between">
+                                        <h5 class="m-0 align-content-center">
+                                            <span class="text-capitalize fs-14 me--3 payment-name">{{str_replace('_',' ',$payment->key_name)}}</span>
+                                            @if($mode=='test')
+                                            <div class="badge theme-bg-opacity10 text-primary px-2">
+                                                {{translate('Test')}}
+                                            </div>
+                                            @else
+                                            <div class="badge theme-bg-opacity10 text-success px-2">
+                                                {{translate('Live')}}
+                                            </div>
+                                            @endif
+                                        </h5>
+                                        <div class="d-flex align-items-center gap-xxl-20 gap-2">
+                                            <label class="toggle-switch h--45px toggle-switch-sm d-flex justify-content-between rounded py-0">
+                                                <input  type="checkbox" id="{{$payment->key_name}}"
+                                                        data-id="{{$payment->key_name}}"
+                                                        data-type="status"
+                                                        data-image-on="{{ asset('/public/assets/admin/img/feature-status-on.png') }}"
+                                                        data-image-off="{{ asset('/public/assets/admin/img/off-danger.png') }}"
+                                                        data-title-on="{{ translate('Turn ON ') }} {{strtoupper(str_replace('_',' ',$payment->key_name))}} {{ translate('Payment Method') }}"
+                                                        data-title-off="{{ translate('Turn OFF ') }} {{strtoupper(str_replace('_',' ',$payment->key_name))}} {{ translate('Payment Method') }}"
+                                                        data-text-on="<p>{{ translate('By enabling ') }} {{strtoupper(str_replace('_',' ',$payment->key_name))}} {{ translate(' customers can securely pay with their ')}} {{strtoupper(str_replace('_',' ',$payment->key_name))}} {{ translate('accounts.') }}</p>"
+                                                        data-text-off="<p>{{ translate('By disabling ') }} {{strtoupper(str_replace('_',' ',$payment->key_name))}} {{ translate(' customers will not be able to pay with their ')}} {{strtoupper(str_replace('_',' ',$payment->key_name))}} {{ translate('accounts.') }}</p>"
+                                                        class="status toggle-switch-input dynamic-checkbox" 
+                                                        name="status" value="1" {{$payment['is_active']==1?'checked':''}}>
+                                                <span class="toggle-switch-label text">
+                                                    <span class="toggle-switch-indicator"></span>
+                                                </span>
+                                            </label>
+                                            <button type="button" class="btn bg-white action-btn btn-outline-warning offcanvas-trigger" data-target="#payment_setup_{{$payment->key_name}}">
+                                                <i class="tio-settings d-flex"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                    <div id="payment_setup_{{$payment->key_name}}" class="custom-offcanvas d-flex flex-column justify-content-between">
+                                        <form action="{{getEnvMode()!='demo'?route('admin.business-settings.third-party.payment-method-update'):'javascript:'}}" method="POST" enctype="multipart/form-data">
+                                            @csrf
+                                            <input type="hidden" name="gateway" value="{{$payment->key_name}}">
+                                            
+                                            <div class="custom-offcanvas-header bg--secondary d-flex justify-content-between align-items-center px-3 py-3">
+                                                <div class="py-1">
+                                                    <h3 class="mb-0 line--limit-1">
+                                                       {{translate('Setup')}} - <span class="text-capitalize">{{str_replace('_',' ',$payment->key_name)}}</span>
+                                                    </h3>
+                                                </div>
+                                                <button type="button" class="btn-close w-25px h-25px border rounded-circle d-center bg--secondary text-dark offcanvas-close fz-15px p-0" aria-label="Close">
+                                                    &times;
+                                                </button>
+                                            </div>
+                                            <div class="custom-offcanvas-body p-20">
+                                                <div class="p-xxl-20 p-3 bg-light rounded mb-20">
+                                                    <div class="mb-3">
+                                                        <h4 class="mb-1">
+                                                            <span class="text-capitalize">{{str_replace('_',' ',$payment->key_name)}}</span>
+                                                        </h4>
+                                                        <p class="mb-0 fs-12">
+                                                            {{ translate('If you turn off customer can’t pay through this payment gateway.') }}
+                                                        </p>
+                                                    </div>
+                                                    <label class="toggle-switch h--45px toggle-switch-sm d-flex justify-content-between border rounded px-3 py-0 form-control">
+                                                        <span class="pr-1 d-flex align-items-center switch--label">
+                                                            <span class="line--limit-1">
+                                                                {{translate('Status')}}
+                                                            </span>
+                                                        </span>
+                                                        <input type="checkbox" class="status toggle-switch-input" name="status" value="1" {{$payment['is_active']==1?'checked':''}}>
+                                                        <span class="toggle-switch-label text">
+                                                            <span class="toggle-switch-indicator"></span>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                @php($additional_data = $payment['additional_data'] != null ? json_decode($payment['additional_data']) : [])
+                                                <div class="p-20 bg-light rounded mb-20">
+                                                    <div class="mb-30">
+                                                        <h4 class="mb-1">{{ translate('Choose Logo') }} <span class="text-danger">*</span> </h4>
+                                                        <p class="mb-0 fs-12 gray-dark">
+                                                            {{translate('It will show in website & app. ')}}
+                                                        </p>
+                                                    </div>
+                                                    <div class="mx-auto text-center">
+                                                        @include('admin-views.partials._image-uploader', [
+                                                            'id' => 'image-input-'.$payment->key_name,
+                                                            'name' => 'gateway_image',
+                                                            'ratio' => '3:1',
+                                                            'isRequired' => true,
+                                                            'existingImage' => isset($additional_data->gateway_image) ? \App\CentralLogics\Helpers::get_full_url('payment_modules/gateway_image/', $additional_data->gateway_image, $additional_data->storage ?? 'public', 'upload_image') : null,
+                                                            'imageExtension' => IMAGE_EXTENSION,
+                                                            'imageFormat' => IMAGE_FORMAT,
+                                                            'maxSize' => MAX_FILE_SIZE,
+                                                            'textPosition' => 'bottom',
+                                                        ])
+                                                    </div>
+                                                </div>
+
+                                                <div class="p-xxl-20 p-3 bg-light rounded">
+                                                    <div class="form-floating mb-20">
+                                                        <label for="payment_gateway_title-{{$payment_key}}" class="form-label fs-14">{{translate('payment_gateway_title')}} <span class="text-danger">*</span></label>
+                                                        <input type="text" class="form-control" name="gateway_title" id="payment_gateway_title-{{$payment_key}}" placeholder="{{translate('payment_gateway_title')}}" value="{{$additional_data != null ? $additional_data->gateway_title : ''}}">
+                                                    </div>
+
+                                                    @php($mode=$data_values->where('key_name',$payment->key_name)->first()->live_values['mode'])
+                                                    <div class="form-floating mb-20">
+                                                         <label class="form-label fs-14 d-flex align-items-center gap-1">{{translate('Choose Use Type')}} <span class="text-danger">*</span>
+                                                            <span class="" data-toggle="tooltip" data-placement="right" data-html="true" data-original-title="<div class='text-start'>{{ translate('When select live option: during use this from website/app need real required data. other wise this gateway can\'t work.') }} <br><br> {{ translate('When select Test option: during use this from website/app use fake required data to test payment gateway work properly or not.') }}</div>">
+                                                                <i class="tio-info text-muted fs-14"></i>
+                                                            </span>
+                                                        </label>
+                                                        <div class="restaurant-type-group bg-white border flex-nowrap">
+                                                            <label class="form-check form--check w-100">
+                                                                <input class="form-check-input" type="radio" {{$mode=='live'?'checked':''}} value="live" name="mode">
+                                                                <span class="form-check-label">{{ translate('Live') }}</span>
+                                                            </label>
+                                                            <label class="form-check form--check w-100">
+                                                                <input class="form-check-input" type="radio" {{$mode=='test'?'checked':''}} value="test" name="mode">
+                                                                <span class="form-check-label">{{ translate('Test') }}</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    @php($skip=['gateway','mode','status','supported_country', 'gateway_image'])
+                                                    @foreach($data_values->where('key_name',$payment->key_name)->first()->live_values as $key=>$value)
+                                                        @if(!in_array($key,$skip))
+                                                            <div class="form-floating mb-20">
+                                                                <label for="{{$payment_key}}-{{$key}}" class="form-label fs-14">{{ucwords(str_replace('_',' ',$key))}} <span class="text-danger">*</span></label>
+                                                                <div class="custom-copy-text position-relative h--45px w-100 rounded overflow-hidden">
+                                                                    <input type="text" id="{{$payment_key}}-{{$key}}" class="text-inside copy-text form-control rounded-1 pe-40" placeholder="{{ucwords(str_replace('_',' ',$key))}} *" name="{{$key}}" value="{{env('APP_ENV')=='demo'?'':$value}}" />
+                                                                    <span class="copy-btn bg-white position-absolute end-cus-0 top-50 cursor-pointer text-primary me-3"><i class="tio-copy"></i></span>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+                                                    @endforeach
+
+                                                    @if($payment['key_name'] == 'paystack')
+                                                        <div class="form-floating mb-20">
+                                                            <label for="Callback_Url" class="form-label">{{translate('Callback Url')}}</label>
+                                                            <input id="Callback_Url" type="text" class="form-control" placeholder="{{translate('Callback Url')}} *" readonly value="{{env('APP_ENV')=='demo'?'': route('paystack.callback')}}">
+                                                        </div>
+                                                    @endif
+                                                    
+                                                    @php($supportedCountry = $payment->live_values)
+                                                    @if ( $payment['key_name'] == 'mercadopago')
+                                                        @php($supportedCountry = isset($supportedCountry['supported_country']) ? $supportedCountry['supported_country'] : ['argentina'])
+                                                        <label for="{{ $payment->key_name }}-title" class="form-label">{{ translate('supported_Country') }} *</label>
+                                                        <div class="mb-4">
+                                                            <select class="form-control w-100" name="supported_country">
+                                                                <option value="egypt" {{$supportedCountry == 'egypt'?'selected':''}}>{{ translate('Egypt') }}</option>
+                                                                <option value="PAK" {{$supportedCountry == 'PAK'?'selected':''}}>{{ translate('Pakistan') }}</option>
+                                                                <option value="KSA" {{$supportedCountry == 'KSA'?'selected':''}}>{{ translate('Saudi Arabia') }}</option>
+                                                                <option value="oman" {{$supportedCountry == 'oman'?'selected':''}}>{{ translate('Oman') }}</option>
+                                                                <option value="UAE" {{$supportedCountry == 'UAE'?'selected':''}}>{{ translate('UAE') }}</option>
+                                                                <option value="argentina" {{$supportedCountry == 'argentina'?'selected':''}}>{{ translate('Argentina') }}</option>
+                                                                <option value="brasil" {{$supportedCountry == 'brasil'?'selected':''}}>{{ translate('Brasil') }}</option>
+                                                                <option value="mexico" {{$supportedCountry == 'mexico'?'selected':''}}>{{ translate('México') }}</option>
+                                                                <option value="uruguay" {{$supportedCountry == 'uruguay'?'selected':''}}>{{ translate('Uruguay') }}</option>
+                                                                <option value="colombia" {{$supportedCountry == 'colombia'?'selected':''}}>{{ translate('Colombia') }}</option>
+                                                                <option value="chile" {{$supportedCountry == 'chile'?'selected':''}}>{{ translate('Chile') }}</option>
+                                                                <option value="peru" {{$supportedCountry == 'peru'?'selected':''}}>{{ translate('Perú') }}</option>
+                                                            </select>
+                                                        </div>
+                                                    @endif
+
+                                                </div>
+                                            </div>
+                                            <div class="offcanvas-footer p-3 d-flex align-items-center justify-content-center gap-3">
+                                                <button type="button" class="btn w-100 btn--reset h--40px reset offcanvas-close">{{translate('Reset')}}</button>
+                                                <button type="submit" class="btn w-100 btn--primary h--40px">{{translate('Save')}}</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <!-- End Tab Content -->
+            </div>
+            @if(count($data_values) > 0)
+            <div class="card-footer px-0">
+                <div class="d-flex justify-content-end">
+                    {!! $data_values->links() !!}
+                </div>
+            </div>
+            @else
+            <div class="empty--data">
+                <img width="64" class="mb-2" src="{{asset('/public/assets/admin/svg/illustrations/no-data.svg')}}" alt="public">
+                <p class="fs-16 mb-20">
+                    {{translate('No Payment Method List')}}
+                </p>
+            </div>
+            @endif
+            </div>
+            
         </div>
-        <!-- End Tab Content -->
+
     </div>
 
 
@@ -328,6 +488,11 @@
         </div>
     </div>
 
+
+    <!-- global guideline view Offcanvas here -->
+
+    <div id="offcanvasOverlay" class="offcanvas-overlay"></div>
+    <!-- global guideline view Offcanvas end -->
 
 @endsection
 
@@ -384,8 +549,8 @@
     });
 
 
-        @if(!isset($digital_payment) || $digital_payment['status']==0)
+    @if(!isset($digital_payment) || $digital_payment['status']==0)
         $('.digital_payment_methods').hide();
-        @endif
+    @endif
     </script>
 @endpush

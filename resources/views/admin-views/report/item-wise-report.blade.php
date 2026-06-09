@@ -39,7 +39,7 @@
                     <div class="col-sm-6 col-md-3">
                         <select name="module_id" class="form-control js-select2-custom set-filter" data-url="{{ url()->full() }}" data-filter="module_id" title="{{translate('messages.select_modules')}}">
                             <option value="" {{!request('module_id') ? 'selected':''}}>{{translate('messages.all_modules')}}</option>
-                            @foreach (\App\Models\Module::notParcel()->get() as $module)
+                            @foreach (\App\Models\Module::notParcel()->WithoutAdditionalModules()->get(['id', 'module_name']) as $module)
                                 <option
                                     value="{{$module->id}}" {{request('module_id') == $module->id?'selected':''}}>
                                     {{$module['module_name']}}
@@ -148,7 +148,7 @@
                                 <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
                                     alt="Image Description">
-                                .{{ translate('messages.csv') }}
+                                {{ translate('messages.csv') }}
                             </a>
                         </div>
                     </div>
@@ -287,7 +287,7 @@
         $(document).on('ready', function () {
             $('.js-data-example-ajax').select2({
                 ajax: {
-                    url: '{{url('/')}}/admin/store/get-stores',
+                    url: '{{ route('admin.store.get-stores') }}',
                     data: function (params) {
                         return {
                             q: params.term, // search term

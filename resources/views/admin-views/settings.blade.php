@@ -71,7 +71,7 @@
             </div>
 
             <div class="col-lg-9">
-                <form action="{{ env('APP_MODE') != 'demo' ? route('admin.settings') : 'javascript:' }}" method="post"
+                <form action="{{ getEnvMode() != 'demo' ? route('admin.settings') : 'javascript:' }}" method="post"
                     enctype="multipart/form-data" id="admin-settings-form">
                     @csrf
                     <!-- Card -->
@@ -86,7 +86,7 @@
                         <label class="avatar avatar-xxl avatar-circle avatar-border-lg avatar-uploader profile-cover-avatar"
                             for="avatarUploader">
                             <img id="viewer" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img1.jpg') }}"
-                                class="avatar-img onerror-image"
+                                class="avatar-img onerror-image w-100"
                                 src="{{ auth('admin')->user()->toArray()['image_full_url'] }}" alt="Image">
 
                             <input type="file" name="image" class="js-file-attach avatar-uploader-input"
@@ -169,7 +169,7 @@
                             <div class="d-flex justify-content-end">
                                 <button type="button" data-id="admin-settings-form"
                                     data-message="{{ translate('Want to update admin info ?') }}"
-                                    class="btn btn-primary {{ env('APP_MODE') != 'demo' ? 'form-alert' : 'call-demo' }}">{{ translate('messages.save') }}</button>
+                                    class="btn btn-primary {{ getEnvMode() != 'demo' ? 'form-alert' : 'call-demo' }}">{{ translate('messages.save') }}</button>
                             </div>
 
                             <!-- End Form -->
@@ -189,7 +189,7 @@
                     <div class="card-body">
                         <!-- Form -->
                         <form id="changePasswordForm"
-                            action="{{ env('APP_MODE') != 'demo' ? route('admin.settings-password') : 'javascript:' }}"
+                            action="{{ getEnvMode() != 'demo' ? route('admin.settings-password') : 'javascript:' }}"
                             method="post" enctype="multipart/form-data">
                             @csrf
 
@@ -279,7 +279,7 @@
                             <div class="d-flex justify-content-end">
                                 <button type="button" data-id="changePasswordForm"
                                     data-message="{{ translate('messages.want_to_update_admin_password') }}"
-                                    class="btn btn-primary {{ env('APP_MODE') != 'demo' ? 'form-alert' : 'call-demo' }}">{{ translate('messages.save') }}</button>
+                                    class="btn btn-primary {{ getEnvMode() != 'demo' ? 'form-alert' : 'call-demo' }}">{{ translate('messages.save') }}</button>
                             </div>
                         </form>
                         <!-- End Form -->

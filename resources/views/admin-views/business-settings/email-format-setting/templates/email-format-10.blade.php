@@ -79,4 +79,3 @@ $company_name = App\Models\BusinessSetting::where('key', 'business_name')->first
         </tr>
     </tbody>
 </table>
-<script src="{{asset('public/assets/admin/js/view-pages/common.js')}}"></script>

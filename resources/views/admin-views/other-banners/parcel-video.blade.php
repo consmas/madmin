@@ -252,7 +252,7 @@
                         </div>
                         <div class="btn--container justify-content-end mt-20">
                             <button type="reset" class="btn btn--reset">{{ translate('Reset') }}</button>
-                            <button type="submit" class="btn btn--primary mb-2">{{ translate('Save') }}</button>
+                            <button type="submit" class="btn btn--primary call-demo">{{ translate('Save') }}</button>
                         </div>
                     </div>
                 </div>
@@ -511,7 +511,7 @@
                         @endif
                         <div class="btn--container justify-content-end mt-20">
                             <button type="reset" class="btn btn--reset">{{ translate('Reset') }}</button>
-                            <button type="submit" class="btn btn--primary mb-2">{{ translate('Save') }}</button>
+                            <button type="submit" class="btn btn--primary call-demo">{{ translate('Save') }}</button>
                         </div>
                     </div>
                 </div>

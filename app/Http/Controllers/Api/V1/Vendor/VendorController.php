@@ -25,7 +25,6 @@ use App\Models\WithdrawalMethod;
 use App\CentralLogics\OrderLogic;
 use App\CentralLogics\StoreLogic;
 use App\Mail\WithdrawRequestMail;
-use App\Models\StoreSubscription;
 use App\CentralLogics\CouponLogic;
 use App\Models\AccountTransaction;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +33,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Config;
 use App\Library\Payment as PaymentInfo;
 use App\Models\SubscriptionTransaction;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use App\Models\SubscriptionBillingAndRefundHistory;
@@ -56,7 +54,7 @@ class VendorController extends Controller
         $vendor['todays_order_count'] =$vendor->todaysorders->where('order_type','!=','pos')->whereIn('order_status', ['refunded', 'delivered'])->count();
         $vendor['this_week_order_count'] =$vendor->this_week_orders->where('order_type','!=','pos')->whereIn('order_status', ['refunded', 'delivered'])->count();
         $vendor['this_month_order_count'] =$vendor->this_month_orders->where('order_type','!=','pos')->whereIn('order_status', ['refunded', 'delivered'])->count();
-        $vendor['member_since_days'] =$vendor->created_at->diffInDays();
+        $vendor['member_since_days'] = (int) $vendor->created_at->diffInDays();
         $vendor['cash_in_hands'] =$vendor->wallet?(float)$vendor->wallet->collected_cash:0;
         $vendor['balance'] =$vendor->wallet?(float)$vendor->wallet->balance:0;
         $vendor['total_earning'] =$vendor->wallet?(float)$vendor->wallet->total_earning:0;
@@ -168,10 +166,10 @@ class VendorController extends Controller
                 }
 
 
-                if( $st?->storeConfig?->minimum_stock_for_warning > 0){
+                if( $st?->storeConfig?->show_low_stock_count && $st?->storeConfig?->minimum_stock_for_warning > 0){
                     $items=  $st?->items()->where('stock' ,'<=' , $st?->storeConfig?->minimum_stock_for_warning );
                 } else{
-                    $items=  $st?->items()->where('stock',0 );
+                    $items=  $st?->items()->whereRaw('1 = 0');
                 }
 
                 $out_of_stock_count=  $st?->module->module_type != 'food' ?  $items->orderby('stock')->latest()->count() : 0;
@@ -188,6 +186,17 @@ class VendorController extends Controller
         $store->save();
         return response()->json(['message' => $store->active?translate('messages.store_opened'):translate('messages.store_temporarily_closed')], 200);
     }
+
+    // public function verifiedBadgePopupSeen(Request $request)
+    // {
+    //     $store = $request->vendor->stores[0];
+    //     Helpers::mark_verified_badge_popup_seen($store);
+
+    //     return response()->json([
+    //         'message' => translate('messages.updated_successfully'),
+    //         'has_seen_verified_badge_popup' => 1,
+    //     ], 200);
+    // }
 
     public function get_earning_data(Request $request)
     {
@@ -437,6 +446,10 @@ class VendorController extends Controller
             {
                 $ol = OrderLogic::create_transaction($order,'admin', null);
             }
+              if($order->delivery_man_id){
+                    Helpers::deliverymanLoyaltyPointHistory(deliveryManId:$order->delivery_man_id, amount: $order->order_amount, transactionType:'earn_on_order_completion' ,pointConversionType :'credit', reference: $order->id);
+                }
+
 
             $order->payment_status = 'paid';
             OrderLogic::update_unpaid_order_payment(order_id:$order->id, payment_method:$order->payment_method);
@@ -524,7 +537,7 @@ class VendorController extends Controller
         } else if ($order->order_type == 'parcel' || $order->prescription_order == 1) {
             $order->delivery_address = json_decode($order->delivery_address, true);
             if($order->prescription_order && $order->order_attachment){
-                $order->order_attachment = json_decode($order->order_attachment, true);
+                $order->order_attachment = is_array($order->order_attachment)? $order->order_attachment : json_decode($order->order_attachment, true);
             }
             return response()->json(($order), 200);
         }
@@ -718,11 +731,11 @@ class VendorController extends Controller
             $admin= Admin::where('role_id', 1)->first();
             $mail_status = Helpers::get_mail_status('campaign_request_mail_status_admin');
             if(config('mail.status') && $mail_status == '1' && Helpers::getNotificationStatusData('admin','campaign_join_request','mail_status' )) {
-                Mail::to($admin->email)->send(new \App\Mail\CampaignRequestMail($store->name));
+                Mail::to($admin?->getRawOriginal('email'))->send(new \App\Mail\CampaignRequestMail($store->name));
             }
             $mail_status = Helpers::get_mail_status('campaign_request_mail_status_store');
             if(config('mail.status') && $mail_status == '1' &&  Helpers::getNotificationStatusData('store','store_campaign_join_request','mail_status',$store->id )) {
-                Mail::to($store->vendor->email)->send(new \App\Mail\VendorCampaignRequestMail($store->name,'pending'));
+                Mail::to($store->vendor?->getRawOriginal('email'))->send(new \App\Mail\VendorCampaignRequestMail($store->name,'pending'));
             }
         }
         catch(\Exception $e)
@@ -863,10 +876,10 @@ class VendorController extends Controller
                 $admin= \App\Models\Admin::where('role_id', 1)->first();
                 $wallet_transaction = WithdrawRequest::where('vendor_id',$w->vendor_id)->latest()->first();
                 if($request['vendor']?->stores[0]?->module?->module_type !== 'rental' &&  config('mail.status') && $mail_status == '1'  &&  Helpers::getNotificationStatusData('admin','withdraw_request','mail_status' )) {
-                    Mail::to($admin->email)->send(new WithdrawRequestMail('admin_mail',$wallet_transaction));
+                    Mail::to($admin?->getRawOriginal('email'))->send(new WithdrawRequestMail('admin_mail',$wallet_transaction));
                 }
                 elseif($request['vendor']?->stores[0]?->module?->module_type == 'rental' && addon_published_status('Rental') && config('mail.status') && Helpers::get_mail_status('rental_withdraw_request_mail_status_admin') == '1' &&   Helpers::getRentalNotificationStatusData('admin','provider_withdraw_request','mail_status') ){
-                    Mail::to($admin->email)->send(new ProviderWithdrawRequestMail('pending',$wallet_transaction));
+                    Mail::to($admin?->getRawOriginal('email'))->send(new ProviderWithdrawRequestMail('pending',$wallet_transaction));
                 }
                 return response()->json(['message'=>translate('messages.withdraw_request_placed_successfully')],200);
             }
