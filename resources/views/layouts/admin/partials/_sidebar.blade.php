@@ -886,6 +886,12 @@
                         <span class="text-truncate">{{ translate('messages.notification_settings') }}</span>
                     </a>
                 </li>
+                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/ai-management*') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('admin.ai-management.index') }}" title="AI Management">
+                        <span class="tio-message-text-outlined nav-icon"></span>
+                        <span class="text-truncate">AI Management</span>
+                    </a>
+                </li>
 
                 @endif
                 <!-- End Business Settings -->

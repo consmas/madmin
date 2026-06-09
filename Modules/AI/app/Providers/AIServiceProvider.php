@@ -2,6 +2,7 @@
 
 namespace Modules\AI\app\Providers;
 
+use App\Models\BusinessSetting;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +21,7 @@ class AIServiceProvider extends ServiceProvider
         $this->registerCommandSchedules();
         $this->registerTranslations();
         $this->registerConfig();
+        $this->registerRuntimeSettings();
         config(['openai.request_timeout' => config('ai.request_timeout', 30)]);
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
@@ -111,5 +113,21 @@ class AIServiceProvider extends ServiceProvider
         }
 
         return $paths;
+    }
+
+    private function registerRuntimeSettings(): void
+    {
+        try {
+            $stored = BusinessSetting::query()->where('key', 'ai_phase_one_config')->value('value');
+            $settings = $stored ? json_decode($stored, true) : [];
+
+            if (is_array($settings)) {
+                foreach ($settings as $key => $value) {
+                    config(["ai.{$key}" => $value]);
+                }
+            }
+        } catch (\Throwable) {
+            // Keep environment defaults available during installation and migrations.
+        }
     }
 }

@@ -63,6 +63,14 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
         //dashboard
         Route::get('/', 'DashboardController@dashboard')->name('dashboard');
 
+        Route::group(['prefix' => 'ai-management', 'as' => 'ai-management.', 'middleware' => ['module:settings']], function () {
+            Route::get('/', 'AiManagementController@index')->name('index');
+            Route::put('settings', 'AiManagementController@updateSettings')->name('settings.update');
+            Route::post('{type}', 'AiManagementController@store')->name('store');
+            Route::get('{type}/{id}/edit', 'AiManagementController@edit')->name('edit');
+            Route::put('{type}/{id}', 'AiManagementController@update')->name('update');
+        });
+
         Route::get('maintenance-mode', 'SystemController@maintenance_mode')->name('maintenance-mode');
         Route::get('landing-page', 'SystemController@landing_page')->name('landing-page');
 
