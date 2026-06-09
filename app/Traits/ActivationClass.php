@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\BusinessSetting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 // use Illuminate\Support\Facades\Route;
@@ -97,16 +98,70 @@ trait ActivationClass
         $config = $this->getAddonsConfig();
         $cacheKey = $this->getSystemAddonCacheKey(app: $app);
 
-        if (isset($config[$app]) && (!isset($config[$app]['active']) || $config[$app]['active'] == 0)) {
+        if (!isset($config[$app])) {
             Cache::forget($cacheKey);
             return false;
-        } else {
-            $appConfig = $config[$app];
-            return Cache::remember($cacheKey, $this->getCacheTimeoutByDays(days: 1), function () use ($app, $appConfig) {
-                $response = $this->getRequestConfig(username: $appConfig['username'], purchaseKey: $appConfig['purchase_key'], softwareId: $appConfig['software_id'], softwareType: $appConfig['software_type'] ?? base64_decode('cHJvZHVjdA=='));
-                $this->updateActivationConfig(app: $app, response: $response);
-                return (bool)$response['active'];
-            });
+        }
+
+        $appConfig = $this->resolveActivationConfig($app, $config[$app]);
+
+        if (!isset($appConfig['active']) || $appConfig['active'] == 0) {
+            Cache::forget($cacheKey);
+            return false;
+        }
+
+        return Cache::remember($cacheKey, $this->getCacheTimeoutByDays(days: 1), function () use ($app, $appConfig) {
+            $response = $this->getRequestConfig(username: $appConfig['username'], purchaseKey: $appConfig['purchase_key'], softwareId: $appConfig['software_id'], softwareType: $appConfig['software_type'] ?? base64_decode('cHJvZHVjdA=='));
+            $this->updateActivationConfig(app: $app, response: $response);
+            return (bool)$response['active'];
+        });
+    }
+
+    public function resolveActivationConfig(string $app, array $appConfig): array
+    {
+        if (!empty($appConfig['username']) && !empty($appConfig['purchase_key'])) {
+            return $appConfig;
+        }
+
+        $settingKeys = [
+            'vendor_app' => 'addon_activation_vendor_app',
+            'deliveryman_app' => 'addon_activation_delivery_man_app',
+            'react_web' => 'addon_activation_react',
+        ];
+
+        if (!isset($settingKeys[$app])) {
+            return $appConfig;
+        }
+
+        $storedConfig = $this->getStoredActivationConfig($settingKeys[$app]);
+
+        if (
+            !is_array($storedConfig)
+            || (int)($storedConfig['activation_status'] ?? 0) !== 1
+            || empty($storedConfig['username'])
+            || empty($storedConfig['purchase_key'])
+        ) {
+            return $appConfig;
+        }
+
+        $appConfig['username'] = trim($storedConfig['username']);
+        $appConfig['purchase_key'] = $storedConfig['purchase_key'];
+        $appConfig['active'] = 1;
+
+        return $appConfig;
+    }
+
+    protected function getStoredActivationConfig(string $key): array
+    {
+        try {
+            $storedConfig = json_decode(
+                BusinessSetting::where('key', $key)->value('value') ?? '[]',
+                true
+            );
+
+            return is_array($storedConfig) ? $storedConfig : [];
+        } catch (\Throwable) {
+            return [];
         }
     }
 
